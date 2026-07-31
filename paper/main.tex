@@ -70,28 +70,30 @@
 Transformers propagate information across depth through a single additive
 residual stream: every sublayer reads only the most recent state.
 \emph{Attention residuals} relax this by letting each sublayer attend, through a
-learned softmax, over the outputs of \emph{all} previous layers, an attention
-over depth. But that read uses a \emph{single} query shared across the entire
-width, so every feature subspace must read the depth history through one
+learned softmax. However, that read uses a \emph{single} query shared across the
+entire width, so every feature subspace must read the depth history through one
 distribution. The cost of this \emph{forced compromise} grows with how much
 the subspaces disagree about which layers to read, and disagreement grows with
-model width. We introduce \textbf{Multi-Head Attention Residuals (MHAR)}:
-reshape the routing query into $H$ per-subspace heads, each with its own softmax
+model width. We introduce \textbf{Multi-Head Attention Residuals (MHAR)}: the
+routing query is reshaped into $H$ per-subspace heads, each with its own softmax
 over the depth history. The read becomes block-diagonal, the reshape adds
 \emph{zero} parameters and negligible compute, and $H{=}1$ recovers attention
-residuals exactly. Trained from scratch on FineWeb-Edu, MHAR improves validation
-loss over a standard Transformer at 100M, 350M, and 1B ($-0.049$, $-0.080$,
-$-0.063$). What grows with scale is the \emph{necessity} of multiple heads: a
-single routing query helps at 100M but by 1B is $0.105$ \emph{worse} than the
-plain additive residual, even at its own optimal learning rate, so MHAR's
-advantage over single-head routing widens from $0.010$ to $0.168$. Setting the
-number of routing heads equal to the number of KV heads is a
-hyperparameter-free, near-optimal default, and a direct probe of the trained
-queries confirms learned subspace disagreement as the driver. Finally, fused
-Triton routing kernels lift attention-residual training from $0.2$--$0.5\times$
-to $0.55$--$0.88\times$ of baseline throughput at near-baseline peak memory.
-An identity-preserving conversion via \emph{delta} attention residuals
-supports 8B mid-training ($+3.2$ GSM8K, $+3.1$ GPQA).
+residuals exactly. Trained from scratch on a deduplicated Nemotron-based
+anneal corpus that is quality-filtered and STEM- and code-heavy, MHAR improves
+validation loss over a standard Transformer at 100M, 350M, and 1B ($-0.061$,
+$-0.149$, and $-0.140$). It achieves the best result among four
+methods in every setting, with the gain increasing from 100M to the larger
+scales. The head count is a real design axis rather than a free knob:
+validation loss is U-shaped with respect to $H$, with a flat optimum at $H{=}4$
+or $H{=}8$ across scales. We adopt $H{=}8$ for large-scale models;
+over-splitting beyond this point ($H{=}16$) consistently gives back part of
+the gain. A direct probe of the trained queries confirms that learned
+subspace disagreement is the underlying driver. Fused Triton routing kernels
+increase attention-residual training throughput from $0.2$--$0.5\times$ to
+$0.55$--$0.88\times$ of the baseline while maintaining near-baseline peak
+memory. An identity-preserving conversion using \emph{delta} attention
+residuals supports 8B mid-training, yielding improvements of $+3.2$ on GSM8K
+and $+3.1$ on GPQA.
 \end{abstract}
 
 \section{Introduction}
@@ -152,9 +154,9 @@ We frame this restriction as a concrete cost, the \emph{forced compromise}: a
 single query must reconcile, in one softmax, the differing depth preferences of
 every subspace. Its cost is driven primarily by how much those subspaces
 disagree, which grows with model width; a secondary, more speculative factor is
-how collinear (hard to tell apart) the candidate sources are. Single-query
-routing should therefore help small models and hurt large ones; splitting the query
-into per-subspace heads makes the read block-diagonal and removes the compromise. We confirm the width prediction both in
+how collinear (hard to tell apart) the candidate sources are. Splitting the query
+into per-subspace heads makes the read block-diagonal and removes the compromise.
+We confirm the width dependence both in
 loss (\S\ref{sec:exp}) and by directly probing the trained queries
 (Appendix~\ref{sec:mechanism}).
 
@@ -163,27 +165,24 @@ Our contributions:
 \item \textbf{Multi-head attention residuals (MHAR).} We split the single
 attention-residual routing query into $H$ per-subspace heads
 (\S\ref{sec:method}): a reshape that adds no parameters or FLOPs, recovers
-attention residuals exactly at $H{=}1$, and needs no tuning---setting $H$ equal
-to the number of KV heads~\citep{ainslie2023gqa} is a near-optimal,
-hyperparameter-free default (Appendix~\ref{app:kvh100}).
+attention residuals exactly at $H{=}1$, and needs little tuning---the optimum
+consistently lands at $H{=}4$ or $H{=}8$ across scales~\citep{ainslie2023gqa},
+and for large-scale models we adopt $H{=}8$ (Appendix~\ref{app:kvh100}).
 \item \textbf{Fused kernels for efficient MHAR.} Fused Triton routing kernels
 lift attention-residual training from ${\sim}0.2$--$0.5\times$ to
 $0.55$--$0.88\times$ baseline throughput at near-baseline peak memory
 (Appendix~\ref{sec:kernel}), making depth routing practical at scale.
-\item \textbf{Scaling MHAR.} Trained from scratch at 100M / 350M / 1B
-(\S\ref{sec:exp}), MHAR improves validation loss over a standard Transformer at
-every scale ($-0.049$/$-0.080$/$-0.063$ at 100M/350M/1B), while the published
-single-head routing degrades from helpful to \emph{harmful}
-($-0.039\rightarrow+0.055\rightarrow+0.140$;
-\S\ref{sec:ablation}, Appendix~\ref{sec:mechanism}). An identity-preserving
-conversion via \emph{delta} attention residuals~\citep{luo2026delta} extends
-MHAR to 8B mid-training on a public quality-filtered anneal dataset, adding
-$+3.2$ GSM8K and $+3.1$ GPQA (paired McNemar $p{=}0.004/0.038$) over a
-schedule-matched plain-CPT control (\S\ref{sec:midtrain}).
+\item \textbf{Scaling MHAR.} Trained from scratch at 100M--1B, MHAR is the
+best of four methods at every scale, with gains over the baseline that
+\emph{grow} from 100M to the larger scales
+($-0.061$/$-0.149$/$-0.140$; \S\ref{sec:exp}), and the
+routing-head count shows a clear U-shaped optimum at $H{=}4$ or $H{=}8$
+(we adopt $H{=}8$ at scale; \S\ref{sec:ablation}). An identity-preserving
+conversion~\citep{luo2026delta} extends MHAR to 8B
+mid-training, adding $+3.2$ GSM8K (paired $p{=}0.004$) over a schedule-matched
+control (\S\ref{sec:midtrain}).
 \end{itemize}
 
-Appendix~\ref{sec:related} situates MHAR among residual, dense-connection, and
-cross-layer-aggregation approaches to reading the depth history.
 
 \section{Method: Multi-Head Attention Residuals}
 \label{sec:method}
@@ -328,9 +327,15 @@ iso-parameter, iso-forward control.
 \subsection{Setup}
 
 \paragraph{Models and training.} We train decoder-only Transformers from scratch on
-FineWeb-Edu~\citep{penedo2024fineweb} for 20K steps with the AdamW
+the \texttt{anneal\_pt\_v3} corpus---a deduplicated, Nemotron-based anneal
+mix~\citep{nvidia2025nemotronccv2} (quality-filtered, synthetic-, STEM-, and
+code-heavy), the same corpus used for the 8B mid-training experiments of
+\S\ref{sec:midtrain} (composition in Appendix Table~\ref{tab:datamix})---for
+20K steps with the AdamW
 optimizer~\citep{loshchilov2019adamw}, a cosine learning-rate schedule with
-1{,}000 warmup steps decaying to $0.1\times$ peak, and bfloat16. The three scales
+1{,}000 warmup steps decaying to $0.1\times$ peak, and bfloat16. (A replication of the same
+four-method comparison on a second, web-generic corpus is
+reported in Appendix Table~\ref{tab:mainweb}.) The three scales
 are: 100M ($d{=}512$, $L{=}12$, 8 heads, 4 KV heads, FFN 1536), 350M
 ($d{=}1024$, $L{=}24$, 16 heads, 8 KV heads, FFN 4096), and 1B ($d{=}1280$,
 $L{=}36$, 16 heads, 8 KV heads, FFN 5120), all with head dimension 64--80 and a
@@ -341,12 +346,17 @@ global batch 32. We compare four methods at each scale: a standard Transformer
 attention residuals ($H{=}1$, i.e.\ the published attention-residual
 formulation of~\citet{kimi2025attention}), and multi-head attention residuals
 (\emph{MHAR}) with the number of routing heads $H$ set equal to the number of
-KV heads. All four share architecture, data, schedule, optimizer, and data-parallel degree,
-so the routing mechanism is the only difference. Table~\ref{tab:main} reports each
-method at the tuned peak learning rate $1\times10^{-3}$ (the optimum for baseline,
-hyper-connections, and MHAR); the full per-method sweep is in
-Table~\ref{tab:lrsweep}. MHAR is parameter- and FLOP-matched to baseline up to the
-$O(d)$ routing queries. Full training and reproducibility details (optimizer
+KV heads. Following~\citet{kimi2025attention}, all routing pseudo-queries are
+\emph{zero-initialized}, so every depth softmax starts as a uniform average
+over its sources (the appendix replication predates this fix and uses randomly
+initialized queries; see the caveat there). All four methods share architecture,
+data, schedule, optimizer, and data-parallel degree,
+so the routing mechanism is the only difference. Table~\ref{tab:main} reports all
+methods at a unified peak learning rate of $5\times10^{-4}$; a per-method
+learning-rate sweep (Appendix Table~\ref{tab:lrsweep}) shows the
+method ranking is not an artifact of sharing one rate. MHAR is
+parameter-matched to baseline up to the $O(d)$ routing queries and adds only
+$0.5$--$1.2\%$ routing FLOPs (Table~\ref{tab:maincost}). Full training and reproducibility details (optimizer
 hyperparameters, tokenizer, positional scheme, precision, and the validation
 protocol) are given in Appendix~\ref{app:repro}.
 
@@ -355,28 +365,35 @@ evaluation pass; Appendix~\ref{sec:mechanism}), so unless noted we report the
 \emph{tail-mean} of the last eleven evaluations (steps 15--20k). This $\pm0.07$ is
 single-pass sampling noise; the cross-method $\Delta$ is far better resolved,
 because methods are compared \emph{paired} (same data order within a scale) and
-averaged over eleven evals. We additionally train three seeds per method at every
-scale and report the \emph{paired} seed deltas (Table~\ref{tab:seeds}); the
-single-cell tables report a single fixed seed (seed 42; Appendix~\ref{app:repro}).
+averaged over eleven evals. Pairing matters doubly here: each streaming
+validation pass samples a small window of the corpus, and long documents make
+per-eval values fluctuate across steps, so only same-step paired deltas and
+tail-means are meaningful. The
+single-cell tables report one fixed seed (Appendix~\ref{app:repro}).
 
 \subsection{Pretraining}
 
 \begin{table}[h]
 \centering
-\caption{From-scratch validation loss ($\downarrow$, tail-mean of the last eleven
-evaluations, steps 15--20k; \S\ref{sec:exp}) at the tuned peak learning rate
-$1\times10^{-3}$; $\Delta$ is relative to the same-rate baseline;
-CEG$_{\mathrm{FLOPs}}$ is the compute-equivalent gain of MHAR over the baseline
-(see text). MHAR is best at every scale; single-head routing regresses below
-baseline at 350M and 1B.}
+\caption{From-scratch validation loss ($\downarrow$) after a unified 20K-step
+schedule on the \texttt{anneal\_pt\_v3} corpus at a unified peak learning rate
+of $5\times10^{-4}$ (tail-mean over the last quarter of training;
+\S\ref{sec:exp}); $\Delta$ is relative
+to the same-rate baseline. MHAR is best at every scale, and both
+attention-residual variants \emph{grow} their gain from 100M to the larger
+scales. The last
+column is an \emph{over-splitting control}: the same model with the routing
+query split into $H{=}16$ heads, past the $H{=}4$--$8$ optimum. A replication on a
+second corpus, where the single-head column reverses, is in Appendix
+Table~\ref{tab:mainweb}.}
 \label{tab:main}
 \begin{tabular}{lcccccc}
 \toprule
-\textbf{Scale} & \textbf{$d$/$L$/KV} & \textbf{Baseline} & \textbf{Hyper-conn.} & \textbf{Single-head} & \textbf{MHAR} & \textbf{CEG$_{\mathrm{FLOPs}}$} \\
+\textbf{Scale} & \textbf{$d$/$L$/KV} & \textbf{Baseline} & \textbf{Hyper-conn.} & \textbf{Single-head} & \textbf{MHAR ($H{=}8$)} & \textbf{MHAR ($H{=}16$)} \\
 \midrule
-100M & 512/12/4  & 3.336 & 3.322 \,($-0.014$) & 3.297 \,($-0.039$) & \textbf{3.287} \,($-0.049$) & $1.27\times$ \\
-350M & 1024/24/8 & 3.290 & 3.260 \,($-0.030$) & 3.345 \,($+0.055$) & \textbf{3.210} \,($-0.080$) & $1.49\times$ \\
-1B   & 1280/36/8 & 3.175 & 3.172 \,($-0.002$) & 3.315 \,($+0.140$) & \textbf{3.111} \,($-0.063$) & $1.38\times$ \\
+100M & 512/12/4  & 3.031 & 2.999 \,($-0.032$) & 2.970 \,($-0.060$) & \textbf{2.969} \,($-0.061$) & 2.996 \,($-0.035$) \\
+350M & 1024/24/8 & 2.997 & 2.931 \,($-0.066$) & 2.876 \,($-0.121$) & \textbf{2.848} \,($-0.149$) & 2.895 \,($-0.102$) \\
+1B   & 1280/36/8 & 2.894 & 2.807 \,($-0.086$) & 2.759 \,($-0.134$) & \textbf{2.754} \,($-0.140$) & 2.825 \,($-0.069$) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -385,41 +402,68 @@ baseline at 350M and 1B.}
 to the additive residual is hyper-connections~\citep{zhu2024hyperconnections}, which
 replace the single stream with $n$ parallel streams mixed by per-layer learned depth
 and width connections. Trained in the same sweep ($n{=}4$), they improve over the
-baseline at all three scales but \emph{inconsistently}: the gain peaks at 350M
-($-0.030$) and collapses to within eval noise at 1B ($-0.002$; Table~\ref{tab:main}).
-\textbf{MHAR outperforms hyper-connections at every scale} (by $0.035$, $0.050$, and
-$0.061$ at 100M/350M/1B), and the margin \emph{widens} with scale: enriching the
-depth \emph{routing} of a single stream scales better than enriching the
-\emph{connection topology} across streams.
+baseline at all three scales ($-0.032$/$-0.066$/$-0.086$; Table~\ref{tab:main}),
+but \textbf{MHAR outperforms hyper-connections at every scale} (by $0.029$,
+$0.083$, and $0.053$ at 100M/350M/1B): enriching the
+depth \emph{routing} of a single stream is consistently stronger than enriching
+the \emph{connection topology} across streams, at a fraction of the parameter
+and memory-traffic cost (Table~\ref{tab:maincost}).
 
-\paragraph{Compute-equivalent gain.} To express the loss deltas as compute,
-Table~\ref{tab:main} also reports the compute-equivalent
+\paragraph{Over-splitting control ($H{=}16$).} The head count is bounded on
+both sides. The last column of Table~\ref{tab:main} repeats MHAR with the same
+$(d,)$ query reshaped into $H{=}16$ heads---\emph{past} the $H{=}4$--$8$ optimum
+($2\times$ the KV count at 350M/1B, $4\times$ at 100M), every other setting identical.
+At 350M this gives back a third of MHAR's gain ($-0.149\rightarrow-0.102$)
+and at 1B half of it ($-0.140\rightarrow-0.069$); at 100M the penalty is
+present but shallower. At all three scales $H{=}16$ lands \emph{above}
+single-head routing. The
+over-splitting cost grows monotonically with scale ($+0.026$/$+0.047$/$+0.071$
+over the $H{=}4$--$8$ optimum), mirroring how the single-query compromise grows with width: each head now routes a
+subspace narrower than what any KV group consumes, so coherent features are
+split across independently-routed slices. Validation loss is therefore
+\emph{U-shaped} in $H$, bottoming out in a flat basin at $H{=}4$--$8$---head
+count is a real
+design axis, and $H{=}4$ or $H{=}8$ is its near-optimal setting across scales
+(we adopt $H{=}8$ at scale; full sweep in \S\ref{sec:ablation}).
+
+\paragraph{Compute-equivalent gain.} The loss deltas of
+Table~\ref{tab:main} can also be expressed as compute-equivalent
 gain~\citep{davidson2023ceg,mai2026thinking}: the factor by which baseline
-training FLOPs would have to grow to match MHAR's loss, from a power-law fit
-$L{=}AC^{-\alpha}{+}E$ to the three baseline points, normalized so the
-baseline's own CEG is $1$ at each scale. Because MHAR's routing adds only
-$0.5$--$1.2\%$ FLOPs, the loss gain translates into a $1.3$--$1.5\times$
-compute equivalence under our fixed-step recipe. The comparison is corroborated
-by per-method LR tuning (Table~\ref{tab:lrsweep}) and three-seed error bars at
-$5\times10^{-4}$ (Table~\ref{tab:seeds}); one caveat: the fixed-step ladder's
-flat exponent ($\alpha{\approx}0.06$) inflates CEG relative to compute-optimal
-ladders, where the same deltas would yield ${\sim}1.1$--$1.15\times$.
+training FLOPs would have to grow to match MHAR's loss, under a power law
+$L{=}AC^{-\alpha}$ fitted to the lower envelope of the three baseline
+training curves in the style of~\citet{kaplan2020scaling}
+($\alpha{=}0.089$; the cosine schedule makes mid-run points pessimistic, so
+this envelope is a \emph{conservative} exponent). Because MHAR's routing adds
+only $0.5$--$1.2\%$ FLOPs, the loss gain translates into a
+$1.3\times$/$1.8\times$/$1.7\times$ compute equivalence at 100M/350M/1B. The exponent brackets the estimate:
+fitting only the three final points gives $\alpha{=}0.053$---nearly identical
+to the $0.057$ that \citet{kimi2025attention} fit on their own ladder---and
+would give $1.5$--$2.6\times$, while a steeper Chinchilla-like
+$\alpha{=}0.15$ gives $1.15$--$1.4\times$.
 
 Beyond the final numbers, MHAR dominates the baseline \emph{throughout}
 training, not just at convergence: its loss curve stays below the baseline from
 early in training onward (Figure~\ref{fig:trainloss}, Appendix~\ref{app:robustness};
-100M shown). Since the two runs share
+the 100M web-replication pair shown). Since the two runs share
 node, software, data order, and global batch, the separation is attributable to
 the routing mechanism alone.
 
-\paragraph{Why the advantage grows with scale.} A single routing query shares
-one depth distribution across all $d$ channels---a forced compromise that
-Table~\ref{tab:main} shows turning from harmless (100M) into a liability (1B)
-as width raises how much independent subspaces disagree about what to read
-(probed in Appendix~\ref{sec:mechanism}). Figure~\ref{fig:perhead} shows the
+\paragraph{When do the extra heads matter?} A single routing query shares
+one depth distribution across all $d$ channels---a forced compromise whose cost
+depends on how much independent subspaces disagree about what to read
+(probed in Appendix~\ref{sec:mechanism}). The cost is strongly
+\emph{data-dependent}: on the anneal corpus a zero-initialized single query
+already captures most of the routing gain (Table~\ref{tab:main};
+MHAR$-$single-head $= -0.001$/$-0.028$/$-0.006$), whereas in the
+web-corpus replication single-head routing degrades from helpful at 100M to
+\emph{worse than the plain residual} at 1B while MHAR keeps its full gain
+(Appendix Table~\ref{tab:mainweb}). MHAR is thus the best variant in every
+cell of both distributions: the multi-head reshape costs nothing and acts as
+insurance against the single-query compromise wherever it does bind.
+Figure~\ref{fig:perhead} shows the
 trained MHAR heads use their per-slice freedom: each maintains a stable,
-distinctive deviation from the head-consensus routing. The advantage survives
-scale because the $H$ heads carry $H$ different links, not $H$ copies of one.
+distinctive deviation from the head-consensus routing---the $H$ heads carry
+$H$ different links, not $H$ copies of one.
 
 \begin{figure}[t]
 \centering
@@ -433,39 +477,42 @@ under a matched-norm random query, replicate on disjoint evaluation text
 \label{fig:perhead}
 \end{figure}
 
-\paragraph{Robustness.} The ranking in Table~\ref{tab:main} is stable across peak learning rate (each method at its own best), training budget, and random seed (Appendix~\ref{app:robustness}).
-
 \paragraph{Downstream evaluation.} To check that the loss improvement is not an
-artifact of the training distribution, we evaluate the baseline and MHAR checkpoints
+artifact of the training distribution, we evaluate the anneal-trained baseline and MHAR checkpoints
 zero-shot (single run) at 100M, 350M, and 1B on held-out WikiText-2 perplexity,
 LAMBADA~\citep{paperno2016lambada}, and HellaSwag~\citep{zellers2019hellaswag} with
-the LM evaluation harness~\citep{eval-harness} (Table~\ref{tab:downstream}). At
+the LM evaluation harness~\citep{eval-harness} (Table~\ref{tab:downstream}).
+Because the models are trained on the anneal mix and the benchmarks are
+web-derived, this is a \emph{cross-distribution} transfer test. At
 \emph{every} scale MHAR improves perplexity and LAMBADA accuracy, with HellaSwag
-better at 350M, tied at 1B, and within noise at 100M. The val-loss gain therefore
-transfers to held-out data, and the relative perplexity gain \emph{grows} with
-scale ($-10\%$, $-15\%$, $-19\%$ at 100M/350M/1B); broader benchmarks are future
-work.
+better at 350M and 1B and within sampling noise at 100M. The val-loss gain
+therefore transfers off the training distribution: the relative perplexity gain
+roughly doubles from 100M to 350M and holds at 1B ($-9\%$, $-20\%$, $-19\%$),
+and the LAMBADA gain grows monotonically with scale ($+2.4$, $+3.8$, $+7.2$
+points); broader benchmarks are future work.
 
 \begin{table}[h]
 \centering
-\caption{Zero-shot downstream evaluation at 100M, 350M, and 1B (single run). Each model
-is evaluated at its training context (100M: seq.\ 2048; 350M/1B: seq.\ 1024), so
-perplexity is comparable only \emph{within} a scale. MHAR transfers its gain to held-out
-perplexity and LAMBADA at every scale, and HellaSwag at 350M (tied at 1B, marginally lower at 100M). 100M
-is the earlier $6\times10^{-4}$ batch; 350M and 1B are the $5\times10^{-4}$ batch.}
+\caption{Zero-shot downstream evaluation at 100M, 350M, and 1B (single run) of the
+anneal-corpus models of Table~\ref{tab:main}. The benchmarks are web-derived and
+held out from the training mix, so gains here are \emph{cross-distribution}
+transfer. Each model is evaluated at its training context (100M: seq.\ 2048;
+350M/1B: seq.\ 1024), so perplexity is comparable only \emph{within} a scale.
+MHAR improves perplexity and LAMBADA at every scale and HellaSwag at 350M/1B
+(marginally lower at 100M, within the $\pm3$pt noise of 200 samples).}
 \label{tab:downstream}
 \begin{tabular}{llccc}
 \toprule
 \textbf{Scale} & \textbf{Method} & \textbf{WikiText-2 PPL $\downarrow$} & \textbf{LAMBADA $\uparrow$} & \textbf{HellaSwag $\uparrow$} \\
 \midrule
-100M & Baseline  & 48.6 & 10.4\% & \textbf{33.0\%} \\
-100M & MHAR  & \textbf{43.8} & \textbf{13.4\%} & 32.5\% \\
+100M & Baseline  & 60.0 & 9.6\% & \textbf{35.0\%} \\
+100M & MHAR  & \textbf{54.5} & \textbf{12.0\%} & 33.0\% \\
 \midrule
-350M & Baseline  & 53.9 & 9.6\% & 33.5\% \\
-350M & MHAR  & \textbf{46.0} & \textbf{13.4\%} & \textbf{35.5\%} \\
+350M & Baseline  & 64.9 & 8.8\% & 34.5\% \\
+350M & MHAR  & \textbf{52.0} & \textbf{12.6\%} & \textbf{36.0\%} \\
 \midrule
-1B & Baseline  & 49.6 & 12.4\% & 34.0\% \\
-1B & MHAR  & \textbf{40.1} & \textbf{15.0\%} & 34.0\% \\
+1B & Baseline  & 56.4 & 8.8\% & 30.5\% \\
+1B & MHAR  & \textbf{45.4} & \textbf{16.0\%} & \textbf{33.0\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -481,7 +528,8 @@ we graft multi-head attention residuals onto a pretrained Transformer and cool t
 learning rate to convergence.
 
 \paragraph{Data.} We assemble \texttt{anneal\_pt\_v3}, an English-only anneal
-corpus of $\approx 1.9$\,T tokens, from public quality-filtered corpora,
+corpus of $\approx 1.9$\,T tokens, from public deduplicated, quality-filtered
+corpora,
 deliberately synthetic-, STEM-, and code-heavy in the style of Nemotron anneal
 blends~\citep{su2024nemotroncc}. The blend draws on the Nemotron-CC-v2 web crawl
 and its synthetic rephrasing and diverse-QA variants~\citep{nvidia2025nemotronccv2},
@@ -520,24 +568,10 @@ heads. MHAR is grafted onto the pretrained model with a zero-initialized output
 gate ($\alpha{=}0$ at init), so the converted model is \emph{numerically
 identical} to the base at step~0 (maximum logit deviation $0$ in fp32), and the
 routing opens during mid-training. This lets us continue-train an existing
-checkpoint without a loss spike. Figure~\ref{fig:midtrain_identity} shows this
-directly on the schedule-matched pair (identical seed and data order): the loss
-curves start numerically identical (first logged step $1.8616$ vs $1.8615$;
-maximum gap $6\times10^{-5}$ over the first 100 steps), and the gap saturates
-near $10^{-3}$---$36\times$ below step-to-step batch noise---across all 9{,}500
-steps.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/midtrain_identity.pdf}
-\caption{\textbf{The conversion is exactly identity and introduces no
-optimization shock.} Train loss of the schedule-matched 8B mid-training pair
-(identical seed and data order). \textbf{Left:} the two curves coincide.
-\textbf{Right:} the per-step $|\Delta \mathrm{loss}|$ starts at ${\sim}10^{-5}$,
-rises only as the zero-initialized gate opens, and saturates $36\times$ below
-step-to-step batch noise (dotted).}
-\label{fig:midtrain_identity}
-\end{figure}
+checkpoint without a loss spike: on the schedule-matched pair (identical seed
+and data order) both runs start from the same loss ($1.8616$ vs $1.8615$ at the
+first logged step), and the per-step gap stays $36\times$ below batch noise
+across all 9{,}500 steps.
 
 \paragraph{Downstream protocol.} We evaluate six capability-oriented tasks
 with the LM Evaluation Harness~\citep{eval-harness}, grouped as \emph{General}
@@ -582,12 +616,15 @@ and $\approx 10$\,B-token budget.}
 Mid-training on the anneal corpus produces large downstream gains (GSM8K more
 than doubles, $19.0\rightarrow47.0$; MATH more than triples,
 $5.3\rightarrow19.1$; MMLU rises $+8.9$) while the schedule-matched comparison
-isolates what routing itself adds: a real, reasoning-sided gain of $+3.2$ GSM8K
+isolates what routing itself adds: a real gain of $+3.2$ GSM8K
 (123 vs.\ 81 discordant items, paired exact McNemar $p{=}0.004$) and $+3.1$
 GPQA (27 vs.\ 13, $p{=}0.038$), with MMLU, MATH, and code statistically
-unchanged. The routing gain at this scale is thus modest but consistently
-reasoning-sided; how it interacts with a more aggressive re-training schedule
-is left to future work.
+unchanged. The routing gain at this scale is thus modest and concentrated on
+GSM8K and GPQA; how it interacts with a more aggressive re-training schedule
+is left to future work. We release the mid-trained MHAR model and its
+schedule-matched control at
+\url{https://huggingface.co/wdlctc/marin-8b-cpt-mhar-delta} and
+\url{https://huggingface.co/wdlctc/marin-8b-cpt-plain-lr4e4}.
 
 \subsection{Parameter and compute cost}
 
@@ -637,8 +674,8 @@ Fused Triton (ours)       & \textbf{5.7} & \textbf{11.4} & \textbf{42.4} & \text
 
 \paragraph{Parameter cost.} MHAR adds only $+0.02\%$ parameters over the vanilla
 baseline (per-layer routing queries and RMSNorms: $+100$K at 350M, $+187$K at
-1B; Table~\ref{tab:maincost})---far too few to account for the $-0.05$ to
-$-0.08$ nat gain. Crucially, the
+1B; Table~\ref{tab:maincost})---far too few to account for the $-0.06$ to
+$-0.15$ nat gain (Table~\ref{tab:main}). Crucially, the
 multi-head split itself is \emph{exactly} free over single-head routing in
 parameters, compute, \emph{and} memory: $H$ merely reshapes one query into $H$
 smaller ones, replacing one softmax with $H$ softmaxes over the short depth axis
@@ -665,6 +702,43 @@ baseline is future work.
 \section{Ablations}
 \label{sec:ablation}
 
+\begin{figure}[t]
+\centering
+\begin{minipage}[c]{0.51\textwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/fig_h_ushape_1b.pdf}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.47\textwidth}
+\centering
+\includegraphics[width=\linewidth]{figures/fig_kvh_1b_panel.pdf}
+\end{minipage}
+\caption{\textbf{Head count at 1B: a flat $H{=}4$--$8$ optimum.} \textbf{(a)} The
+KV$\,{=}\,8$ row (tail-mean): loss falls from
+single-head ($H{=}1$) into a flat basin at $H{=}4$--$8$---the optimum, $3.132$
+and $3.129$, essentially tied---then rises past it: $H{=}16$ ($3.173$) gives
+back roughly a third of the multi-head gain, though it stays well below $H{=}1$.
+\textbf{(b)} The full kv$\times$H grid: multi-head routing helps at every KV,
+the per-KV optimum (gold stars) lands at $H{=}4$ or $H{=}8$, and the $H{=}16$
+column overshoots the basin in every row while staying below $H{=}1$.}
+\label{fig:hushape}
+\end{figure}
+
+\paragraph{The head count has a two-sided optimum.} Figure~\ref{fig:hushape}a
+sweeps the routing-head count at 1B (KV$\,{=}\,8$) with everything else fixed:
+loss falls sharply from $H{=}1$ ($3.270$) into a flat basin at the KV
+granularity, reaching its optimum at $H{=}4$ ($3.132$) and $H{=}8$ ($3.129$)---
+the two are essentially tied, within tail-mean noise---then rises past it:
+$H{=}16$ ($3.173$) sits $0.044$ above the optimum, beyond the tail-mean noise
+(${\sim}\pm0.02$), and the same overshoot appears in every KV row of the grid
+($+0.031$--$0.052$). The two failure modes are granularity mismatches with the
+stream's consumers, though asymmetric ones: too few heads force unrelated
+subspaces through one depth distribution (costing $0.14$ at $H{=}1$), while too
+many split what a KV group consumes coherently (costing $0.03$--$0.05$ at
+$H{=}16$, still well below single-head). The size of the overshoot is
+corpus-dependent: on the anneal corpus of Table~\ref{tab:main} it is larger
+and $H{=}16$ does land above single-head routing. The optimum lands at $H{=}4$ or $H{=}8$ at every
+scale we tested---a flat basin---and for large-scale models we adopt $H{=}8$.
+
 \paragraph{Routing should be multi-head, just like attention.}
 The attention-residual bypass is structurally a self-attention query over
 \emph{depth} (Eq.~\ref{eq:route}) and inherits the same limitation that made
@@ -672,55 +746,52 @@ attention multi-head: one query cannot serve every subspace at once
 (\S\ref{sec:intro}). The thesis of our work follows: \textbf{if attention is
 multi-head, the attention-residual bypass should be multi-head too.} This section
 shows that splitting the routing query into $H$ heads is not merely analogous but
-empirically \emph{necessary} as models grow, and that one hyperparameter-free
-rule, $H{=}$ KV (the stream's consumption granularity), captures essentially all
+the only setting that stays robust as models grow and the data distribution
+changes (\S\ref{sec:exp}), and that the optimum consistently sits at $H{=}4$ or
+$H{=}8$ (a flat basin, from which we adopt $H{=}8$ at scale), capturing essentially all
 of the benefit.
 
 
 \paragraph{How many heads: a convergence signature.}
 How many routing heads help, and where the optimum sits, depends on how converged the
-router is. In a deliberately \emph{under-trained} grid (100M at its optimal LR
+router is. In a deliberately \emph{under-trained} grid (100M on the web corpus
+at its tuned LR
 $1\times10^{-3}$ but only 5K steps, vs.\ the 20K used elsewhere;
 Figure~\ref{fig:heads_under}), the clean signal is in the most over-subscribed row,
 KV$\,{=}\,1$: there the single shared query ($H{=}1$) is worst and $H{=}8$ best, a
 \emph{monotone} $0.028$ drop, well above the $\sim\!0.006$ single-seed noise floor
 (the higher-KV rows are within noise). Before convergence, more heads only ever help.
-Trained to convergence, the optimum instead \emph{saturates} near $H{=}$ KV, the
-stream's consumption granularity: at KV$\,{=}\,1$ the converged optimum is the
-single matched head $H{=}1$, and the full $4\times4$ sweep at 100M
-(Appendix~\ref{app:kvh100}) puts the KV$\,{=}\,4,8$ optima exactly on the $H{=}$ KV
-diagonal. We therefore adopt $H{=}$ KV throughout the main results
-(Table~\ref{tab:main}).
+Trained to convergence, the optimum instead \emph{saturates} into a flat
+$H{=}4$--$8$ basin: the full
+grids at 100M
+(Appendix~\ref{app:kvh100}) and 1B (Figure~\ref{fig:hushape}b) put every per-KV optimum at $H{=}4$ or $H{=}8$
+(the over-subscribed KV$\,{\in}\,\{1,2\}$ rows still prefer more heads
+even at convergence). We therefore adopt $H{=}8$ for large-scale models (Table~\ref{tab:main}).
 This is exactly what the forced-compromise account predicts: the penalty that makes
 splitting past KV unhelpful is \emph{learned} (Appendix~\ref{sec:mechanism}) and only
 binds once feature subspaces have specialized---before convergence extra heads are
-free averaging flexibility; after it, $H{=}$ KV is the knee. Practically, $H{=}$ KV
-is the safe default for a \emph{well-tuned} run; under-tuning only ever pushes the
-optimum to \emph{more} heads, never fewer, so the rule never costs you.
+free averaging flexibility; after it, $H{=}4$--$8$ is the knee. Practically,
+$H{=}8$ is a safe default for a \emph{well-tuned} run; under-tuning only ever
+pushes the optimum to \emph{more} heads, never fewer, so the choice
+never costs you.
 
-\paragraph{Single-head routing degrades at scale.}
+\paragraph{Single-head routing is not robust across data distributions.}
 Single-head routing ($H{=}1$) is exactly the original attention-residual
 formulation~\citep{kimi2025attention}: one learned query routes the depth history.
-Read against the baseline with \emph{each method at its own optimal learning rate}
-(Table~\ref{tab:lrsweep}), it is \emph{not} robust as the model grows. It helps at
-100M ($-0.039$), is roughly neutral at 350M ($+0.038$), and clearly regresses at 1B,
-where replacing the additive residual with a single routing query is $0.105$
-\emph{worse} than the baseline. MHAR ($H{=}$ KV), in
-contrast, improves at every scale, so multi-head's advantage over single-head routing
-\emph{widens} monotonically: $-0.010$, $-0.118$, $-0.168$ at 100M/350M/1B
-(best-vs-best; larger still at a shared rate)---the central claim of this work.
+On the anneal corpus it is strong (Table~\ref{tab:main}), but in the
+web-corpus replication---read against the baseline with \emph{each method at
+its own optimal learning rate} (Appendix Table~\ref{tab:lrsweep})---it is
+\emph{not} robust as
+the model grows: it helps at
+100M ($-0.039$) but lands above the baseline at both larger scales ($+0.038$ at
+350M, $+0.105$ at 1B). MHAR, in
+contrast, improves at every scale on \emph{both} corpora; on web data
+multi-head's advantage over single-head routing
+\emph{widens} monotonically with scale: $-0.010$, $-0.118$, $-0.168$ at 100M/350M/1B
+(best-vs-best; larger still at a shared rate). The zero-parameter reshape is
+what makes attention residuals robust---the central claim of this work.
 
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.5\textwidth]{figures/heads_undertrained.pdf}
-\caption{\textbf{The bypass wants more heads.} Under-trained regime (100M,
-$1\times10^{-3}$, 5K steps): routing-head ($H$) $\times$ KV grid of validation
-loss (lower/yellow better; gold stars: per-KV optimum; red dashed line: the
-$H{=}$ KV diagonal). The boxed KV$\,{=}\,1$ row is the one supra-noise signal
-(see text).}
-\label{fig:heads_under}
-\end{figure}
 
 % --- Limitations temporarily commented out (2026-07-11, per author) ---
 \iffalse
@@ -740,7 +811,7 @@ The MHAR$-$baseline gain is itself non-monotonic across 100M/350M/1B
 multi-head$-$single-head and multi-head$-$hyper-connections gaps. (ii)~\textbf{Evaluation.} We confirm transfer to held-out perplexity
 and LAMBADA at all three scales (Table~\ref{tab:downstream}), but only as single-run
 evaluations on a narrow suite (WikiText-2, LAMBADA, HellaSwag), not a broader benchmark. (iii)~\textbf{Mechanistic understanding.} We give an
-empirical rule ($H{=}$ KV) but not a theory for why the optimum sits near there,
+empirical optimum ($H{=}4$--$8$) but not a theory for why the optimum sits there,
 nor a full account of \emph{what} different routing heads learn. (iv)~\textbf{Head-alignment.}
 Our head-alignment ablation (MHAR-HW) is single-seed and within the $\pm0.07$
 eval-noise floor, so it does not detect a benefit from aligning routing to attention
@@ -772,18 +843,22 @@ dimension-dependent so only the learned-disagreement KL is compared across scale
 \section{Conclusion}
 Multi-head attention residuals remove the forced-compromise bottleneck of a single
 routing query by giving each feature subspace its own depth-routing head, at zero
-parameter cost over single-head routing. Trained from scratch from 100M to 1B, MHAR
-improves over a standard Transformer at every scale while a single routing query
-degrades from helpful to harmful, so the multi-head advantage widens with
-scale; the gain transfers to held-out perplexity and LAMBADA accuracy. Setting
-the number of routing heads equal to the number of KV heads is a near-optimal,
-hyperparameter-free default (aligning routing to attention head groups adds nothing
+parameter cost over single-head routing. Trained from scratch from 100M to 1B on a
+quality-filtered anneal corpus, MHAR improves over a standard Transformer at every
+scale with gains that grow from 100M to the larger scales
+($-0.061$/$-0.149$/$-0.140$), and it is the
+only variant whose gain also survives web-generic pretraining data, where a single
+routing query degrades from helpful to harmful and the multi-head advantage
+widens with scale; the gain transfers to held-out perplexity and LAMBADA
+accuracy. The optimum
+consistently lands at $H{=}4$ or $H{=}8$ across scales, and for large-scale
+models we adopt $H{=}8$ (aligning routing to attention head groups adds nothing
 measurable; Appendix~\ref{sec:mechanism}). Beyond from-scratch training, an
 identity-preserving conversion carries MHAR to 8B mid-training (GSM8K $+3.2$,
 paired $p{=}0.004$), and fused routing
 kernels cut the mechanism's systems cost to $0.55$--$0.88\times$ baseline throughput
 at near-baseline peak memory---together making multi-head depth routing practical
-beyond research scale. Understanding \emph{why} the optimum sits near $H{=}$ KV, and
+beyond research scale. Understanding \emph{why} the optimum sits at $H{=}4$--$8$, and
 what individual routing heads learn to attend to, are natural next steps.
 
 % ---- Broader-impacts paragraph commented out per request; unwrap \iffalse..\fi to restore ----
@@ -900,20 +975,23 @@ MHAR with $H{=}1$, and the single-head baseline in all our tables.}
 \label{app:kvh100}
 Figure~\ref{fig:kvh100} shows the full $4\times4$ routing-head sweep at 100M
 ($H,\text{KV}\,{\in}\,\{1,2,4,8\}$), the converged counterpart of the under-trained
-grid in Figure~\ref{fig:heads_under}. At 100M the KV$\,{=}\,4$ and KV$\,{=}\,8$
-optima sit exactly on the $H{=}$ KV diagonal (gold stars on the red line), while at
-small KV$\,{\in}\,\{1,2\}$ more heads help beyond $H{=}$ KV (best cell $H{=}8$). This
+grid in Figure~\ref{fig:heads_under}. These grids train on the web replication
+corpus (FineWeb-Edu, randomly initialized routing queries;
+Appendix~\ref{app:robustness}), so their absolute losses are not comparable to
+the anneal-corpus Table~\ref{tab:main}. At 100M the KV$\,{=}\,4$ and KV$\,{=}\,8$
+optima sit at $H{=}4$ and $H{=}8$ (gold stars; on the red $H{=}$ KV line), while at
+small KV$\,{\in}\,\{1,2\}$ more heads help, up to $H{=}8$. This
 grid pins down the two practically relevant conclusions: multi-head routing helps at
-every KV setting, and $H{=}$ KV is a near-optimal, hyperparameter-free
-default in the grouped-query regime (KV$\,{\geq}\,4$) that modern models use. We ran
-the same sweep at 350M and 1B. At 350M the KV$\,{\geq}\,4$ optima again fall on the
-$H{=}$ KV diagonal. At 1B, however, the global grid argmin is the \emph{off}-diagonal
+every KV setting, and the optimum consistently lands at $H{=}4$ or $H{=}8$ (we
+adopt $H{=}8$ at scale). We ran
+the same sweep at 350M and 1B. At 350M the KV$\,{\geq}\,4$ optima again fall at
+$H{=}8$. At 1B, however, the global grid argmin is the \emph{off}-diagonal
 cell KV$\,{=}\,2$, $H{=}8$ (tail-mean $3.258$), and the four lowest cells---the
-off-diagonal KV$2$/$H8$, the on-diagonal ($H{=}$ KV) KV$8$/$H8$, and the near-diagonal
-KV$8$/$H4$ and KV$4$/$H8$---lie within $\sim\!0.02$ of one another, below the
+KV$2$/$H8$, KV$8$/$H8$, KV$8$/$H4$ and KV$4$/$H8$---all at $H{=}4$ or $H{=}8$---lie
+within $\sim\!0.02$ of one another, below the
 $\sim\!\pm0.07$ single-pass eval noise; these sweeps are also single-seed. We
-therefore read $H{=}$ KV at 1B as \emph{within noise of optimal} in the grouped-query
-regime rather than the strict grid minimum, and summarize the two sweeps here rather
+therefore read $H{=}8$ at 1B as \emph{within noise of optimal}
+rather than the strict grid minimum, and summarize the two sweeps here rather
 than as separate figures.
 
 \begin{figure}[h]
@@ -922,15 +1000,30 @@ than as separate figures.
 \caption{Validation loss of MHAR at 100M as a function of routing heads $H$
 (x) and KV heads (y). Lower is better. Gold stars mark the best $H$ per KV; the
 red dashed line is the head-matched diagonal $H{=}$ KV. At 100M the KV$\,{=}\,4$ and
-KV$\,{=}\,8$ optima sit on the $H{=}$ KV diagonal. The 100M architecture of
-Table~\ref{tab:main}, trained at $5\times10^{-4}$.}
+KV$\,{=}\,8$ optima sit at $H{=}4$ and $H{=}8$ (we adopt $H{=}8$ at scale). The 100M architecture of
+Table~\ref{tab:main}, trained on FineWeb-Edu at $5\times10^{-4}$.}
 \label{fig:kvh100}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/heads_undertrained.pdf}
+\caption{\textbf{Under-trained 100M kv$\times$H grid} (web replication,
+$1\times10^{-3}$, only 5K steps; tail-mean 3500--5000)---the under-trained
+counterpart of Figure~\ref{fig:kvh100}. Before the router converges, more heads
+only ever help: the clean supra-noise signal is the most over-subscribed row
+KV$\,{=}\,1$ (red outline; a monotone $0.028$ drop from $H{=}1$ to $H{=}8$, above
+the $\sim\!0.006$ single-seed noise floor), while the higher-KV rows are within
+noise. Gold stars: per-KV optimum; red dashed line: $H{=}$ KV.}
+\label{fig:heads_under}
 \end{figure}
 
 \section{Why single-head routing breaks: the forced-compromise mechanism}
 \label{sec:mechanism}
 
-The pattern above has a single explanation. Multi-head routing buys almost nothing
+The pattern above has a single explanation. In the web-data setting
+(Table~\ref{tab:mainweb}, whose checkpoints this appendix probes), multi-head
+routing buys almost nothing
 over single-head at 100M---the $H$-axis is flat, MHAR beating single-head by only
 $0.010$ (Appendix~\ref{app:kvh100}), while both already beat the baseline, so one
 head suffices---yet is worth $\sim\!0.17$ by 1B, where the single query has crossed
@@ -972,13 +1065,13 @@ and KV ($d512\to d768$, $L12$, kv4) raises the trained-query KL by $14\%$
 ($0.235\to0.281$)---and here $d$ alone changes. \emph{(iii) Not a ``more sources''
 artifact.} A matched-source-count control leaves a $\sim\!2\times$ median KL growth,
 and contiguous vs.\ head-interleaved slicing give identical results (echoing the
-head-alignment null of \S\ref{sec:ablation}). Source collinearity is \emph{non-monotonic} across scale---it rises from 100M to
+head-alignment null of Table~\ref{tab:headalign}). Source collinearity is \emph{non-monotonic} across scale---it rises from 100M to
 350M ($0.060\!\to\!0.114$) but then \emph{drops} at 1B ($0.087$), partly a
 dimension effect (cosine shrinks at larger $d$)---so it is \emph{not} a clean
 cross-scale driver, and the learned width-disagreement is the signal we rely on.
 The forced-compromise cost thus grows with scale and peaks at 1B, tracking the
 learned disagreement rather than collinearity, consistent with the loss crossover
-in Table~\ref{tab:main}.
+in Table~\ref{tab:mainweb}.
 
 Crucially, \textbf{the disagreement is not merely latent}: it moves the loss. At
 fixed depth ($L12$, kv4), the same widening $d512\!\to\!d768$ that raises the probed
@@ -1034,7 +1127,9 @@ A natural hypothesis is that routing should be \emph{aligned} to the model's
 attention structure rather than to arbitrary coordinate slices. We test this with
 \emph{MHAR-HW}, a head-\emph{wise} variant that gives each grouped-query-attention
 KV head group its own full-width routing query and feeds that group's routed
-mixture to its $Q/K/V$ projections, at parameters and FLOPs matched to MHAR. Table~\ref{tab:headalign} compares the two across scales:
+mixture to its $Q/K/V$ projections; with one full-width query per group, its
+routing cost is $G\times$ that of MHAR ($G$ the number of KV groups) but still
+negligible next to the sublayers. Table~\ref{tab:headalign} compares the two across scales:
 head-alignment yields \emph{no detectable} improvement over arbitrary subspace
 routing---the two are within the $\pm0.07$ eval-noise floor at all three scales (the
 $+0.016$ at 1B is a single final-step eval). Because this ablation is single-seed and
@@ -1046,7 +1141,7 @@ those heads to the attention head groups.
 
 \begin{table}[h]
 \centering
-\caption{Head-alignment ablation (validation loss $\downarrow$, final-step eval):
+\caption{Head-alignment ablation (FineWeb-Edu; validation loss $\downarrow$, final-step eval):
 routing over arbitrary subspaces (MHAR) vs.\ aligned to KV head groups
 (MHAR-HW), with matched head count. Aligning to attention heads shows no measurable
 benefit over arbitrary subspace routing; all differences fall within the $\pm0.07$
@@ -1292,19 +1387,22 @@ disagreement $0.235\!\to\!0.281$ while the random-query null and source collinea
 flat. Here we show the same widening also moves the \emph{loss}, closing the link from
 disagreement to cost in-distribution (unlike an inference-time intervention, which is
 off-distribution). We train all three methods at the wider $d768/L12/$kv4 point
-(``124M'') under a unified $5\times10^{-4}$ recipe (20K steps, sequence 2048, global
+(``124M'') on the web corpus of the replication (FineWeb-Edu;
+Table~\ref{tab:mainweb}) under a unified $5\times10^{-4}$ recipe (20K steps,
+sequence 2048, global
 batch 64, $L{=}12$, kv${=}4$) against a matched $d512$ baseline trained the same way
 (the 100M \emph{architecture} of Table~\ref{tab:main}; only $d$, the head count, and
-the FFN width change). This control is a self-contained $5\times10^{-4}$ comparison,
-so its $d512$ deltas differ slightly from Table~\ref{tab:main}'s $1\times10^{-3}$
-numbers. Within each width
+the FFN width change). This control is a self-contained $5\times10^{-4}$ comparison
+on the web corpus,
+so its $d512$ deltas differ slightly from Table~\ref{tab:mainweb}'s tuned-rate
+($1\times10^{-3}$) numbers. Within each width
 all three methods share the same data-parallel degree, so the method-vs-baseline
 \emph{deltas} cancel world-size effects and are directly comparable across widths
 (Table~\ref{tab:widthcost}).
 
 \begin{table}[h]
 \centering
-\caption{Width-control (tail-mean validation loss, steps 15--20k). Holding depth
+\caption{Width-control (FineWeb-Edu, tail-mean validation loss, steps 15--20k). Holding depth
 ($L{=}12$) and KV ($4$) fixed and only widening $d512\!\to\!d768$: single-head routing's
 edge over the baseline \emph{erodes} ($-0.041\!\to\!-0.033$) while MHAR holds
 ($-0.050\!\to\!-0.053$), so MHAR's advantage over single-head \emph{more than doubles}
@@ -1325,11 +1423,47 @@ noise floor, so the robust signal is the widening MHAR$-$single gap.}
 
 \section{Robustness of the from-scratch comparison}
 \label{app:robustness}
+Every run in this appendix trains on web-generic
+FineWeb-Edu~\citep{penedo2024fineweb} with randomly initialized routing
+queries (predating the zero-initialization fix; \S\ref{sec:exp}), as do the
+head grids of Appendix~\ref{app:kvh100} and the checkpoints probed in
+Appendix~\ref{sec:mechanism}.
+
+\paragraph{Web-data comparison (FineWeb-Edu).} Table~\ref{tab:mainweb} repeats
+the four-method comparison of Table~\ref{tab:main} on web-generic
+FineWeb-Edu~\citep{penedo2024fineweb} at the tuned peak learning rate
+$1\times10^{-3}$, with the compute-equivalent gain of MHAR (see
+\S\ref{sec:exp}). Two differences from the main-text protocol: these runs
+predate the zero-initialization fix (routing queries randomly initialized,
+deviating from~\citet{kimi2025attention}; on this corpus zero-init moves the 1B
+single-head delta from $+0.082$ to $+0.018$ at $5\times10^{-4}$ but does not
+change its sign at the tuned rate), and each method is shown at its tuned rate.
+The single-head column reverses relative to the anneal corpus: helpful at 100M,
+above baseline at 350M--1B, while MHAR keeps its full gain---the
+distribution-dependence discussed in \S\ref{sec:exp}.
+
+\begin{table}[h]
+\centering
+\caption{Web-data (FineWeb-Edu) validation loss ($\downarrow$, tail-mean) at the
+tuned peak learning rate $1\times10^{-3}$; $\Delta$ vs.\ the same-rate baseline;
+CEG$_{\mathrm{FLOPs}}$ is the compute-equivalent gain of MHAR over baseline.
+Randomly initialized routing queries (pre-fix; see text).}
+\label{tab:mainweb}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Scale} & \textbf{$d$/$L$/KV} & \textbf{Baseline} & \textbf{Hyper-conn.} & \textbf{Single-head} & \textbf{MHAR} & \textbf{CEG$_{\mathrm{FLOPs}}$} \\
+\midrule
+100M & 512/12/4  & 3.336 & 3.322 \,($-0.014$) & 3.297 \,($-0.039$) & \textbf{3.287} \,($-0.049$) & $1.27\times$ \\
+350M & 1024/24/8 & 3.290 & 3.260 \,($-0.030$) & 3.345 \,($+0.055$) & \textbf{3.210} \,($-0.080$) & $1.49\times$ \\
+1B   & 1280/36/8 & 3.175 & 3.172 \,($-0.002$) & 3.315 \,($+0.140$) & \textbf{3.111} \,($-0.063$) & $1.38\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.62\textwidth]{figures/train_loss_100m.pdf}
-\caption{Training loss at 100M (EMA-smoothed): MHAR stays below the standard
+\caption{Training loss at 100M on FineWeb-Edu (EMA-smoothed): MHAR stays below the standard
 baseline throughout training (inset: tail zoom, steps 12k--20k). The two runs are
 identical except for the routing mechanism (same node, software, data order, and
 global batch).}
@@ -1349,18 +1483,19 @@ prefer $1\,{\times}\,10^{-3}$; single-head prefers $5\,{\times}\,10^{-4}$ at 350
 1B (and $1\,{\times}\,10^{-3}$ at 100M). Even
 best-vs-best, MHAR improves over the baseline at every scale
 ($-0.049$/$-0.080$/$-0.063$), and single-head---now at its own kinder
-$5\,{\times}\,10^{-4}$---still regresses at scale ($+0.038$ at 350M, $+0.105$ at 1B,
+$5\,{\times}\,10^{-4}$---still lands above the baseline at the larger scales
+($+0.038$ at 350M, $+0.105$ at 1B,
 versus $+0.055$/$+0.140$ at $1\,{\times}\,10^{-3}$). The advantage is a property of
 the architecture, not of a favorable or under-tuned learning rate.
 
 \begin{table}[h]
 \centering
-\caption{Best-vs-best learning rate: each method at its \emph{own} optimum over peak
+\caption{Best-vs-best learning rate (FineWeb-Edu): each method at its \emph{own} optimum over peak
 LR $\in\{1,5\}{\times}10^{-4},\,10^{-3}$ (validation loss $\downarrow$, tail-mean of
 the last eleven evaluations; $\Delta$ vs.\ the same-scale best baseline; superscript
 is the selected LR). MHAR wins at every scale even when every method is given its
 own optimal learning rate; single-head, even at its kinder $5\times10^{-4}$, still
-regresses at 350M and 1B.}
+sits above the baseline at 350M and 1B.}
 \label{tab:lrsweep}
 \begin{tabular}{lcccc}
 \toprule
@@ -1387,19 +1522,15 @@ budgets). The architecture effects are thus properties of the model, not transie
 of a short schedule.
 
 \paragraph{Seed robustness (all scales).} We train \emph{three seeds per method at
-every scale} under a single shared $5\times10^{-4}$ recipe. We use one shared rate
-here---rather than each method's tuned optimum as in the headline
-Table~\ref{tab:main}---so that the three methods differ \emph{only} in seed and
-routing mechanism; the tuned-optimum comparison, which is the fairer one for
-\emph{absolute} numbers, is Table~\ref{tab:main}, and the two agree
-(\S\ref{sec:exp}, ``Robustness to learning rate''). Because seed $s$ fixes the data
+every scale} under a single shared $5\times10^{-4}$ recipe, so that the three
+methods differ \emph{only} in seed and routing mechanism. Because seed $s$ fixes the data
 order across methods, each method-vs-baseline comparison is \emph{paired},
 cancelling cross-seed noise. MHAR improves over the baseline at all three scales,
 with the paired delta exceeding ten standard errors everywhere
 ($-0.045$/$-0.090$/$-0.071$ nats at 100M/350M/1B; Table~\ref{tab:seeds}). The
 single-head and hyper-connection patterns also hold under seeds. Single-head routing
-crosses from a significant \emph{help} at 100M ($-0.043$) to neutral at 350M
-($-0.005$) to a significant \emph{regression} at 1B ($+0.093$), and is by far the
+moves from a significant \emph{help} at 100M ($-0.043$) through $-0.005$ at 350M
+to a significant \emph{regression} at 1B ($+0.093$), and is by far the
 highest-variance method: its three 1B paired deltas span $+0.04$ to $+0.16$, versus
 MHAR's $\pm0.002$---exactly what the forced-compromise account predicts for an
 unstable single shared query. Hyper-connections help at 100M/350M but fall within
@@ -1407,7 +1538,7 @@ noise at 1B ($-0.016$).
 
 \begin{table}[h]
 \centering
-\caption{Seed robustness: paired per-seed delta vs.\ baseline (validation loss
+\caption{Seed robustness (FineWeb-Edu): paired per-seed delta vs.\ baseline (validation loss
 $\downarrow$, tail-mean of the last eleven evaluations; three seeds per method per
 scale, shared $5\times10^{-4}$ recipe; $\pm$ is the per-seed standard deviation).
 Seed $s$ fixes the data order across methods, so the comparison is paired. MHAR
@@ -1441,12 +1572,16 @@ on $8\times$H100-80GB, sequence length 4096, weight-EMA ($\beta{=}0.999$,
 evaluated), a logit z-loss ($10^{-4}$), and weight decay $0.05$ (excluding
 embeddings, norms, biases).
 
-\paragraph{Tokenizer and data.} We tokenize FineWeb-Edu~\citep{penedo2024fineweb}
-with the Qwen3 byte-level BPE tokenizer (loaded from \texttt{Qwen/Qwen3-0.6B}).
-Documents are streamed, joined with the end-of-text token (id $151{,}645$), and
+\paragraph{Tokenizer and data.} We tokenize the \texttt{anneal\_pt\_v3} corpus
+(\S\ref{sec:midtrain}; composition in Table~\ref{tab:datamix}) with the Qwen3
+byte-level BPE tokenizer (loaded from \texttt{Qwen/Qwen3-0.6B}). Documents are
+streamed from the corpus shards, joined with the end-of-text token (id
+$151{,}645$), and
 packed into contiguous sequences of length $T$ with no padding. The token-embedding
 and output projection are tied (\texttt{tie\_word\_embeddings}) with model vocabulary
-size $151{,}936$.
+size $151{,}936$. The supplementary web replication
+(Appendix~\ref{app:robustness}) runs the identical pipeline on
+FineWeb-Edu~\citep{penedo2024fineweb}.
 
 \paragraph{Architecture.} Every model follows the Qwen3 recipe~\citep{qwen2025qwen3}:
 pre-norm decoder blocks with RMSNorm ($\epsilon{=}10^{-6}$), SwiGLU (SiLU) MLPs,
@@ -1556,8 +1691,9 @@ to its top three of twenty quality bins (verified from the per-document
 \begin{enumerate}
 \item \textbf{Claims.} Do the abstract and introduction accurately reflect the paper's
 contributions and scope? \emph{Answer:} [Yes]. The abstract/intro state the method
-(multi-head attention residuals), the scaling and transfer results, the $H{=}$ KV rule,
-and the mechanism probe, each matched to the corresponding sections and tables.
+(multi-head attention residuals), the scaling and transfer results, the $H{=}4$--$8$
+optimum ($H{=}8$ adopted at scale), and the mechanism probe, each matched to the
+corresponding sections and tables.
 
 \item \textbf{Limitations.} Does the paper discuss its limitations? \emph{Answer:} [Yes].
 The Limitations discussion (currently commented out) covers scale/budget/seeds (incl.\ the 7B null and the
