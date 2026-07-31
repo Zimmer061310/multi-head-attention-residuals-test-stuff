@@ -1,0 +1,318 @@
+\begin{thebibliography}{47}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ainslie et~al.(2023)Ainslie, Lee-Thorp, de~Jong, Zemlyanskiy,
+  Lebr{\'o}n, and Sanghai]{ainslie2023gqa}
+Joshua Ainslie, James Lee-Thorp, Michiel de~Jong, Yury Zemlyanskiy, Federico
+  Lebr{\'o}n, and Sumit Sanghai.
+\newblock {GQA}: Training generalized multi-query transformer models from
+  multi-head checkpoints.
+\newblock In \emph{EMNLP}, 2023.
+
+\bibitem[Austin et~al.(2021)Austin, Odena, Nye, Bosma, Michalewski, Dohan,
+  Jiang, Cai, Terry, Le, and Sutton]{austin2021mbpp}
+Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski,
+  David Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, and Charles
+  Sutton.
+\newblock Program synthesis with large language models.
+\newblock \emph{arXiv preprint arXiv:2108.07732}, 2021.
+
+\bibitem[Bachlechner et~al.(2021)Bachlechner, Majumder, Mao, Cottrell, and
+  McAuley]{bachlechner2020rezero}
+Thomas Bachlechner, Bodhisattwa~Prasad Majumder, Huanru~Henry Mao, Garrison~W
+  Cottrell, and Julian McAuley.
+\newblock Rezero is all you need: Fast convergence at large depth.
+\newblock \emph{UAI}, 2021.
+
+\bibitem[Chen et~al.(2021)Chen, Tworek, Jun, Yuan, Pinto, Kaplan,
+  et~al.]{chen2021codex}
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de~Oliveira
+  Pinto, Jared Kaplan, et~al.
+\newblock Evaluating large language models trained on code.
+\newblock \emph{arXiv preprint arXiv:2107.03374}, 2021.
+
+\bibitem[Cobbe et~al.(2021)Cobbe, Kosaraju, Bavarian, Chen, Jun, Kaiser,
+  Plappert, Tworek, Hilton, Nakano, Hesse, and Schulman]{cobbe2021gsm8k}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz
+  Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano,
+  Christopher Hesse, and John Schulman.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv preprint arXiv:2110.14168}, 2021.
+
+\bibitem[Dao et~al.(2022)Dao, Fu, Ermon, Rudra, and
+  R{\'e}]{dao2022flashattention}
+Tri Dao, Daniel~Y. Fu, Stefano Ermon, Atri Rudra, and Christopher R{\'e}.
+\newblock Flash{A}ttention: Fast and memory-efficient exact attention with
+  {IO}-awareness.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[Davidson et~al.(2023)Davidson, Denain, Villalobos, and
+  Bas]{davidson2023ceg}
+Tom Davidson, Jean-Stan Denain, Pablo Villalobos, and Guillem Bas.
+\newblock {AI} capabilities can be significantly improved without expensive
+  retraining.
+\newblock \emph{arXiv preprint arXiv:2312.07413}, 2023.
+
+\bibitem[DeepSeek(2025)]{deepseek2025mhc}
+DeepSeek.
+\newblock Manifold-constrained hyper-connections.
+\newblock \emph{arXiv preprint arXiv:2512.24880}, 2025.
+
+\bibitem[Elhage et~al.(2021)Elhage, Nanda, Olsson,
+  et~al.]{elhage2021mathematical}
+Nelson Elhage, Neel Nanda, Catherine Olsson, et~al.
+\newblock A mathematical framework for transformer circuits.
+\newblock \emph{Transformer Circuits Thread}, 2021.
+
+\bibitem[Fedus et~al.(2022)Fedus, Zoph, and Shazeer]{fedus2022switch}
+William Fedus, Barret Zoph, and Noam Shazeer.
+\newblock Switch transformers: Scaling to trillion parameter models with simple
+  and efficient sparsity.
+\newblock \emph{JMLR}, 2022.
+
+\bibitem[Gao et~al.(2024)Gao, Tow, Abbasi, Biderman, Black, DiPofi, Foster,
+  Golding, Hsu, Le~Noac'h, Li, McDonell, Muennighoff, Ociepa, Phang, Reynolds,
+  Schoelkopf, Skowron, Sutawika, Tang, Thite, Wang, Wang, and
+  Zou]{eval-harness}
+Leo Gao, Jonathan Tow, Baber Abbasi, Stella Biderman, Sid Black, Anthony
+  DiPofi, Charles Foster, Laurence Golding, Jeffrey Hsu, Alain Le~Noac'h,
+  Haonan Li, Kyle McDonell, Niklas Muennighoff, Chris Ociepa, Jason Phang,
+  Laria Reynolds, Hailey Schoelkopf, Aviya Skowron, Lintang Sutawika, Eric
+  Tang, Anish Thite, Ben Wang, Kevin Wang, and Andy Zou.
+\newblock A framework for few-shot language model evaluation, 2024.
+\newblock URL \url{https://zenodo.org/records/10256836}.
+
+\bibitem[He et~al.(2016)He, Zhang, Ren, and Sun]{he2016deep}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{CVPR}, 2016.
+
+\bibitem[He et~al.(2021)He, Ravula, Kanber, and Ainslie]{he2021realformer}
+Ruining He, Anirudh Ravula, Karol Kanber, and Joshua Ainslie.
+\newblock Realformer: Transformer likes residual attention.
+\newblock \emph{ACL Findings}, 2021.
+
+\bibitem[Hendrycks et~al.(2021{\natexlab{a}})Hendrycks, Burns, Basart, Zou,
+  Mazeika, Song, and Steinhardt]{hendrycks2021mmlu}
+Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn
+  Song, and Jacob Steinhardt.
+\newblock Measuring massive multitask language understanding.
+\newblock \emph{ICLR}, 2021{\natexlab{a}}.
+
+\bibitem[Hendrycks et~al.(2021{\natexlab{b}})Hendrycks, Burns, Kadavath, Arora,
+  Basart, Tang, Song, and Steinhardt]{hendrycks2021mathdataset}
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric
+  Tang, Dawn Song, and Jacob Steinhardt.
+\newblock Measuring mathematical problem solving with the {MATH} dataset.
+\newblock In \emph{NeurIPS Datasets and Benchmarks Track}, 2021{\natexlab{b}}.
+
+\bibitem[Huang et~al.(2017)Huang, Liu, Van Der~Maaten, and
+  Weinberger]{huang2017densely}
+Gao Huang, Zhuang Liu, Laurens Van Der~Maaten, and Kilian~Q Weinberger.
+\newblock Densely connected convolutional networks.
+\newblock In \emph{CVPR}, 2017.
+
+\bibitem[{Hugging Face}(2025{\natexlab{a}})]{hf2025finepdfs}
+{Hugging Face}.
+\newblock Finepdfs.
+\newblock \url{https://huggingface.co/datasets/HuggingFaceFW/finepdfs},
+  2025{\natexlab{a}}.
+
+\bibitem[{Hugging Face}(2025{\natexlab{b}})]{hf2025stackedu}
+{Hugging Face}.
+\newblock Stack-edu.
+\newblock \url{https://huggingface.co/datasets/HuggingFaceTB/stack-edu},
+  2025{\natexlab{b}}.
+
+\bibitem[Kimi(2025)]{kimi2025attention}
+Kimi.
+\newblock Attention residuals.
+\newblock \emph{arXiv preprint arXiv:2603.15031}, 2025.
+
+\bibitem[Lewkowycz et~al.(2022)Lewkowycz, Andreassen, Dohan, Dyer, Michalewski,
+  Ramasesh, Slone, Anil, Schlag, Gutman-Solo, et~al.]{lewkowycz2022minerva}
+Aitor Lewkowycz, Anders Andreassen, David Dohan, Ethan Dyer, Henryk
+  Michalewski, Vinay Ramasesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo
+  Gutman-Solo, et~al.
+\newblock Solving quantitative reasoning problems with language models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2019adamw}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock \emph{ICLR}, 2019.
+
+\bibitem[Luo et~al.(2026)Luo, Cai, and Hu]{luo2026delta}
+Cheng Luo, Zefan Cai, and Junjie Hu.
+\newblock Delta attention residuals.
+\newblock \emph{arXiv preprint arXiv:2605.18855}, 2026.
+
+\bibitem[{Marin Community}(2025)]{marin2025}
+{Marin Community}.
+\newblock {Marin}: An open lab for building foundation models.
+\newblock \url{https://huggingface.co/marin-community/marin-8b-base}, 2025.
+
+\bibitem[{Microsoft AI}(2026)]{mai2026thinking}
+{Microsoft AI}.
+\newblock {MAI-Thinking-1}: Building a hill-climbing machine.
+\newblock Technical report, Microsoft, 2026.
+\newblock URL \url{https://microsoft.ai/pdf/mai-thinking-1.pdf}.
+
+\bibitem[{NVIDIA}(2025{\natexlab{a}})]{nvidia2025nemotronccmath}
+{NVIDIA}.
+\newblock Nemotron-cc-math-v1.
+\newblock \url{https://huggingface.co/datasets/nvidia/Nemotron-CC-Math-v1},
+  2025{\natexlab{a}}.
+
+\bibitem[{NVIDIA}(2025{\natexlab{b}})]{nvidia2025nemotronccv2}
+{NVIDIA}.
+\newblock Nemotron-cc-v2.
+\newblock \url{https://huggingface.co/datasets/nvidia/Nemotron-CC-v2},
+  2025{\natexlab{b}}.
+
+\bibitem[{NVIDIA}(2025{\natexlab{c}})]{nvidia2025nemotronsft}
+{NVIDIA}.
+\newblock Nemotron-pretraining-sft-v1.
+\newblock
+  \url{https://huggingface.co/datasets/nvidia/Nemotron-Pretraining-SFT-v1},
+  2025{\natexlab{c}}.
+
+\bibitem[Pagliardini et~al.(2024)Pagliardini, Ablin, and
+  Jaggi]{pagliardini2024denseformer}
+Matteo Pagliardini, Pierre Ablin, and Martin Jaggi.
+\newblock Denseformer: Enhancing information flow in transformers via depth
+  weighted average.
+\newblock \emph{arXiv preprint arXiv:2402.02622}, 2024.
+
+\bibitem[Paperno et~al.(2016)Paperno, Kruszewski, Dutta, Bernardi, Boleda,
+  Fern{\'a}ndez, and Baroni]{paperno2016lambada}
+Denis Paperno, Germ{\'a}n Kruszewski, Angeliki Dutta, Raffaella Bernardi, Gemma
+  Boleda, Raquel Fern{\'a}ndez, and Marco Baroni.
+\newblock The {LAMBADA} dataset: Word prediction requiring a broad discourse
+  context.
+\newblock In \emph{ACL}, 2016.
+
+\bibitem[Penedo et~al.(2024)Penedo, Kydl{\'\i}{\v{c}}ek,
+  et~al.]{penedo2024fineweb}
+Guilherme Penedo, Hynek Kydl{\'\i}{\v{c}}ek, et~al.
+\newblock The fineweb datasets: Decanting the web for the finest text data at
+  scale.
+\newblock \emph{arXiv preprint arXiv:2406.17557}, 2024.
+
+\bibitem[Qiu et~al.(2025)Qiu, Wang, Zheng, Huang, Wen, Yang, Men, Yu, Huang,
+  Liu, Zhou, and Lin]{qiu2025gated}
+Zihan Qiu, Zekun Wang, Bo~Zheng, Zeyu Huang, Kaiyue Wen, Songlin Yang, Rui Men,
+  Le~Yu, Fei Huang, Dayiheng Liu, Jingren Zhou, and Junyang Lin.
+\newblock Gated attention for large language models: Non-linearity, sparsity,
+  and attention-sink-free.
+\newblock \emph{arXiv preprint arXiv:2505.06708}, 2025.
+
+\bibitem[Qwen(2025)]{qwen2025qwen3}
+Qwen.
+\newblock Qwen3 technical report.
+\newblock \emph{arXiv preprint arXiv:2505.09388}, 2025.
+
+\bibitem[Raposo et~al.(2024)Raposo, Ritter, Richards, Lillicrap, Humphreys, and
+  Santoro]{raposo2024mixture}
+David Raposo, Sam Ritter, Blake Richards, Timothy Lillicrap, Peter~Conway
+  Humphreys, and Adam Santoro.
+\newblock Mixture-of-depths: Dynamically allocating compute in
+  transformer-based language models.
+\newblock \emph{arXiv preprint arXiv:2404.02258}, 2024.
+
+\bibitem[Razzhigaev et~al.(2024)Razzhigaev, Mikhalchuk, Goncharova, Gerasimov,
+  Oseledets, Kuznetsov, and Korotin]{razzhigaev2024linear}
+Anton Razzhigaev, Matvey Mikhalchuk, Elizaveta Goncharova, Ivan Gerasimov, Ivan
+  Oseledets, Denis Kuznetsov, and Alexander Korotin.
+\newblock Your transformer is secretly linear.
+\newblock In \emph{ACL}, 2024.
+
+\bibitem[Rein et~al.(2024)Rein, Hou, Stickland, Petty, Pang, Dirani, Michael,
+  and Bowman]{rein2024gpqa}
+David Rein, Betty~Li Hou, Asa~Cooper Stickland, Jackson Petty, Richard~Yuanzhe
+  Pang, Julien Dirani, Julian Michael, and Samuel~R. Bowman.
+\newblock {GPQA}: A graduate-level google-proof {Q}\&{A} benchmark.
+\newblock In \emph{Conference on Language Modeling (COLM)}, 2024.
+
+\bibitem[Shazeer et~al.(2017)Shazeer, Mirhoseini, Maarten, Le, Dean, and
+  Hinton]{shazeer2017moe}
+Noam Shazeer, Azalia Mirhoseini, Krzysztof Maarten, Quoc~V Le, Jeff Dean, and
+  Geoffrey~E Hinton.
+\newblock Outrageously large neural networks: The sparsely-gated
+  mixture-of-experts layer.
+\newblock \emph{ICLR}, 2017.
+
+\bibitem[Srivastava et~al.(2015)Srivastava, Greff, and
+  Schmidhuber]{srivastava2015highway}
+Rupesh~K Srivastava, Klaus Greff, and J{\"u}rgen Schmidhuber.
+\newblock Training very deep networks.
+\newblock \emph{NeurIPS}, 2015.
+
+\bibitem[Su et~al.(2024)Su, Kong, Lin, Jennings, Norick, Kliegl, Patwary,
+  Shoeybi, and Catanzaro]{su2024nemotroncc}
+Dan Su, Kezhi Kong, Ying Lin, Joseph Jennings, Brandon Norick, Markus Kliegl,
+  Mostofa Patwary, Mohammad Shoeybi, and Bryan Catanzaro.
+\newblock {Nemotron-CC}: Transforming {Common Crawl} into a refined
+  long-horizon pretraining dataset.
+\newblock \emph{arXiv preprint arXiv:2412.02595}, 2024.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{NeurIPS}, 2017.
+
+\bibitem[Veit et~al.(2016)Veit, Wilber, and Belongie]{veit2016residual}
+Andreas Veit, Michael~J Wilber, and Serge Belongie.
+\newblock Residual networks behave like ensembles of relatively shallow
+  networks.
+\newblock \emph{NeurIPS}, 2016.
+
+\bibitem[Wang et~al.(2022)Wang, Ma, Dong, Huang, Zhang, and
+  Wei]{wang2022deepnet}
+Hongyu Wang, Shuming Ma, Li~Dong, Shaohan Huang, Dongdong Zhang, and Furu Wei.
+\newblock Deepnet: Scaling transformers to 1,000 layers.
+\newblock \emph{arXiv preprint arXiv:2203.00555}, 2022.
+
+\bibitem[Xiao et~al.(2025)Xiao, Meng, Li, and Yuan]{wang2024muddformer}
+Da~Xiao, Qingye Meng, Shengping Li, and Xingyuan Yuan.
+\newblock Muddformer: Breaking residual bottlenecks in transformers via
+  multiway dynamic dense connections.
+\newblock \emph{ICML}, 2025.
+
+\bibitem[Xiong et~al.(2020)Xiong, Yang, He, Zheng, Zheng, Xing, Zhang, Lan,
+  Wang, and Liu]{xiong2020prenorm}
+Ruibin Xiong, Yunchang Yang, Di~He, Kai Zheng, Shuxin Zheng, Chen Xing,
+  Huishuai Zhang, Yanyan Lan, Liwei Wang, and Tie-Yan Liu.
+\newblock On layer normalization in the transformer architecture.
+\newblock \emph{ICML}, 2020.
+
+\bibitem[Zellers et~al.(2019)Zellers, Holtzman, Bisk, Farhadi, and
+  Choi]{zellers2019hellaswag}
+Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi.
+\newblock Hellaswag: Can a machine really finish your sentence?
+\newblock In \emph{ACL}, 2019.
+
+\bibitem[Zhang et~al.(2026{\natexlab{a}})Zhang, Liu, Wang, and
+  Gu]{zhang2026ddl}
+Yifan Zhang, Yifeng Liu, Mengdi Wang, and Quanquan Gu.
+\newblock Deep delta learning.
+\newblock \emph{arXiv preprint arXiv:2601.00417}, 2026{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2026{\natexlab{b}})Zhang, Liu, Wang, and
+  Gu]{zhang2026duality}
+Yifan Zhang, Yifeng Liu, Mengdi Wang, and Quanquan Gu.
+\newblock Residual stream duality in modern transformer architectures.
+\newblock \emph{arXiv preprint arXiv:2603.16039}, 2026{\natexlab{b}}.
+
+\bibitem[Zhu et~al.(2024)]{zhu2024hyperconnections}
+Defa Zhu et~al.
+\newblock Hyper-connections.
+\newblock \emph{arXiv preprint arXiv:2409.19606}, 2024.
+
+\end{thebibliography}
