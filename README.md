@@ -1,8 +1,8 @@
 # Multi-Head Attention Residuals (MHAR)
 
-Paper (arXiv version) and reference implementation for **Multi-Head Attention Residuals**.
+Paper and reference implementation for **Multi-Head Attention Residuals**.
 
-[📄 Paper (PDF)](paper/mhar_arxiv_v1.pdf) · [📝 Blog post](https://wdlctc.github.io/multi-head-attention-residuals.html)
+[📄 arXiv:2607.27230](https://arxiv.org/abs/2607.27230) · [📝 Blog post](https://wdlctc.github.io/multi-head-attention-residuals.html) · [PDF](paper/mhar_arxiv_v1.pdf)
 
 Cheng Luo, Zefan Cai, Junjie Hu
 
@@ -91,6 +91,7 @@ pass `--wandb_entity`). Data defaults to `HuggingFaceFW/fineweb-edu`; pass
 @article{luo2026mhar,
   title={Multi-Head Attention Residuals},
   author={Cheng Luo and Zefan Cai and Junjie Hu},
+  journal={arXiv preprint arXiv:2607.27230},
   year={2026}
 }
 ```
