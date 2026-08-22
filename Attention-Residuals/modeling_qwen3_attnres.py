@@ -19,6 +19,8 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
+from mhar_partition import arbitrary_group_mhar_eager
+
 # Re-use Qwen3 components directly from the installed transformers package.
 # We only override DecoderLayer and Model; everything else is unchanged.
 from transformers.models.qwen3.configuration_qwen3 import Qwen3Config
@@ -442,6 +444,7 @@ def mh_block_attn_res(
     proj: nn.Linear,              # learned pseudo-query weight  (d,) viewed as (H, d/H)
     norm: Qwen3RMSNorm,           # RMSNorm applied to keys before scoring
     num_heads: int,
+    partition=None,               # optional pairs over 2H half-head blocks
 ) -> torch.Tensor:
     """
     Multi-head block_attn_res: the hidden dim is split into num_heads
@@ -449,6 +452,11 @@ def mh_block_attn_res(
     over depth sources — different subspaces can route to different layers.
     Same parameter count as block_attn_res (the (D,) query is reshaped).
     """
+    if partition is not None:
+        V = torch.stack(blocks + [partial_block], dim=0)
+        return arbitrary_group_mhar_eager(
+            V, proj.weight.view(-1), norm, partition, num_heads)
+
     if _mhar_fused is not None:
         mctx = _mhar_fused.current_context()
         if mctx is not None:
@@ -1836,4 +1844,3 @@ class Qwen3AttnResForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
             logits=logits,
             past_key_values=outputs.past_key_values,
         )
-
