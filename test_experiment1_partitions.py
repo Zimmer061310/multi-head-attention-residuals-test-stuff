@@ -127,5 +127,58 @@ class ArbitraryRoutingKernelTest(unittest.TestCase):
             torch.testing.assert_close(got.grad, expected.grad, rtol=1e-5, atol=1e-6)
 
 
+class ModelIntegrationTest(unittest.TestCase):
+    @unittest.skipUnless(
+        os.environ.get("MHAR_RUN_MODEL_INTEGRATION") == "1",
+        "set MHAR_RUN_MODEL_INTEGRATION=1 in the pinned Transformers runtime",
+    )
+    def test_reference_partition_matches_complete_model(self):
+        from modeling_qwen3_attnres import Qwen3AttnResConfig, Qwen3AttnResForCausalLM
+
+        torch.manual_seed(11)
+        config = Qwen3AttnResConfig(
+            vocab_size=128,
+            hidden_size=64,
+            num_hidden_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            intermediate_size=128,
+            max_position_embeddings=32,
+            head_dim=16,
+            attnres_mode="full_mh",
+            attnres_num_heads=4,
+            rms_norm_eps=1e-6,
+            tie_word_embeddings=True,
+        )
+        model = Qwen3AttnResForCausalLM(config).eval()
+        with torch.no_grad():
+            for name, parameter in model.named_parameters():
+                if "res_proj.weight" in name:
+                    parameter.normal_(0, 0.2)
+
+        input_ids = torch.randint(0, config.vocab_size, (2, 11))
+        with torch.no_grad():
+            ordinary = model(input_ids=input_ids, use_cache=False).logits
+            canonical = model.set_mhar_partition(REFERENCE_PARTITION_H4)
+            arbitrary = model(input_ids=input_ids, use_cache=False).logits
+
+        self.assertEqual(canonical, REFERENCE_PARTITION_H4)
+        self.assertEqual(model.mhar_partition, REFERENCE_PARTITION_H4)
+        self.assertTrue(all(
+            layer._mhar_partition == REFERENCE_PARTITION_H4
+            for layer in model.model.layers))
+        torch.testing.assert_close(arbitrary, ordinary, rtol=1e-5, atol=1e-6)
+
+        alternative_partition = ((0, 7), (1, 6), (2, 5), (3, 4))
+        model.set_mhar_partition(alternative_partition)
+        with torch.no_grad():
+            alternative = model(input_ids=input_ids, use_cache=False).logits
+        self.assertGreater((alternative - ordinary).abs().max().item(), 1e-7)
+
+        model.set_mhar_partition(None)
+        self.assertIsNone(model.mhar_partition)
+        self.assertTrue(all(layer._mhar_partition is None for layer in model.model.layers))
+
+
 if __name__ == "__main__":
     unittest.main()

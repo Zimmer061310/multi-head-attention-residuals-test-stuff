@@ -19,7 +19,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from mhar_partition import arbitrary_group_mhar_eager
+from mhar_partition import arbitrary_group_mhar_eager, canonicalize_partition
 
 # Re-use Qwen3 components directly from the installed transformers package.
 # We only override DecoderLayer and Model; everything else is unchanged.
@@ -36,11 +36,37 @@ from transformers.generation import GenerationMixin
 from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
 from transformers.modeling_layers import GradientCheckpointingLayer
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
-from transformers.utils import can_return_tuple, auto_docstring
-from transformers.utils.generic import merge_with_config_defaults
-from transformers.utils.output_capturing import capture_outputs
+from transformers.utils import can_return_tuple, auto_docstring as _hf_auto_docstring
+try:
+    # Compatibility with the internal Transformers snapshot used by the
+    # original repository.
+    from transformers.utils.generic import merge_with_config_defaults
+    from transformers.utils.output_capturing import capture_outputs
+except ImportError:
+    # Public Transformers 4.57/5.x consolidated both behaviors in this
+    # decorator.  Keep the second decorator as an identity wrapper so the
+    # model remains loadable in the pinned experiment runtime.
+    from transformers.utils.generic import check_model_inputs as merge_with_config_defaults
+
+    def capture_outputs(function):
+        return function
 from transformers.processing_utils import Unpack
 from transformers.utils import TransformersKwargs
+
+
+def auto_docstring(function):
+    """Use HF's generated docs when supported; otherwise preserve runtime code.
+
+    Transformers 4.57's documentation generator cannot inspect the PEP 604
+    union annotations used by this repository under Python 3.12.  Documentation
+    generation is non-semantic, so falling back to the original callable is
+    safe and keeps the public pinned runtime usable.
+    """
+
+    try:
+        return _hf_auto_docstring(function)
+    except AttributeError:
+        return function
 
 # Fused Triton kernels for full_mh routing (optional; enabled via
 # enable_fused_mhar() or ATTNRES_FUSED=1). Falls back to the eager path.
@@ -646,6 +672,9 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
         # AttnRes mode
         self.attnres_mode = getattr(config, "attnres_mode", "block")
         self.attnres_num_heads = getattr(config, "attnres_num_heads", 8)
+        # Runtime-only Experiment 1 intervention.  It is deliberately absent
+        # from the config and state dict so checkpoints remain unchanged.
+        self._mhar_partition = None
         if self.attnres_mode in ("full_mh", "full_hw", "block_mh") and config.hidden_size % self.attnres_num_heads != 0:
             raise ValueError(
                 f"hidden_size {config.hidden_size} not divisible by attnres_num_heads {self.attnres_num_heads}")
@@ -1472,7 +1501,8 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
             # and softmax over sources, so subspaces route independently.
             h_attn = mh_block_attn_res(blocks, partial_block,
                                        self.attn_res_proj, self.attn_res_norm,
-                                       self.attnres_num_heads)
+                                       self.attnres_num_heads,
+                                       partition=self._mhar_partition)
             h = self._apply_gate(partial_block, h_attn, "attn")
 
             attn_out, _ = self.self_attn(
@@ -1490,7 +1520,8 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
             # MLP sublayer
             h_attn = mh_block_attn_res(blocks, partial_block,
                                        self.mlp_res_proj, self.mlp_res_norm,
-                                       self.attnres_num_heads)
+                                       self.attnres_num_heads,
+                                       partition=self._mhar_partition)
             h = self._apply_gate(partial_block, h_attn, "mlp")
 
             mlp_out = self.mlp(self.post_attention_layernorm(h))
@@ -1595,6 +1626,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
         self.rotary_emb = Qwen3RotaryEmbedding(config=config)
         self.gradient_checkpointing = False
         self.has_sliding_layers = "sliding_attention" in self.config.layer_types
+        self._mhar_partition = None
 
         # Final block_attn_res: produces effective hidden state after all layers
         # by routing over all sources + last partial. Needed for any mode where
@@ -1608,6 +1640,39 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
             self.final_res_norm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         self.post_init()
+
+    @property
+    def mhar_partition(self):
+        """The runtime-only arbitrary grouping active at every full_mh site."""
+
+        return self._mhar_partition
+
+    def set_mhar_partition(self, partition):
+        """Apply one coordinate-attached partition to every full_mh routing site.
+
+        Passing ``None`` restores the checkpoint's ordinary contiguous routing.
+        The intervention is only defined for ``full_mh`` and pairs ``2H``
+        half-head primitive blocks into ``H`` shared-softmax groups.
+        """
+
+        if partition is None:
+            canonical = None
+        else:
+            if self._attnres_mode != "full_mh":
+                raise ValueError(
+                    "arbitrary MHAR partitions require config.attnres_mode='full_mh'")
+            num_heads = getattr(self.config, "attnres_num_heads", 8)
+            if self.config.hidden_size % (2 * num_heads):
+                raise ValueError(
+                    f"hidden_size {self.config.hidden_size} must be divisible by "
+                    f"2 * attnres_num_heads ({2 * num_heads})")
+            canonical = canonicalize_partition(
+                partition, num_primitive_blocks=2 * num_heads)
+
+        self._mhar_partition = canonical
+        for layer in self.layers:
+            layer._mhar_partition = canonical
+        return canonical
 
     @merge_with_config_defaults
     @capture_outputs
@@ -1644,7 +1709,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
         if not isinstance(causal_mask_mapping := attention_mask, dict):
             mask_kwargs = dict(
                 config=self.config,
-                inputs_embeds=inputs_embeds,
+                input_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 cache_position=cache_position,
                 past_key_values=past_key_values,
@@ -1696,6 +1761,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
         _mhar_ctx = None
         if (
             attnres_mode == "full_mh"
+            and self._mhar_partition is None
             and _mhar_fused is not None
             and _mhar_fused.fused_mhar_enabled()
             and inputs_embeds.is_cuda
@@ -1753,6 +1819,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
                     blocks, partial_block,
                     self.final_res_proj, self.final_res_norm,
                     getattr(self.config, "attnres_num_heads", 8),
+                    partition=(self._mhar_partition if attnres_mode == "full_mh" else None),
                 )
             elif self._needs_final_routing:
                 partial_block = block_attn_res(
@@ -1798,6 +1865,15 @@ class Qwen3AttnResForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         self.post_init()
+
+    @property
+    def mhar_partition(self):
+        return self.model.mhar_partition
+
+    def set_mhar_partition(self, partition):
+        """Delegate the runtime Experiment 1 intervention to the backbone."""
+
+        return self.model.set_mhar_partition(partition)
 
     @can_return_tuple
     @auto_docstring
