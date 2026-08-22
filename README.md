@@ -81,6 +81,69 @@ python test_mhar_fused.py
 python test_mhar_fused_delta.py
 ```
 
+## Experiment 1: exhaustive residual partitions
+
+The frozen H=4 compatibility experiment evaluates all 105 pairings of eight
+160-dimensional primitive blocks into four routing groups.  The same partition
+is applied at all 73 routing sites, and every candidate sees the same fixed
+tokens.  The full preregistration is in
+[`experiment 1 plan.md`](experiment%201%20plan.md).
+
+Install the pinned experiment runtime and run the CPU correctness suite:
+
+```bash
+python3 -m pip install -r requirements-experiment1.txt
+MHAR_RUN_MODEL_INTEGRATION=1 python3 -m unittest -v \
+  test_experiment1_partitions.py test_experiment1_runner.py
+```
+
+Materialize non-overlapping discovery and confirmation tensors from an explicit
+dataset revision or local parquet manifest:
+
+```bash
+python3 experiment1_partition_compatibility.py materialize \
+  --dataset HuggingFaceFW/fineweb-edu \
+  --dataset-revision <immutable-revision> \
+  --tokenizer Qwen/Qwen3-0.6B \
+  --tokenizer-revision <immutable-revision> \
+  --seq-len 1024 \
+  --discovery-sequences 512 \
+  --confirmation-sequences 512 \
+  --output output/experiment1/fixed_eval.pt
+```
+
+Evaluate all 105 partitions on discovery, rank them, evaluate only the selected
+reference/best/worst candidates on confirmation, then write the final report:
+
+```bash
+python3 experiment1_partition_compatibility.py evaluate \
+  --checkpoint <1b-h4-full_mh-checkpoint> \
+  --artifact output/experiment1/fixed_eval.pt \
+  --output-dir output/experiment1/run \
+  --split discovery --device cuda --dtype bf16 --batch-size 1
+
+python3 experiment1_partition_compatibility.py analyze \
+  --discovery-results output/experiment1/run/discovery_results.jsonl \
+  --output-dir output/experiment1/run/analysis
+
+python3 experiment1_partition_compatibility.py evaluate \
+  --checkpoint <1b-h4-full_mh-checkpoint> \
+  --artifact output/experiment1/fixed_eval.pt \
+  --output-dir output/experiment1/run \
+  --split confirmation \
+  --discovery-results output/experiment1/run/discovery_results.jsonl \
+  --device cuda --dtype bf16 --batch-size 1
+
+python3 experiment1_partition_compatibility.py analyze \
+  --discovery-results output/experiment1/run/discovery_results.jsonl \
+  --confirmation-results output/experiment1/run/confirmation_results.jsonl \
+  --output-dir output/experiment1/run/analysis
+```
+
+Results are appended and synced after every partition, so an interrupted run
+can resume in the same output directory.  The run manifest rejects changes to
+the checkpoint hash, fixed-data hash, software commit, dtype, or partition set.
+
 Requirements: PyTorch ≥ 2.4, `transformers`, `triton`, `datasets` (and `wandb` if you
 pass `--wandb_entity`). Data defaults to `HuggingFaceFW/fineweb-edu`; pass
 `--data_files 'path/*.parquet'` to train on local parquet shards.
