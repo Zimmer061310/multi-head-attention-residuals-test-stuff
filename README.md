@@ -201,6 +201,24 @@ MHAR_PYTHON_BIN=/root/autodl-tmp/mhar-venv/bin/python \
   ./run_experiment1_after_training.sh
 ```
 
+For staged checkpoint inspection, run the milestone controller from a separate
+screen session. It waits for an atomically completed checkpoint, interrupts the
+training screen, runs all 105 discovery partitions, selects and evaluates the
+reference/best/worst partitions on the untouched confirmation set, and then
+exits so the result can be reviewed before training resumes:
+
+```bash
+MHAR_PYTHON_BIN=/root/autodl-tmp/mhar-venv/bin/python \
+MHAR_REPO_DIR=/root/mhar-experiment \
+./run_experiment1_milestone.sh 2000
+```
+
+The preregistered milestones are 2,000, 5,000, 10,000, and 20,000 steps. Resume
+from the reviewed checkpoint with `run_experiment1_train_1b_h4.sh <checkpoint>`
+before starting the next milestone controller. Each milestone uses a distinct
+W&B group and output directory; the fixed discovery/confirmation artifact is
+shared unchanged across milestones.
+
 The queue materializes document-disjoint discovery and confirmation tensors
 from the reserved local FineWeb-Edu shard, records the source shard SHA-256,
 waits for the atomically published final checkpoint, runs a three-partition
