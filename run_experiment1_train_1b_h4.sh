@@ -6,6 +6,7 @@ MHAR_OUTPUT_DIR="${MHAR_OUTPUT_DIR:-/root/autodl-tmp/experiment1/checkpoint-1b-h
 MHAR_HF_HOME="${MHAR_HF_HOME:-/root/autodl-tmp/huggingface}"
 MHAR_WANDB_DIR="${MHAR_WANDB_DIR:-/root/autodl-tmp/wandb}"
 MHAR_HF_ENDPOINT="${MHAR_HF_ENDPOINT:-https://hf-mirror.com}"
+MHAR_DATA_FILES="${MHAR_DATA_FILES:-/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/*.parquet}"
 
 mkdir -p "$MHAR_OUTPUT_DIR" "$MHAR_HF_HOME" "$MHAR_WANDB_DIR"
 
@@ -46,8 +47,9 @@ exec "$MHAR_PYTHON_BIN" -m torch.distributed.run \
   --max_norm 1.0 \
   --seed 42 \
   --dataset HuggingFaceFW/fineweb-edu \
-  --dataset_name default \
+  --dataset_name sample-10BT \
   --dataset_revision 87f09149ef4734204d70ed1d046ddc9ca3f2b8f9 \
+  --data_files "$MHAR_DATA_FILES" \
   --tokenizer Qwen/Qwen3-0.6B \
   --tokenizer_revision c1899de289a04d12100db370d81485cdf75e47ca \
   --fused \

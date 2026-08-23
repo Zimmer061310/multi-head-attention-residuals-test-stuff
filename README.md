@@ -95,12 +95,16 @@ The checked-in launcher fixes the FineWeb-Edu substitution and every planned
 training-scale field: 1.0795B parameters, width 1280, 36 layers, 16 attention
 heads, 8 KV heads, FFN 5120, MHAR H=4, sequence length 1024, global batch 32,
 20,000 AdamW steps, peak/minimum LR `5e-4`/`5e-5`, 1,000 warmup steps, bf16,
-and seed 42. FineWeb-Edu and the Qwen3 tokenizer are pinned to immutable Hub
-commits in the script.
+and seed 42. FineWeb-Edu's official `sample-10BT` configuration and the Qwen3
+tokenizer are pinned to immutable Hub commits in the script. The server run
+uses two local parquet shards (about 1.4B tokens, versus 655.36M consumed) so
+training does not depend on a six-day network stream. Every matched shard's
+absolute path, byte size, and SHA-256 are frozen in the run identity.
 
 ```bash
 MHAR_PYTHON_BIN=/path/to/python \
 MHAR_OUTPUT_DIR=/fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu \
+MHAR_DATA_FILES='/fast-disk/fineweb-edu-sample-10BT/train/*.parquet' \
 ./run_experiment1_train_1b_h4.sh
 ```
 

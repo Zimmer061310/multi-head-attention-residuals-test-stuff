@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "Attention-Residuals"))
 
 from modeling_qwen3_attnres import Qwen3AttnResConfig, Qwen3AttnResForCausalLM
-from train_scratch import load_training_state, save_training_checkpoint
+from train_scratch import data_files_identity, load_training_state, save_training_checkpoint
 
 
 class FakeTokenizer:
@@ -85,6 +85,23 @@ class ResumeCheckpointTest(unittest.TestCase):
             self.assertTrue(state["optimizer"]["state"])
             self.assertEqual(
                 state["scheduler"]["last_epoch"], scheduler.state_dict()["last_epoch"])
+
+    def test_data_file_identity_is_content_addressed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "b.parquet").write_bytes(b"second")
+            (root / "a.parquet").write_bytes(b"first")
+            identity = data_files_identity(str(root / "*.parquet"))
+            self.assertEqual(
+                [Path(row["path"]).name for row in identity["files"]],
+                ["a.parquet", "b.parquet"],
+            )
+            self.assertEqual(identity["files"][0]["bytes"], 5)
+            self.assertEqual(
+                identity["files"][0]["sha256"],
+                "a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1"
+                "b84cd99541461a08e",
+            )
 
 
 if __name__ == "__main__":

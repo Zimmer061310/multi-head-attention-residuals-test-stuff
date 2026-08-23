@@ -13,6 +13,8 @@ Usage:
 """
 
 import argparse
+import glob
+import hashlib
 import json
 import math
 import os
@@ -152,7 +154,7 @@ def training_identity(args, world_size):
         "dataset": args.dataset,
         "dataset_name": args.dataset_name,
         "dataset_revision": args.dataset_revision,
-        "data_files": args.data_files,
+        "data_files": data_files_identity(args.data_files),
         "tokenizer": args.tokenizer,
         "tokenizer_revision": args.tokenizer_revision,
         "seq_len": args.seq_len,
@@ -176,6 +178,33 @@ def training_identity(args, world_size):
         "compile_model": args.compile_model,
         "fsdp": args.fsdp,
         "grad_ckpt": args.grad_ckpt,
+    }
+
+
+def sha256_file(path, chunk_size=8 * 1024 * 1024):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        while chunk := handle.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def data_files_identity(pattern):
+    if not pattern:
+        return None
+    matches = sorted(Path(value).resolve() for value in glob.glob(pattern))
+    if not matches:
+        raise FileNotFoundError(f"--data_files matched no files: {pattern}")
+    return {
+        "pattern": pattern,
+        "files": [
+            {
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": sha256_file(path),
+            }
+            for path in matches
+        ],
     }
 
 
