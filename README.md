@@ -120,11 +120,15 @@ python3 experiment1_partition_compatibility.py evaluate \
   --checkpoint <1b-h4-full_mh-checkpoint> \
   --artifact output/experiment1/fixed_eval.pt \
   --output-dir output/experiment1/run \
-  --split discovery --device cuda --dtype bf16 --batch-size 1
+  --split discovery --device cuda --dtype bf16 --batch-size 1 \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp1-1b-h4
 
 python3 experiment1_partition_compatibility.py analyze \
   --discovery-results output/experiment1/run/discovery_results.jsonl \
-  --output-dir output/experiment1/run/analysis
+  --output-dir output/experiment1/run/analysis \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp1-1b-h4
 
 python3 experiment1_partition_compatibility.py evaluate \
   --checkpoint <1b-h4-full_mh-checkpoint> \
@@ -132,21 +136,39 @@ python3 experiment1_partition_compatibility.py evaluate \
   --output-dir output/experiment1/run \
   --split confirmation \
   --discovery-results output/experiment1/run/discovery_results.jsonl \
-  --device cuda --dtype bf16 --batch-size 1
+  --device cuda --dtype bf16 --batch-size 1 \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp1-1b-h4
 
 python3 experiment1_partition_compatibility.py analyze \
   --discovery-results output/experiment1/run/discovery_results.jsonl \
   --confirmation-results output/experiment1/run/confirmation_results.jsonl \
-  --output-dir output/experiment1/run/analysis
+  --output-dir output/experiment1/run/final-analysis \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp1-1b-h4
 ```
 
 Results are appended and synced after every partition, so an interrupted run
 can resume in the same output directory.  The run manifest rejects changes to
 the checkpoint hash, fixed-data hash, software commit, dtype, or partition set.
+W&B receives separate smoke/discovery/confirmation/analysis jobs under one
+group, plus the fixed-token artifact, raw JSONL/manifests, ranked table, and
+final report artifact. The checkpoint itself is not uploaded; its SHA-256 is
+recorded.
 
-Requirements: PyTorch ≥ 2.4, `transformers`, `triton`, `datasets` (and `wandb` if you
-pass `--wandb_entity`). Data defaults to `HuggingFaceFW/fineweb-edu`; pass
-`--data_files 'path/*.parquet'` to train on local parquet shards.
+The analysis exports 300-dpi PNG and vector PDF versions of:
+
+- `fig_nll_vs_distance`: all partitions against mean coordinate distance, with
+  distance-bin medians and reference/best/worst markers;
+- `fig_nll_by_retention`: the complete loss distribution at 0%, 25%, 50%, and
+  100% original-pair retention;
+- `fig_partition_ranking`: the full discovery ranking from 1 through 105; and
+- `fig_confirmation`: selected discovery extrema on the untouched set, when
+  confirmation results are supplied.
+
+Requirements: PyTorch ≥ 2.4, `transformers`, `triton`, `datasets`, `matplotlib`,
+and `wandb`. Data defaults to `HuggingFaceFW/fineweb-edu`; pass
+`--data-files 'path/*.parquet'` to use local parquet shards.
 
 ## Citation
 

@@ -49,8 +49,19 @@ from mhar_partition import (  # noqa: E402
 
 
 ARTIFACT_FORMAT_VERSION = 1
-RESULT_FORMAT_VERSION = 1
+RESULT_FORMAT_VERSION = 2
 EXPECTED_DISCOVERY_PARTITIONS = 105
+DEFAULT_WANDB_PROJECT = "MHAR Stuff"
+OKABE_ITO = {
+    "orange": "#E69F00",
+    "sky_blue": "#56B4E9",
+    "bluish_green": "#009E73",
+    "yellow": "#F0E442",
+    "blue": "#0072B2",
+    "vermillion": "#D55E00",
+    "reddish_purple": "#CC79A7",
+    "gray": "#8A8A8A",
+}
 
 
 def utc_now() -> str:
@@ -114,6 +125,53 @@ def append_jsonl(path: Path, value: Any) -> None:
         handle.write(json.dumps(value, sort_keys=True) + "\n")
         handle.flush()
         os.fsync(handle.fileno())
+
+
+def wandb_init(
+    args: argparse.Namespace,
+    *,
+    config: dict[str, Any],
+    job_type: str,
+    default_name: str,
+    run_id: str | None = None,
+):
+    """Initialize optional W&B tracking without making it a test dependency."""
+
+    if args.wandb_mode == "disabled":
+        return None
+    try:
+        import wandb
+    except ImportError as exc:
+        raise RuntimeError(
+            "W&B tracking was requested; install the `wandb` package first") from exc
+
+    tags = ["experiment-1", "mhar", "h4", job_type]
+    if getattr(args, "smoke_limit", None) is not None:
+        tags.append("smoke")
+    return wandb.init(
+        project=args.wandb_project,
+        entity=args.wandb_entity,
+        id=run_id,
+        resume="allow" if run_id else None,
+        name=args.wandb_run_name or default_name,
+        group=args.wandb_group,
+        job_type=job_type,
+        tags=tags,
+        mode=args.wandb_mode,
+        config=config,
+        settings=wandb.Settings(x_disable_stats=args.wandb_mode == "offline"),
+    )
+
+
+def add_wandb_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--wandb-project", default=DEFAULT_WANDB_PROJECT)
+    parser.add_argument("--wandb-entity", default=None)
+    parser.add_argument("--wandb-run-name", default=None)
+    parser.add_argument("--wandb-group", default=None)
+    parser.add_argument(
+        "--wandb-mode", choices=("online", "offline", "disabled"), default="disabled",
+        help="enable W&B explicitly; tests and local utilities default to disabled",
+    )
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -356,12 +414,16 @@ def evaluate_input_ids(
     *,
     batch_size: int,
     device: torch.device,
-) -> tuple[float, int, float]:
-    """Return total NLL, valid-token count, and elapsed seconds."""
+) -> tuple[float, int, float, int | None, int | None]:
+    """Return loss totals, time, and CUDA peak allocated/reserved bytes."""
 
     model.set_mhar_partition(partition)
     total_nll = 0.0
     valid_tokens = 0
+    uses_cuda = device.type == "cuda" and torch.cuda.is_available()
+    if uses_cuda:
+        torch.cuda.synchronize(device)
+        torch.cuda.reset_peak_memory_stats(device)
     started = time.perf_counter()
     for offset in range(0, input_ids.shape[0], batch_size):
         batch = input_ids[offset : offset + batch_size].to(
@@ -372,7 +434,12 @@ def evaluate_input_ids(
         total_nll += F.cross_entropy(
             shift_logits, shift_labels, reduction="sum").item()
         valid_tokens += shift_labels.numel()
-    return total_nll, valid_tokens, time.perf_counter() - started
+    if uses_cuda:
+        torch.cuda.synchronize(device)
+    elapsed = time.perf_counter() - started
+    peak_allocated = torch.cuda.max_memory_allocated(device) if uses_cuda else None
+    peak_reserved = torch.cuda.max_memory_reserved(device) if uses_cuda else None
+    return total_nll, valid_tokens, elapsed, peak_allocated, peak_reserved
 
 
 @torch.inference_mode()
@@ -499,12 +566,12 @@ def evaluate_command(args: argparse.Namespace) -> None:
     }
 
     if run_manifest_path.exists():
-        existing_manifest = json.loads(run_manifest_path.read_text(encoding="utf-8"))
-        if existing_manifest["run_identity"] != run_identity:
+        manifest = json.loads(run_manifest_path.read_text(encoding="utf-8"))
+        if manifest["run_identity"] != run_identity:
             raise RuntimeError(
                 "existing run manifest does not match this invocation; use a new output directory")
     else:
-        atomic_write_json(run_manifest_path, {
+        manifest = {
             "created_at": utc_now(),
             "run_identity": run_identity,
             "architecture_validation": architecture_validation,
@@ -512,19 +579,104 @@ def evaluate_command(args: argparse.Namespace) -> None:
             "reference_parity": parity,
             "partition_ids": [partition_id(p) for p in partitions],
             "selection_roles": roles_by_id,
-        })
+        }
+        atomic_write_json(run_manifest_path, manifest)
+
+    args.wandb_group = args.wandb_group or f"mhar-exp1-{artifact_hash[:10]}"
+    tracked_before = "wandb" in manifest
+    run = wandb_init(
+        args,
+        config={
+            **run_identity,
+            "architecture": architecture_validation["observed"],
+            "fixed_data_metadata": payload.get("metadata", {}),
+            "fixed_data_shape": list(input_ids.shape),
+            "predicted_tokens_per_partition": int(
+                input_ids.shape[0] * (input_ids.shape[1] - 1)),
+            "reference_parity": parity,
+        },
+        job_type="smoke" if args.smoke_limit is not None else args.split,
+        default_name=(
+            f"exp1-smoke-{args.smoke_limit}-{artifact_hash[:8]}"
+            if args.smoke_limit is not None
+            else f"exp1-{args.split}-{artifact_hash[:8]}"
+        ),
+        run_id=manifest.get("wandb", {}).get("run_id"),
+    )
+    if run is not None:
+        manifest["wandb"] = {
+            "project": args.wandb_project,
+            "entity": args.wandb_entity,
+            "group": args.wandb_group,
+            "mode": args.wandb_mode,
+            "run_id": run.id,
+            "run_name": run.name,
+            "run_url": run.url,
+        }
+        atomic_write_json(run_manifest_path, manifest)
+        if not tracked_before:
+            import wandb
+
+            fixed_artifact = wandb.Artifact(
+                f"mhar-exp1-fixed-eval-{artifact_hash[:12]}",
+                type="dataset",
+                metadata={
+                    "sha256": artifact_hash,
+                    "discovery_shape": list(payload["discovery_input_ids"].shape),
+                    "confirmation_shape": list(payload["confirmation_input_ids"].shape),
+                },
+            )
+            fixed_artifact.add_file(str(artifact_path), name=artifact_path.name)
+            sidecar = artifact_path.with_suffix(artifact_path.suffix + ".manifest.json")
+            if sidecar.is_file():
+                fixed_artifact.add_file(str(sidecar), name=sidecar.name)
+            run.log_artifact(fixed_artifact, aliases=[artifact_hash[:12]])
 
     existing_rows = load_jsonl(results_path) if results_path.exists() else []
     completed = {row["partition_id"] for row in existing_rows}
     if len(completed) != len(existing_rows):
         raise RuntimeError("results file contains duplicate partition ids")
 
+    reference_id = partition_id(REFERENCE_PARTITION_H4)
+    reference_nll = next(
+        (row["nll"] for row in existing_rows if row["partition_id"] == reference_id), None)
+
+    def log_partition(row: dict[str, Any], index: int) -> None:
+        if run is None:
+            return
+        delta = None if reference_nll is None else row["nll"] - reference_nll
+        metrics = {
+            "partition/index": index,
+            "partition/nll": row["nll"],
+            "partition/ppl": row["ppl"],
+            "partition/original_pairs_retained": row["original_pairs_retained"],
+            "partition/retention": row["retention"],
+            "partition/mean_coordinate_distance": row["mean_coordinate_distance"],
+            "partition/total_coordinate_distance": row["total_coordinate_distance"],
+            "partition/elapsed_seconds": row["elapsed_seconds"],
+            "partition/tokens_per_second": row.get(
+                "tokens_per_second", row["valid_tokens"] / row["elapsed_seconds"]),
+        }
+        if delta is not None:
+            metrics["partition/delta_nll"] = delta
+        if row.get("peak_cuda_allocated_bytes") is not None:
+            metrics["partition/peak_cuda_allocated_gib"] = (
+                row["peak_cuda_allocated_bytes"] / 2**30)
+            metrics["partition/peak_cuda_reserved_gib"] = (
+                row["peak_cuda_reserved_bytes"] / 2**30)
+        run.log(metrics, step=index)
+
+    if run is not None and not tracked_before:
+        positions = {partition_id(value): index for index, value in enumerate(partitions, 1)}
+        for prior_row in existing_rows:
+            log_partition(prior_row, positions[prior_row["partition_id"]])
+
     for index, partition in enumerate(partitions, 1):
         identifier = partition_id(partition)
         if identifier in completed:
             print(f"[{index:3d}/{len(partitions)}] skip completed {identifier}", flush=True)
             continue
-        total_nll, valid_tokens, elapsed = evaluate_input_ids(
+        total_nll, valid_tokens, elapsed, peak_allocated, peak_reserved = evaluate_input_ids(
             model, input_ids, partition,
             batch_size=args.batch_size, device=device)
         nll = total_nll / valid_tokens
@@ -546,8 +698,14 @@ def evaluate_command(args: argparse.Namespace) -> None:
             "nll": nll,
             "ppl": math.exp(nll) if nll < 20 else float("inf"),
             "elapsed_seconds": elapsed,
+            "tokens_per_second": valid_tokens / elapsed,
+            "peak_cuda_allocated_bytes": peak_allocated,
+            "peak_cuda_reserved_bytes": peak_reserved,
         }
         append_jsonl(results_path, row)
+        if identifier == reference_id:
+            reference_nll = nll
+        log_partition(row, index)
         print(
             f"[{index:3d}/{len(partitions)}] {identifier} "
             f"NLL={nll:.8f} delta=pending elapsed={elapsed:.1f}s",
@@ -561,6 +719,45 @@ def evaluate_command(args: argparse.Namespace) -> None:
         missing = sorted(expected_ids - observed_ids)
         extra = sorted(observed_ids - expected_ids)
         raise RuntimeError(f"incomplete result set; missing={missing}, extra={extra}")
+    if run is not None:
+        import wandb
+
+        reference_nll = next(
+            (row["nll"] for row in rows if row["partition_id"] == reference_id), None)
+        columns = [
+            "partition_id", "roles", "nll", "delta_nll", "ppl",
+            "original_pairs_retained", "retention", "mean_coordinate_distance",
+            "total_coordinate_distance", "elapsed_seconds", "tokens_per_second",
+            "peak_cuda_allocated_gib", "peak_cuda_reserved_gib",
+        ]
+        table = wandb.Table(columns=columns)
+        for row in rows:
+            table.add_data(
+                row["partition_id"], ",".join(row.get("roles", [])), row["nll"],
+                None if reference_nll is None else row["nll"] - reference_nll,
+                row["ppl"], row["original_pairs_retained"], row["retention"],
+                row["mean_coordinate_distance"], row["total_coordinate_distance"],
+                row["elapsed_seconds"], row.get(
+                    "tokens_per_second", row["valid_tokens"] / row["elapsed_seconds"]),
+                None if row.get("peak_cuda_allocated_bytes") is None
+                else row["peak_cuda_allocated_bytes"] / 2**30,
+                None if row.get("peak_cuda_reserved_bytes") is None
+                else row["peak_cuda_reserved_bytes"] / 2**30,
+            )
+        run.log({f"{args.split}/partition_table": table})
+        run.summary["completed_partitions"] = len(rows)
+        run.summary["results_sha256"] = sha256_file(results_path)
+        run.summary["median_seconds_per_partition"] = statistics.median(
+            row["elapsed_seconds"] for row in rows)
+        result_artifact = wandb.Artifact(
+            f"mhar-exp1-{args.split}-results-{artifact_hash[:12]}",
+            type="experiment-results",
+            metadata={"results_sha256": sha256_file(results_path)},
+        )
+        result_artifact.add_file(str(results_path), name=results_path.name)
+        result_artifact.add_file(str(run_manifest_path), name=run_manifest_path.name)
+        run.log_artifact(result_artifact)
+        run.finish()
     print(f"completed {args.split}: {results_path} sha256={sha256_file(results_path)}")
 
 
@@ -730,7 +927,191 @@ def write_analysis_markdown(
             roles = ", ".join(row.get("roles", []))
             lines.append(
                 f"| {roles} | `{row['partition_id']}` | {row['nll']:.8f} | {row['ppl']:.6f} |")
+    lines.extend([
+        "",
+        "## Interpretation boundaries",
+        "",
+        "The distance and retention figures test coordinate locality and original-pair "
+        "preservation. They do not identify human-interpretable semantics or prove which "
+        "latent features occupy a primitive block. The frozen confirmation set tests whether "
+        "the discovery-selected extrema replicate; it does not remove checkpoint-specificity.",
+    ])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _configure_plot_style() -> None:
+    import matplotlib as mpl
+
+    mpl.rcParams.update({
+        "figure.dpi": 120,
+        "savefig.dpi": 300,
+        "font.size": 10,
+        "axes.labelsize": 10,
+        "axes.titlesize": 11,
+        "legend.fontsize": 8,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    })
+
+
+def _save_figure(fig, output_dir: Path, stem: str) -> list[str]:
+    paths = []
+    for suffix in ("pdf", "png"):
+        path = output_dir / f"{stem}.{suffix}"
+        fig.savefig(path, bbox_inches="tight", dpi=300 if suffix == "png" else None)
+        paths.append(str(path))
+    return paths
+
+
+def write_analysis_figures(
+    output_dir: Path,
+    ranked: list[dict[str, Any]],
+    summary: dict[str, Any],
+    confirmation_rows: list[dict[str, Any]] | None,
+) -> list[str]:
+    """Write colorblind-safe, paper-ready PDF and PNG result figures."""
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    _configure_plot_style()
+    figure_paths: list[str] = []
+    scale = 1000.0  # display millinats/token while preserving token-weighted NLL.
+
+    # Figure 1: all partitions against the coordinate-locality intervention.
+    fig, axis = plt.subplots(figsize=(5.7, 3.8))
+    for row in ranked:
+        digest = hashlib.sha256(row["partition_id"].encode("utf-8")).digest()
+        jitter = (int.from_bytes(digest[:2], "big") / 65535.0 - 0.5) * 0.12
+        axis.scatter(
+            row["mean_coordinate_distance"] + jitter,
+            row["delta_nll"] * scale,
+            s=17, alpha=0.55, color=OKABE_ITO["gray"], linewidths=0,
+        )
+    distance_rows = summary["distance_summary"]
+    axis.plot(
+        [row["mean_coordinate_distance"] for row in distance_rows],
+        [row["median_delta_nll"] * scale for row in distance_rows],
+        marker="o", markersize=4, linewidth=1.6, color=OKABE_ITO["bluish_green"],
+        label="Distance-bin median",
+    )
+    selected = [
+        (summary["reference_partition_id"], "Reference", OKABE_ITO["blue"], "D"),
+        (summary["best_partition_id"], "Discovery best", OKABE_ITO["orange"], "*"),
+        (summary["worst_partition_id"], "Discovery worst", OKABE_ITO["vermillion"], "X"),
+    ]
+    by_id = {row["partition_id"]: row for row in ranked}
+    plotted_ids: set[str] = set()
+    for identifier, label, color, marker in selected:
+        if identifier in plotted_ids:
+            continue
+        row = by_id[identifier]
+        axis.scatter(
+            row["mean_coordinate_distance"], row["delta_nll"] * scale,
+            s=75, color=color, marker=marker, edgecolors="black", linewidths=0.5,
+            zorder=4, label=label,
+        )
+        plotted_ids.add(identifier)
+    axis.axhline(0, color="black", linewidth=0.7, alpha=0.55)
+    axis.set_xlabel("Mean coordinate distance, D(P)")
+    axis.set_ylabel("Δ token-weighted NLL (millinats/token)")
+    axis.set_title("Partition loss versus coordinate locality")
+    axis.set_xticks([1, 1.5, 2, 2.5, 3, 3.5, 4])
+    axis.legend(frameon=False, ncol=2)
+    figure_paths.extend(_save_figure(fig, output_dir, "fig_nll_vs_distance"))
+    plt.close(fig)
+
+    # Figure 2: all observations grouped by the four attainable retention levels.
+    retention_values = sorted({float(row["retention"]) for row in ranked})
+    groups = [
+        [row["delta_nll"] * scale for row in ranked if row["retention"] == value]
+        for value in retention_values
+    ]
+    fig, axis = plt.subplots(figsize=(5.4, 3.8))
+    boxes = axis.boxplot(
+        groups, positions=list(range(len(groups))), widths=0.55,
+        patch_artist=True, showfliers=False,
+        medianprops={"color": "black", "linewidth": 1.3},
+        whiskerprops={"color": OKABE_ITO["gray"]},
+        capprops={"color": OKABE_ITO["gray"]},
+    )
+    for box in boxes["boxes"]:
+        box.set_facecolor(OKABE_ITO["sky_blue"])
+        box.set_alpha(0.45)
+        box.set_edgecolor(OKABE_ITO["blue"])
+    for position, (value, group) in enumerate(zip(retention_values, groups)):
+        matching = [row for row in ranked if row["retention"] == value]
+        for row in matching:
+            digest = hashlib.sha256(row["partition_id"].encode("utf-8")).digest()
+            jitter = (int.from_bytes(digest[2:4], "big") / 65535.0 - 0.5) * 0.32
+            axis.scatter(position + jitter, row["delta_nll"] * scale, s=14,
+                         color=OKABE_ITO["blue"], alpha=0.55, linewidths=0)
+        axis.text(position, max(group) if group else 0, f"n={len(group)}",
+                  ha="center", va="bottom", fontsize=8)
+    axis.axhline(0, color="black", linewidth=0.7, alpha=0.55)
+    axis.set_xticks(range(len(groups)), [f"{value:.0%}" for value in retention_values])
+    axis.set_xlabel("Original reference pairs retained")
+    axis.set_ylabel("Δ token-weighted NLL (millinats/token)")
+    axis.set_title("Loss distribution by original-pair retention")
+    figure_paths.extend(_save_figure(fig, output_dir, "fig_nll_by_retention"))
+    plt.close(fig)
+
+    # Figure 3: exhaustive ranking, so the effect size is visible without binning.
+    fig, axis = plt.subplots(figsize=(5.7, 3.8))
+    axis.plot(
+        [row["rank"] for row in ranked],
+        [row["delta_nll"] * scale for row in ranked],
+        color=OKABE_ITO["blue"], linewidth=1.5,
+    )
+    for identifier, label, color, marker in selected:
+        row = by_id[identifier]
+        axis.scatter(row["rank"], row["delta_nll"] * scale, s=70, color=color,
+                     marker=marker, edgecolors="black", linewidths=0.5,
+                     zorder=4, label=label)
+    axis.axhline(0, color="black", linewidth=0.7, alpha=0.55)
+    axis.set_xlabel("Partition rank by discovery NLL (1 = best)")
+    axis.set_ylabel("Δ token-weighted NLL (millinats/token)")
+    axis.set_title("Exhaustive ranking of all evaluated partitions")
+    axis.legend(frameon=False)
+    figure_paths.extend(_save_figure(fig, output_dir, "fig_partition_ranking"))
+    plt.close(fig)
+
+    if confirmation_rows:
+        reference = next(
+            (row for row in confirmation_rows if "reference" in row.get("roles", [])), None)
+        if reference is not None:
+            ordered = sorted(
+                confirmation_rows,
+                key=lambda row: (
+                    0 if "reference" in row.get("roles", []) else
+                    1 if "discovery_best" in row.get("roles", []) else 2,
+                    row["partition_id"],
+                ),
+            )
+            fig, axis = plt.subplots(figsize=(5.7, 3.5))
+            labels = [" / ".join(row.get("roles", [])) for row in ordered]
+            values = [(row["nll"] - reference["nll"]) * scale for row in ordered]
+            colors = [
+                OKABE_ITO["blue"] if "reference" in row.get("roles", [])
+                else OKABE_ITO["orange"] if "discovery_best" in row.get("roles", [])
+                else OKABE_ITO["vermillion"]
+                for row in ordered
+            ]
+            axis.bar(range(len(ordered)), values, color=colors, width=0.62)
+            axis.axhline(0, color="black", linewidth=0.7)
+            axis.set_xticks(range(len(ordered)), labels, rotation=15, ha="right")
+            axis.set_ylabel("Δ confirmation NLL (millinats/token)")
+            axis.set_title("Untouched-set confirmation of selected partitions")
+            figure_paths.extend(_save_figure(fig, output_dir, "fig_confirmation"))
+            plt.close(fig)
+
+    return figure_paths
 
 
 def analyze_command(args: argparse.Namespace) -> None:
@@ -750,9 +1131,97 @@ def analyze_command(args: argparse.Namespace) -> None:
         summary["confirmation_results_path"] = str(confirmation_path)
         summary["confirmation_results_sha256"] = sha256_file(confirmation_path)
 
+    figure_paths = write_analysis_figures(output_dir, ranked, summary, confirmation_rows)
+    summary["figures"] = figure_paths
     atomic_write_json(output_dir / "analysis.json", summary)
     write_ranked_csv(output_dir / "ranked_partitions.csv", ranked)
     write_analysis_markdown(output_dir / "analysis.md", summary, confirmation_rows)
+
+    args.wandb_group = args.wandb_group or f"mhar-exp1-{summary['discovery_results_sha256'][:10]}"
+    analysis_manifest_path = output_dir / "analysis_run_manifest.json"
+    analysis_identity = {
+        "discovery_results_sha256": summary["discovery_results_sha256"],
+        "confirmation_results_sha256": summary.get("confirmation_results_sha256"),
+        "source_commit": git_commit(),
+    }
+    if analysis_manifest_path.exists():
+        analysis_manifest = json.loads(analysis_manifest_path.read_text(encoding="utf-8"))
+        if analysis_manifest["run_identity"] != analysis_identity:
+            raise RuntimeError(
+                "existing analysis W&B manifest does not match these results; "
+                "use a new output directory")
+    else:
+        analysis_manifest = {"created_at": utc_now(), "run_identity": analysis_identity}
+
+    run = wandb_init(
+        args,
+        config={
+            **analysis_identity,
+            "partition_count": summary["partition_count"],
+            "complete_exhaustive_run": summary["complete_exhaustive_run"],
+        },
+        job_type="analysis",
+        default_name=f"exp1-analysis-{summary['discovery_results_sha256'][:8]}",
+        run_id=analysis_manifest.get("wandb", {}).get("run_id"),
+    )
+    if run is not None:
+        import wandb
+
+        analysis_manifest["wandb"] = {
+            "project": args.wandb_project,
+            "entity": args.wandb_entity,
+            "group": args.wandb_group,
+            "mode": args.wandb_mode,
+            "run_id": run.id,
+            "run_name": run.name,
+            "run_url": run.url,
+        }
+        atomic_write_json(analysis_manifest_path, analysis_manifest)
+        table_columns = [
+            "rank", "partition_id", "nll", "delta_nll", "ppl",
+            "original_pairs_retained", "retention", "mean_coordinate_distance",
+            "total_coordinate_distance", "elapsed_seconds", "tokens_per_second",
+        ]
+        table = wandb.Table(columns=table_columns)
+        for row in ranked:
+            table.add_data(*[row.get(column) for column in table_columns])
+        log_payload: dict[str, Any] = {
+            "analysis/ranked_partitions": table,
+            "analysis/nll_range": summary["nll_range"],
+            "analysis/reference_rank": summary["reference_rank"],
+            "analysis/spearman_distance_vs_nll": summary["spearman_distance_vs_nll"],
+            "analysis/ols_nll_per_unit_mean_distance": (
+                summary["ols_nll_per_unit_mean_distance"]),
+        }
+        for figure_path in figure_paths:
+            path = Path(figure_path)
+            if path.suffix == ".png":
+                log_payload[f"figures/{path.stem}"] = wandb.Image(str(path))
+        run.log(log_payload)
+        run.summary.update({
+            "reference_partition_id": summary["reference_partition_id"],
+            "best_partition_id": summary["best_partition_id"],
+            "worst_partition_id": summary["worst_partition_id"],
+            "reference_nll": summary["reference_nll"],
+            "best_nll": summary["best_nll"],
+            "worst_nll": summary["worst_nll"],
+        })
+        report_artifact = wandb.Artifact(
+            f"mhar-exp1-analysis-{summary['discovery_results_sha256'][:12]}",
+            type="analysis",
+            metadata=summary,
+        )
+        for path in [
+            output_dir / "analysis.json",
+            output_dir / "analysis.md",
+            output_dir / "ranked_partitions.csv",
+            *[Path(path) for path in figure_paths],
+        ]:
+            report_artifact.add_file(str(path), name=path.name)
+        run.log_artifact(report_artifact)
+        run.finish()
+    else:
+        atomic_write_json(analysis_manifest_path, analysis_manifest)
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 
@@ -792,6 +1261,7 @@ def build_parser() -> argparse.ArgumentParser:
                           help="testing only: retain H=4/full_mh but relax the 1B shape gate")
     evaluate.add_argument("--smoke-limit", type=int, default=None,
                           help="testing only: evaluate the first N discovery partitions")
+    add_wandb_arguments(evaluate)
     evaluate.set_defaults(func=evaluate_command)
 
     analyze = subparsers.add_parser("analyze", help="rank and summarize results")
@@ -800,6 +1270,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--output-dir", required=True)
     analyze.add_argument("--allow-incomplete", action="store_true",
                          help="testing only: analyze fewer than 105 discovery rows")
+    add_wandb_arguments(analyze)
     analyze.set_defaults(func=analyze_command)
     return parser
 

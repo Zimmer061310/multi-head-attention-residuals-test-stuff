@@ -147,10 +147,24 @@ class EvaluationCliSmokeTest(unittest.TestCase):
                 "--batch-size", "1",
                 "--allow-nonstandard-model",
                 "--smoke-limit", "3",
+                "--wandb-mode", "offline",
+                "--wandb-project", "MHAR Stuff",
+                "--wandb-group", "unit-test",
             ]
-            subprocess.run(command, check=True, cwd=ROOT, capture_output=True, text=True)
+            subprocess_env = dict(
+                os.environ,
+                WANDB_DIR=str(root),
+                WANDB_CACHE_DIR=str(root / "wandb-cache"),
+                WANDB_CONFIG_DIR=str(root / "wandb-config"),
+                WANDB_DATA_DIR=str(root / "wandb-data"),
+            )
+            first_run = subprocess.run(
+                command, cwd=ROOT, capture_output=True, text=True, env=subprocess_env)
+            self.assertEqual(first_run.returncode, 0, first_run.stderr)
             # Resume must skip the same completed rows without duplicating them.
-            subprocess.run(command, check=True, cwd=ROOT, capture_output=True, text=True)
+            resumed_run = subprocess.run(
+                command, cwd=ROOT, capture_output=True, text=True, env=subprocess_env)
+            self.assertEqual(resumed_run.returncode, 0, resumed_run.stderr)
 
             rows = [
                 json.loads(line)
@@ -164,6 +178,8 @@ class EvaluationCliSmokeTest(unittest.TestCase):
                 manifest["run_identity"]["artifact_sha256"],
                 load_fixed_eval_artifact(artifact)[1],
             )
+            self.assertEqual(manifest["wandb"]["project"], "MHAR Stuff")
+            self.assertTrue(manifest["wandb"]["run_id"])
 
             analysis_dir = output / "analysis"
             subprocess.run([
@@ -173,9 +189,18 @@ class EvaluationCliSmokeTest(unittest.TestCase):
                 "--discovery-results", str(output / "discovery_results.jsonl"),
                 "--output-dir", str(analysis_dir),
                 "--allow-incomplete",
-            ], check=True, cwd=ROOT, capture_output=True, text=True)
+                "--wandb-mode", "offline",
+                "--wandb-project", "MHAR Stuff",
+                "--wandb-group", "unit-test",
+            ], check=True, cwd=ROOT, capture_output=True, text=True,
+               env=subprocess_env)
             self.assertTrue((analysis_dir / "analysis.json").is_file())
             self.assertTrue((analysis_dir / "analysis.md").is_file())
+            for stem in (
+                "fig_nll_vs_distance", "fig_nll_by_retention", "fig_partition_ranking"
+            ):
+                self.assertTrue((analysis_dir / f"{stem}.png").is_file())
+                self.assertTrue((analysis_dir / f"{stem}.pdf").is_file())
             self.assertEqual(
                 len((analysis_dir / "ranked_partitions.csv").read_text().splitlines()),
                 4,
