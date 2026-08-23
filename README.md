@@ -89,12 +89,46 @@ is applied at all 73 routing sites, and every candidate sees the same fixed
 tokens.  The full preregistration is in
 [`experiment 1 plan.md`](experiment%201%20plan.md).
 
+### Train the preregistered 1B H=4 checkpoint
+
+The checked-in launcher fixes the FineWeb-Edu substitution and every planned
+training-scale field: 1.0795B parameters, width 1280, 36 layers, 16 attention
+heads, 8 KV heads, FFN 5120, MHAR H=4, sequence length 1024, global batch 32,
+20,000 AdamW steps, peak/minimum LR `5e-4`/`5e-5`, 1,000 warmup steps, bf16,
+and seed 42. FineWeb-Edu and the Qwen3 tokenizer are pinned to immutable Hub
+commits in the script.
+
+```bash
+MHAR_PYTHON_BIN=/path/to/python \
+MHAR_OUTPUT_DIR=/fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu \
+./run_experiment1_train_1b_h4.sh
+```
+
+The single-5090 execution uses per-device batch 4 and accumulation 8 to retain
+global batch 32. Fused MHAR and activation checkpointing are systems-only
+choices. Every 500 steps, the runner atomically saves model weights, AdamW
+moments, scheduler, RNG state, packed-data position, W&B run ID, and the full
+immutable run identity. It retains the newest two step checkpoints.
+
+Resume without changing the schedule or data position:
+
+```bash
+MHAR_PYTHON_BIN=/path/to/python \
+MHAR_OUTPUT_DIR=/fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu \
+./run_experiment1_train_1b_h4.sh \
+  /fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu/step-500
+```
+
+Training logs to W&B project `MHAR Stuff`, group
+`mhar-exp1-1b-h4-fineweb-edu`. W&B is required: the process aborts instead of
+silently running untracked.
+
 Install the pinned experiment runtime and run the CPU correctness suite:
 
 ```bash
 python3 -m pip install -r requirements-experiment1.txt
 MHAR_RUN_MODEL_INTEGRATION=1 python3 -m unittest -v \
-  test_experiment1_partitions.py test_experiment1_runner.py
+  test_experiment1_partitions.py test_experiment1_runner.py test_train_resume.py
 ```
 
 Materialize non-overlapping discovery and confirmation tensors from an explicit
