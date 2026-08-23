@@ -194,6 +194,20 @@ group, plus the fixed-token artifact, raw JSONL/manifests, ranked table, and
 final report artifact. The checkpoint itself is not uploaded; its SHA-256 is
 recorded.
 
+To queue the complete workflow behind the exact 1B H=4 training launcher, run:
+
+```bash
+MHAR_PYTHON_BIN=/root/autodl-tmp/mhar-venv/bin/python \
+  ./run_experiment1_after_training.sh
+```
+
+The queue materializes document-disjoint discovery and confirmation tensors
+from the reserved local FineWeb-Edu shard, records the source shard SHA-256,
+waits for the atomically published final checkpoint, runs a three-partition
+production smoke, then executes discovery, analysis, confirmation, and final
+analysis. It exits rather than silently waiting if training stops without a
+final checkpoint.
+
 The analysis exports 300-dpi PNG and vector PDF versions of:
 
 - `fig_nll_vs_distance`: all partitions against mean coordinate distance, with

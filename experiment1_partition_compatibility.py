@@ -256,6 +256,65 @@ def load_fixed_eval_artifact(path: Path) -> tuple[dict[str, Any], str]:
     return payload, artifact_hash
 
 
+def materialize_document_disjoint_sequences(
+    dataset,
+    tokenizer,
+    *,
+    seq_len: int,
+    discovery_count: int,
+    confirmation_count: int,
+) -> tuple[torch.Tensor, torch.Tensor, dict[str, int]]:
+    """Pack fixed splits without allowing a source document into both splits."""
+
+    if seq_len < 2:
+        raise ValueError("sequence length must be at least 2")
+    if discovery_count < 1 or confirmation_count < 1:
+        raise ValueError("discovery and confirmation counts must be positive")
+
+    targets = (discovery_count, confirmation_count)
+    sequences: tuple[list[list[int]], list[list[int]]] = ([], [])
+    documents_by_split = [0, 0]
+    token_buffer: list[int] = []
+    split_index = 0
+
+    for sample in dataset:
+        if split_index == len(targets):
+            break
+        text = sample.get("text") or sample.get("content") or sample.get("wikitext") or ""
+        if not text:
+            continue
+        documents_by_split[split_index] += 1
+        token_buffer.extend(tokenizer.encode(text, add_special_tokens=False))
+        token_buffer.append(tokenizer.eos_token_id)
+        while (
+            len(token_buffer) >= seq_len
+            and len(sequences[split_index]) < targets[split_index]
+        ):
+            sequences[split_index].append(token_buffer[:seq_len])
+            del token_buffer[:seq_len]
+        if len(sequences[split_index]) == targets[split_index]:
+            # Discard the unfinished tail of the boundary document.  The next
+            # split begins with the next source document, so document identity
+            # cannot leak from discovery into confirmation.
+            token_buffer.clear()
+            split_index += 1
+
+    if split_index != len(targets):
+        observed = tuple(len(values) for values in sequences)
+        raise RuntimeError(
+            "dataset ended before both fixed splits were complete; "
+            f"observed={observed}, required={targets}")
+
+    discovery = torch.tensor(sequences[0], dtype=torch.int32)
+    confirmation = torch.tensor(sequences[1], dtype=torch.int32)
+    document_counts = {
+        "discovery": documents_by_split[0],
+        "confirmation": documents_by_split[1],
+        "total": sum(documents_by_split),
+    }
+    return discovery, confirmation, document_counts
+
+
 def materialize_command(args: argparse.Namespace) -> None:
     from datasets import load_dataset
     from transformers import AutoTokenizer
@@ -275,7 +334,11 @@ def materialize_command(args: argparse.Namespace) -> None:
             "loader": "parquet",
             "data_files": args.data_files,
             "matched_files": [
-                {"path": str(Path(path).resolve()), "bytes": Path(path).stat().st_size}
+                {
+                    "path": str(Path(path).resolve()),
+                    "bytes": Path(path).stat().st_size,
+                    "sha256": sha256_file(Path(path)),
+                }
                 for path in matched_files
             ],
         }
@@ -290,42 +353,30 @@ def materialize_command(args: argparse.Namespace) -> None:
         }
     dataset = dataset.shuffle(seed=args.seed, buffer_size=args.shuffle_buffer)
 
-    required = args.discovery_sequences + args.confirmation_sequences
-    sequences: list[list[int]] = []
-    token_buffer: list[int] = []
-    documents_consumed = 0
-    for sample in dataset:
-        documents_consumed += 1
-        text = sample.get("text") or sample.get("content") or sample.get("wikitext") or ""
-        if not text:
-            continue
-        token_buffer.extend(tokenizer.encode(text, add_special_tokens=False))
-        token_buffer.append(tokenizer.eos_token_id)
-        while len(token_buffer) >= args.seq_len and len(sequences) < required:
-            sequences.append(token_buffer[: args.seq_len])
-            del token_buffer[: args.seq_len]
-        if len(sequences) == required:
-            break
-    if len(sequences) != required:
-        raise RuntimeError(
-            f"dataset ended after {len(sequences)} sequences; required {required}")
-
-    all_input_ids = torch.tensor(sequences, dtype=torch.int32)
-    discovery = all_input_ids[: args.discovery_sequences]
-    confirmation = all_input_ids[args.discovery_sequences :]
+    discovery, confirmation, document_counts = materialize_document_disjoint_sequences(
+        dataset,
+        tokenizer,
+        seq_len=args.seq_len,
+        discovery_count=args.discovery_sequences,
+        confirmation_count=args.confirmation_sequences,
+    )
     metadata = {
         "dataset": dataset_description,
         "split": args.split,
         "seed": args.seed,
         "shuffle_buffer": args.shuffle_buffer,
-        "documents_consumed": documents_consumed,
+        "documents_consumed": document_counts["total"],
+        "documents_by_split": document_counts,
         "sequence_length": args.seq_len,
         "tokenizer": args.tokenizer,
         "tokenizer_revision": args.tokenizer_revision,
         "tokenizer_commit_hash": tokenizer.init_kwargs.get("_commit_hash"),
         "tokenizer_class": tokenizer.__class__.__name__,
         "eos_token_id": tokenizer.eos_token_id,
-        "selection": "single shuffled token stream; discovery precedes confirmation; no overlap",
+        "selection": (
+            "single shuffled document stream; discovery precedes confirmation; "
+            "the boundary document tail is discarded so source documents are disjoint"
+        ),
         "source_commit": git_commit(),
     }
     manifest = save_fixed_eval_artifact(

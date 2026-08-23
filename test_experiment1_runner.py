@@ -13,6 +13,7 @@ import torch
 from experiment1_partition_compatibility import (
     analyze_discovery_rows,
     load_fixed_eval_artifact,
+    materialize_document_disjoint_sequences,
     save_fixed_eval_artifact,
     select_confirmation_partitions,
 )
@@ -45,6 +46,31 @@ class FixedArtifactTest(unittest.TestCase):
                 payload["discovery_input_ids"], discovery.to(torch.int32))
             torch.testing.assert_close(
                 payload["confirmation_input_ids"], confirmation.to(torch.int32))
+
+    def test_materialization_discards_boundary_document_tail(self):
+        class CharacterTokenizer:
+            eos_token_id = 99
+
+            @staticmethod
+            def encode(text, add_special_tokens=False):
+                del add_special_tokens
+                return [ord(value) - ord("a") + 1 for value in text]
+
+        documents = [
+            {"text": "aaaaaaaaaa"},
+            {"text": "bbbbbbbbbb"},
+        ]
+        discovery, confirmation, counts = materialize_document_disjoint_sequences(
+            documents,
+            CharacterTokenizer(),
+            seq_len=4,
+            discovery_count=2,
+            confirmation_count=2,
+        )
+
+        self.assertEqual(counts, {"discovery": 1, "confirmation": 1, "total": 2})
+        self.assertTrue(torch.all(discovery == 1))
+        self.assertTrue(torch.all(confirmation == 2))
 
 
 def synthetic_discovery_rows():
