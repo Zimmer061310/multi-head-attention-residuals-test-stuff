@@ -148,6 +148,8 @@ def wandb_init(
     tags = ["experiment-1", "mhar", "h4", job_type]
     if getattr(args, "smoke_limit", None) is not None:
         tags.append("smoke")
+    if getattr(args, "allow_incomplete", False):
+        tags.extend(["smoke", "incomplete"])
     return wandb.init(
         project=args.wandb_project,
         entity=args.wandb_entity,
@@ -1160,8 +1162,12 @@ def analyze_command(args: argparse.Namespace) -> None:
             "partition_count": summary["partition_count"],
             "complete_exhaustive_run": summary["complete_exhaustive_run"],
         },
-        job_type="analysis",
-        default_name=f"exp1-analysis-{summary['discovery_results_sha256'][:8]}",
+        job_type="smoke-analysis" if args.allow_incomplete else "analysis",
+        default_name=(
+            f"exp1-smoke-analysis-{summary['discovery_results_sha256'][:8]}"
+            if args.allow_incomplete
+            else f"exp1-analysis-{summary['discovery_results_sha256'][:8]}"
+        ),
         run_id=analysis_manifest.get("wandb", {}).get("run_id"),
     )
     if run is not None:
