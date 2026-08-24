@@ -505,6 +505,18 @@ For a pilot analysis, a preregistered milestone checkpoint may be used, but the
 milestone must be stated in every result and must not be presented as the final
 20,000-step architectural result.
 
+The frozen search uses four preregistered checkpoint gates:
+
+\[
+2{,}000,\quad 5{,}000,\quad 10{,}000,\quad 20{,}000\text{ steps}.
+\]
+
+At each gate, wait for the atomic checkpoint, pause training, and run the full
+495-partition discovery plus untouched confirmation workflow.  Report and
+review the completed milestone before resuming toward the next gate.  Never
+resume automatically from 2,000 to 5,000, from 5,000 to 10,000, or from 10,000
+to 20,000.
+
 Apply one partition \(P\) globally and identically at all 73 routing sites:
 
 \[
