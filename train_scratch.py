@@ -54,6 +54,11 @@ def parse_args():
                    help="moe mode: per-expert intermediate size (topk*moe_ff ~ dense ff for iso-activated-FLOPs)")
     p.add_argument("--attnres_heads", type=int, default=8,
                    help="Routing heads for full_mh, and for full_hw's MLP/final routing (hidden_size must be divisible)")
+    p.add_argument(
+        "--mixed_partition", default=None,
+        help="Experiment 2 ordered singleton/doubleton atom partition id; "
+             "requires full_mh and uses attnres_heads as the atomic count",
+    )
     p.add_argument("--hidden_size", type=int, default=512)
     p.add_argument("--num_layers", type=int, default=12)
     p.add_argument("--num_heads", type=int, default=8)
@@ -146,6 +151,7 @@ def training_identity(args, world_size):
         "source_commit": git_commit(),
         "mode": args.mode,
         "attnres_heads": args.attnres_heads,
+        "mixed_partition": args.mixed_partition,
         "hidden_size": args.hidden_size,
         "num_layers": args.num_layers,
         "num_heads": args.num_heads,
@@ -320,6 +326,10 @@ def build_model(args, device):
         model = model_class.from_pretrained(
             args.resume_from, dtype=torch.bfloat16).to(device=device)
         validate_model_config(model, args)
+        if args.mixed_partition:
+            from mhar_partition import parse_mixed_partition_id
+            model.set_mhar_mixed_partition(parse_mixed_partition_id(
+                args.mixed_partition, num_atomic_blocks=args.attnres_heads))
         return model
 
     common = dict(
@@ -369,6 +379,12 @@ def build_model(args, device):
         model = Qwen3AttnResForCausalLM(config)
 
     validate_model_config(model, args)
+    if args.mixed_partition:
+        if args.mode != "full_mh":
+            raise ValueError("--mixed_partition requires --mode full_mh")
+        from mhar_partition import parse_mixed_partition_id
+        model.set_mhar_mixed_partition(parse_mixed_partition_id(
+            args.mixed_partition, num_atomic_blocks=args.attnres_heads))
 
     if getattr(args, "fsdp", False):
         # Keep params fp32; FSDP MixedPrecision does bf16 compute and keeps an
@@ -517,7 +533,10 @@ def main():
                 entity=args.wandb_entity,
                 group=args.wandb_group,
                 job_type="pretraining",
-                tags=["mhar", "full-mh", "h4", "1b", "fineweb-edu"],
+                tags=[
+                    "mhar", "full-mh", f"h{args.attnres_heads}", "1b", "fineweb-edu",
+                    *( ["mixed-width", "experiment-2"] if args.mixed_partition else []),
+                ],
                 id=wandb_run_id,
                 resume="allow" if wandb_run_id else None,
                 name=args.run_name,
@@ -554,6 +573,8 @@ def main():
     if args.fused:
         if args.mode != "full_mh":
             raise ValueError("--fused currently supports --mode full_mh only")
+        if args.mixed_partition:
+            raise ValueError("--fused does not support --mixed_partition; use the eager path")
         from modeling_qwen3_attnres import enable_fused_mhar
         enable_fused_mhar(True)
         if is_main:

@@ -9,8 +9,129 @@ import torch
 
 Pair = tuple[int, int]
 Partition = tuple[Pair, ...]
+AtomicGroup = tuple[int, ...]
+MixedPartition = tuple[AtomicGroup, ...]
 
 REFERENCE_PARTITION_H4: Partition = ((0, 1), (2, 3), (4, 5), (6, 7))
+
+
+def canonicalize_mixed_partition(
+    partition: Iterable[Sequence[int]],
+    *,
+    num_atomic_blocks: int = 16,
+) -> MixedPartition:
+    """Validate an ordered contiguous partition of singleton/doubleton atoms."""
+
+    if num_atomic_blocks < 1:
+        raise ValueError("num_atomic_blocks must be positive")
+    groups = tuple(tuple(int(index) for index in group) for group in partition)
+    if not groups:
+        raise ValueError("mixed partition cannot be empty")
+    for group in groups:
+        if len(group) not in (1, 2):
+            raise ValueError(
+                f"mixed routing groups must contain one or two atoms: {group!r}")
+        if len(group) == 2 and group[1] != group[0] + 1:
+            raise ValueError(f"merged atoms must be adjacent and ordered: {group!r}")
+    flat = tuple(index for group in groups for index in group)
+    expected = tuple(range(num_atomic_blocks))
+    if flat != expected:
+        raise ValueError(
+            "mixed partition must cover every atom exactly once in coordinate order; "
+            f"got {flat!r}, expected {expected!r}")
+    return groups
+
+
+def mixed_partition_from_merges(
+    merged_boundaries: Iterable[int],
+    *,
+    num_atomic_blocks: int = 16,
+) -> MixedPartition:
+    """Build an ordered partition from left-edge indices of adjacent merges."""
+
+    merges = tuple(sorted(int(index) for index in merged_boundaries))
+    if len(merges) != len(set(merges)):
+        raise ValueError("merged boundaries must be unique")
+    if any(index < 0 or index >= num_atomic_blocks - 1 for index in merges):
+        raise ValueError(
+            f"merged boundaries must be in [0, {num_atomic_blocks - 2}]")
+    if any(right == left + 1 for left, right in zip(merges, merges[1:])):
+        raise ValueError("merged boundaries cannot overlap")
+
+    groups: list[AtomicGroup] = []
+    atom = 0
+    merge_set = set(merges)
+    while atom < num_atomic_blocks:
+        if atom in merge_set:
+            groups.append((atom, atom + 1))
+            atom += 2
+        else:
+            groups.append((atom,))
+            atom += 1
+    return canonicalize_mixed_partition(groups, num_atomic_blocks=num_atomic_blocks)
+
+
+def generate_adjacent_merge_partitions(
+    num_atomic_blocks: int = 16,
+    num_merges: int = 4,
+) -> tuple[MixedPartition, ...]:
+    """Enumerate every ordered partition with ``num_merges`` disjoint merges."""
+
+    if num_merges < 0 or num_merges > num_atomic_blocks // 2:
+        raise ValueError("num_merges must be between zero and floor(num_atomic_blocks / 2)")
+
+    def _choose(next_edge: int, remaining: int, chosen: tuple[int, ...]):
+        if remaining == 0:
+            yield chosen
+            return
+        last_edge = num_atomic_blocks - 2
+        for edge in range(next_edge, last_edge + 1):
+            # After choosing this edge, each remaining merge needs two atoms.
+            if last_edge - edge < 2 * (remaining - 1):
+                break
+            yield from _choose(edge + 2, remaining - 1, chosen + (edge,))
+
+    partitions = tuple(
+        mixed_partition_from_merges(edges, num_atomic_blocks=num_atomic_blocks)
+        for edges in _choose(0, num_merges, ())
+    )
+    if len(partitions) != len(set(partitions)):
+        raise AssertionError("mixed partition generator emitted duplicates")
+    return partitions
+
+
+def mixed_partition_id(partition: Iterable[Sequence[int]]) -> str:
+    canonical = canonicalize_mixed_partition(partition)
+    return "__".join("-".join(str(index) for index in group) for group in canonical)
+
+
+def parse_mixed_partition_id(value: str, *, num_atomic_blocks: int = 16) -> MixedPartition:
+    try:
+        groups = tuple(
+            tuple(int(index) for index in group.split("-"))
+            for group in value.split("__")
+        )
+    except ValueError as exc:
+        raise ValueError(f"invalid mixed partition id: {value!r}") from exc
+    return canonicalize_mixed_partition(groups, num_atomic_blocks=num_atomic_blocks)
+
+
+def merged_boundaries(partition: Iterable[Sequence[int]]) -> tuple[int, ...]:
+    canonical = canonicalize_mixed_partition(partition)
+    return tuple(group[0] for group in canonical if len(group) == 2)
+
+
+def mixed_segment_widths(
+    partition: Iterable[Sequence[int]],
+    *,
+    primitive_width: int = 80,
+) -> tuple[int, ...]:
+    if primitive_width < 1:
+        raise ValueError("primitive_width must be positive")
+    return tuple(
+        len(group) * primitive_width
+        for group in canonicalize_mixed_partition(partition)
+    )
 
 
 def canonicalize_partition(
@@ -162,3 +283,46 @@ def arbitrary_group_mhar_eager(
     output_blocks = torch.empty_like(routed_in_gather_order)
     output_blocks.index_copy_(-2, index, routed_in_gather_order)
     return output_blocks.reshape(b, t, d)
+
+
+def mixed_width_mhar_eager(
+    V: torch.Tensor,
+    query: torch.Tensor,
+    norm,
+    partition: Iterable[Sequence[int]],
+    *,
+    num_atomic_blocks: int = 16,
+) -> torch.Tensor:
+    """Route ordered singleton/doubleton atomic regions with separate softmaxes.
+
+    RMS normalization is performed once in the original full-dimensional
+    basis.  Every query coefficient stays attached to its coordinate and the
+    output segments are concatenated in their original coordinate order.
+    """
+
+    if V.ndim != 4:
+        raise ValueError(f"V must have shape [N,B,T,D], got {tuple(V.shape)}")
+    _, _, _, hidden_size = V.shape
+    if hidden_size % num_atomic_blocks:
+        raise ValueError(
+            f"hidden size {hidden_size} must be divisible by {num_atomic_blocks}")
+    if query.numel() != hidden_size:
+        raise ValueError(
+            f"query contains {query.numel()} coefficients, expected {hidden_size}")
+
+    canonical = canonicalize_mixed_partition(
+        partition, num_atomic_blocks=num_atomic_blocks)
+    primitive_width = hidden_size // num_atomic_blocks
+    K = norm(V)
+    flat_query = query.reshape(hidden_size)
+    outputs = []
+    for group in canonical:
+        start = group[0] * primitive_width
+        end = (group[-1] + 1) * primitive_width
+        group_keys = K[..., start:end]
+        group_values = V[..., start:end]
+        group_query = flat_query[start:end]
+        logits = torch.einsum("k, n b t k -> n b t", group_query, group_keys)
+        weights = logits.softmax(dim=0)
+        outputs.append(torch.einsum("n b t, n b t k -> b t k", weights, group_values))
+    return torch.cat(outputs, dim=-1)

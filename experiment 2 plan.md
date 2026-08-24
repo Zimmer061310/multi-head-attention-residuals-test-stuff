@@ -252,7 +252,9 @@ The only independent variable is:
 
 # Why This Experiment Matters
 
-Experiment 1 established that routing-group composition matters.
+Experiment 1 found preliminary evidence in the seed-42, step-2000 H=4
+checkpoint that routing-group composition matters.  Treat that result as
+preliminary until the preregistered independent repetitions are complete.
 
 Experiment 2 asks a more architectural question:
 
@@ -409,13 +411,26 @@ within normal floating-point tolerance.
 
 Only proceed after both endpoint configurations pass.
 
+Also require:
+
+- forward and gradient parity for query, RMSNorm parameters, and source values;
+- complete-model forward parity at the pure H=16 endpoint;
+- one hand-computed mixed-width case containing both 80-d and 160-d groups.
+
 ---
 
 # Evaluation Design
 
-Use exactly the same fixed held-out token set for every configuration.
+Materialize two new, fixed, document-disjoint token artifacts specifically for
+Experiment 2:
 
-Do not advance a streaming validation iterator separately for different partitions.
+- **discovery:** every one of the 495 configurations sees exactly these tokens;
+- **confirmation:** remains untouched until discovery ranking and candidate
+  selection have been frozen.
+
+Do not advance a streaming validation iterator separately for different
+partitions.  Do not reuse an already-opened Experiment 1 confirmation artifact
+as the Experiment 2 untouched confirmation set.
 
 Primary metric:
 
@@ -438,9 +453,28 @@ segment_widths
 number_of_routing_groups
 NLL
 ΔNLL_vs_H16
-ΔNLL_vs_H8
 PPL
+elapsed_seconds
+tokens_per_second
+peak_GPU_memory
+checkpoint_SHA256
+evaluation_artifact_SHA256
+git_commit
 ```
+
+The frozen-search delta is defined only against the native checkpoint:
+
+\[
+\Delta NLL(P)
+=
+NLL(\text{H16 checkpoint with }P)
+-
+NLL(\text{original H16 computation}).
+\]
+
+A pure H=8 segmentation may be evaluated on the same tensors as an operator
+endpoint, but it must be labelled **frozen H16→H8 conversion**.  It is not an
+architectural H=8 control.
 
 ---
 
@@ -450,7 +484,35 @@ There are two stages.
 
 ## Stage A — Frozen Boundary Search
 
-Use an existing trained checkpoint and change only the routing partition.
+Train or load a checkpoint whose native routing configuration is H=16.  The
+sixteen trained 80-dimensional routing regions are the atomic units of this
+experiment.  The existing Experiment 1 H=4 checkpoint is not valid for this
+question because its 80-dimensional slices were not independently routed
+during training.
+
+Use the already-preregistered 1B training scale:
+
+- `hidden_size=1280`, `num_hidden_layers=36`;
+- 16 attention heads and 8 KV heads;
+- FFN width 5120;
+- sequence length 1024, global batch 32;
+- FineWeb-Edu with pinned dataset and tokenizer revisions;
+- AdamW, peak learning rate \(5\times10^{-4}\), bf16;
+- 20,000 training steps, with the same schedule and data order as the matched
+  controls.
+
+For a pilot analysis, a preregistered milestone checkpoint may be used, but the
+milestone must be stated in every result and must not be presented as the final
+20,000-step architectural result.
+
+Apply one partition \(P\) globally and identically at all 73 routing sites:
+
+\[
+P_1=P_2=\cdots=P_{73}=P.
+\]
+
+Evaluate the original native H=16 computation once, then enumerate all 495
+mixed-width partitions on discovery data.
 
 Purpose:
 
@@ -458,13 +520,32 @@ Purpose:
 
 This is a discovery experiment.
 
-Do not claim from Stage A alone that the hybrid architecture is intrinsically better than a separately trained H=8 model.
+After discovery, freeze a confirmation set containing:
+
+- original H=16;
+- the best five discovery partitions;
+- a median partition;
+- the worst partition;
+- any additional structurally diverse candidate selected by a rule written
+  before confirmation is opened.
+
+Evaluate this frozen selection once on the untouched confirmation artifact.
+
+Do not compare a frozen mixed-width winner directly with a separately trained
+H=8 model.  Stage A asks only where an H16-trained model tolerates or benefits
+from removing boundaries.
 
 ---
 
 ## Stage B — Architectural Confirmation
 
-If Stage A finds promising mixed-width patterns, train the strongest candidates using that partition from training initialization.
+If Stage A finds promising mixed-width patterns that survive untouched
+confirmation, freeze one to three candidates before training.  Train from
+scratch:
+
+- uniform H=8;
+- uniform H=16;
+- each selected mixed-width partition.
 
 Use the same:
 
@@ -475,8 +556,15 @@ Use the same:
 - training steps;
 - model width;
 - evaluation protocol;
+- corpus order and initialization protocol;
 
 as the H=8 and H=16 controls.
+
+Use at least three independent seeds per architecture.  Report both the
+per-seed results and the across-seed mean with uncertainty.  Because the
+architectures execute different numbers of routing softmaxes, also report
+tokens/second, peak memory, and total training time; parameters are matched but
+systems cost is not exactly identical.
 
 Then compare:
 
@@ -497,6 +585,9 @@ This is the experiment that determines whether mixed-width MHAR itself is superi
 ---
 
 # Three Primary Outcome Cases
+
+The following cases apply only to the separately trained Stage B models.  They
+must not be inferred from frozen Stage A conversions.
 
 ## Case 1 — Mixed-width partition is worse than H=16
 
@@ -685,12 +776,14 @@ For the 495 primary configurations produce:
 4. Median partition.
 5. Difference between best and worst.
 6. Difference between best mixed partition and H=16.
-7. Difference between best mixed partition and H=8.
+7. Descriptive difference between the best mixed partition and the frozen
+   H16→H8 operator endpoint, clearly labelled as a conversion rather than a
+   trained H=8 comparison.
 8. Frequency with which each H=16 boundary is removed among the top-performing configurations.
 9. Frequency with which each boundary remains among the top-performing configurations.
 10. A boundary importance map across the 1280-dimensional residual axis.
 
-A useful boundary score is:
+A useful descriptive boundary association score is:
 
 \[
 S_i
@@ -705,7 +798,12 @@ Interpretation:
 - large positive \(S_i\): removing the boundary tends to help;
 - negative \(S_i\): preserving the boundary tends to help.
 
-This can provide the first empirical map of where MHAR prefers coarse versus fine routing granularity.
+Because non-overlapping merges make neighboring boundary choices dependent,
+this score is not a causal boundary effect.  Adjust top-partition frequencies
+for each boundary's null inclusion probability and support the descriptive map
+with either matched-swap contrasts or a constrained fixed-\(k\) indicator
+regression.  Use paired document- or sequence-level bootstrap intervals on the
+untouched confirmation set.
 
 ---
 
@@ -715,7 +813,10 @@ Experiment 2 has multiple levels of success.
 
 ### Minimum positive result
 
-Different mixed-width boundary configurations produce reproducibly different NLL despite having identical width composition and routing-group count.
+Different mixed-width boundary configurations produce different discovery NLL
+despite having identical width composition and routing-group count, and the
+preselected contrast survives untouched confirmation with a paired confidence
+interval excluding zero.
 
 This proves:
 
@@ -723,7 +824,8 @@ This proves:
 
 ### Strong result
 
-The best mixed-width configurations significantly outperform H=16.
+The preselected mixed-width configurations outperform the native frozen H=16
+computation on untouched confirmation.
 
 This proves:
 
@@ -731,7 +833,8 @@ This proves:
 
 ### Target result
 
-A mixed-width configuration trained and evaluated under matched conditions outperforms H=8.
+A mixed-width configuration trained and evaluated under matched conditions
+outperforms H=8 across the preregistered training seeds.
 
 This establishes:
 
@@ -741,7 +844,7 @@ This establishes:
 
 # Final Research Progression
 
-Experiment 1 established:
+Experiment 1 provisionally found:
 
 \[
 \boxed{\text{which residual subspaces share a router matters}}
@@ -760,3 +863,31 @@ If Experiment 2 succeeds, Experiment 3 becomes:
 \]
 
 The eventual architecture should preserve residual coordinate order while learning where routing groups begin and end.
+
+---
+
+# Locked Execution Sequence
+
+1. Train or load the matched native H=16 checkpoint.
+2. Implement and parity-test the mixed-width eager router.
+3. Enumerate all 495 valid \(k=4\) partitions.
+4. Apply each partition globally at all 73 routing sites.
+5. Search on fixed Experiment 2 discovery tokens using native H=16 as the only
+   clean frozen baseline.
+6. Freeze the candidate-selection manifest before opening confirmation data.
+7. Confirm the selected partitions once on untouched tokens.
+8. Freeze one to three confirmed mixed-width candidates.
+9. Train H=8, H=16, and the selected mixed architectures from scratch with the
+   matched recipe and at least three seeds.
+10. Compare final token-weighted NLL and systems cost.
+
+The claim boundary is fixed:
+
+- **Frozen H16 search:** where can an H16-trained model tolerate or benefit
+  from removing boundaries?
+- **Matched retraining:** is mixed-width MHAR a better architecture than
+  equal-width MHAR?
+
+All stages must write resumable JSONL results and immutable manifests, log to
+the W&B project `MHAR Stuff`, record code/checkpoint/data hashes, and preserve
+the discovery/confirmation separation.
