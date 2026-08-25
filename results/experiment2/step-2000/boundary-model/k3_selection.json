@@ -1,5 +1,5 @@
 {
-  "boundary_effects_sha256": "ba9891659b5bdfa338c3a3372061e61a804b9307696b7294e60a416a5a8fdfa8",
+  "boundary_effects_sha256": "6994978ec030e5f3a78e8017dd0540014949e10d10f52b1e160ad88c8525d4c7",
   "candidate_space_size": 286,
   "candidates": [
     {
@@ -10,7 +10,7 @@
       ],
       "partition_id": "0-1__2-3__4__5__6__7-8__9__10__11__12__13__14__15",
       "predicted_rank": 219,
-      "predicted_score": 0.05593824086673388,
+      "predicted_score": 0.055938240867,
       "roles": [
         "uniform_transfer"
       ]
@@ -23,7 +23,7 @@
       ],
       "partition_id": "0-1__2-3__4__5__6__7__8__9__10-11__12__13__14__15",
       "predicted_rank": 260,
-      "predicted_score": 0.09023732459638262,
+      "predicted_score": 0.090237324596,
       "roles": [
         "uniform_transfer"
       ]
@@ -36,7 +36,7 @@
       ],
       "partition_id": "0-1__2__3__4-5__6-7__8__9__10__11__12__13__14__15",
       "predicted_rank": 103,
-      "predicted_score": -0.02253038648714019,
+      "predicted_score": -0.022530386487,
       "roles": [
         "uniform_transfer"
       ]
@@ -49,7 +49,7 @@
       ],
       "partition_id": "0-1__2__3__4-5__6__7__8__9__10-11__12__13__14__15",
       "predicted_rank": 285,
-      "predicted_score": 0.1431510085147799,
+      "predicted_score": 0.143151008515,
       "roles": [
         "target_bottom",
         "uniform_transfer"
@@ -63,7 +63,7 @@
       ],
       "partition_id": "0-1__2__3__4__5__6__7-8__9__10-11__12__13__14__15",
       "predicted_rank": 282,
-      "predicted_score": 0.11969229191451652,
+      "predicted_score": 0.119692291915,
       "roles": [
         "target_bottom"
       ]
@@ -76,7 +76,7 @@
       ],
       "partition_id": "0-1__2__3__4__5__6__7__8__9__10-11__12-13__14__15",
       "predicted_rank": 280,
-      "predicted_score": 0.11888965800154264,
+      "predicted_score": 0.118889658002,
       "roles": [
         "uniform_transfer"
       ]
@@ -89,7 +89,7 @@
       ],
       "partition_id": "0-1__2__3__4__5__6__7__8__9__10__11-12__13__14-15",
       "predicted_rank": 172,
-      "predicted_score": 0.023322525930032374,
+      "predicted_score": 0.02332252593,
       "roles": [
         "uniform_transfer"
       ]
@@ -102,7 +102,7 @@
       ],
       "partition_id": "0__1-2__3-4__5-6__7__8__9__10__11__12__13__14__15",
       "predicted_rank": 110,
-      "predicted_score": -0.018188112977606516,
+      "predicted_score": -0.018188112978,
       "roles": [
         "uniform_transfer"
       ]
@@ -115,7 +115,7 @@
       ],
       "partition_id": "0__1-2__3-4__5__6__7__8__9__10__11__12-13__14__15",
       "predicted_rank": 246,
-      "predicted_score": 0.08209721946627553,
+      "predicted_score": 0.082097219466,
       "roles": [
         "uniform_transfer"
       ]
@@ -128,7 +128,7 @@
       ],
       "partition_id": "0__1-2__3__4-5__6__7__8__9__10-11__12__13__14__15",
       "predicted_rank": 286,
-      "predicted_score": 0.1455195034864471,
+      "predicted_score": 0.145519503486,
       "roles": [
         "target_bottom"
       ]
@@ -141,7 +141,7 @@
       ],
       "partition_id": "0__1-2__3__4-5__6__7__8__9__10__11__12__13-14__15",
       "predicted_rank": 230,
-      "predicted_score": 0.064981370309972,
+      "predicted_score": 0.06498137031,
       "roles": [
         "uniform_transfer"
       ]
@@ -154,7 +154,7 @@
       ],
       "partition_id": "0__1-2__3__4__5-6__7__8__9__10__11-12__13__14__15",
       "predicted_rank": 136,
-      "predicted_score": -0.006226024122141155,
+      "predicted_score": -0.006226024122,
       "roles": [
         "uniform_transfer"
       ]
@@ -167,7 +167,7 @@
       ],
       "partition_id": "0__1-2__3__4__5__6-7__8-9__10__11__12__13__14__15",
       "predicted_rank": 70,
-      "predicted_score": -0.05146636691035528,
+      "predicted_score": -0.05146636691,
       "roles": [
         "uniform_transfer"
       ]
@@ -180,7 +180,7 @@
       ],
       "partition_id": "0__1-2__3__4__5__6__7-8__9__10-11__12__13__14__15",
       "predicted_rank": 284,
-      "predicted_score": 0.12206078688618369,
+      "predicted_score": 0.122060786886,
       "roles": [
         "target_bottom"
       ]
@@ -193,7 +193,7 @@
       ],
       "partition_id": "0__1-2__3__4__5__6__7-8__9__10__11__12-13__14__15",
       "predicted_rank": 254,
-      "predicted_score": 0.08695906924356106,
+      "predicted_score": 0.086959069244,
       "roles": [
         "uniform_transfer"
       ]
@@ -206,7 +206,7 @@
       ],
       "partition_id": "0__1-2__3__4__5__6__7__8__9__10-11__12-13__14__15",
       "predicted_rank": 283,
-      "predicted_score": 0.12125815297320981,
+      "predicted_score": 0.121258152973,
       "roles": [
         "target_bottom"
       ]
@@ -219,7 +219,7 @@
       ],
       "partition_id": "0__1__2-3__4__5-6__7__8__9-10__11__12__13__14__15",
       "predicted_rank": 30,
-      "predicted_score": -0.10017998521594108,
+      "predicted_score": -0.100179985216,
       "roles": [
         "uniform_transfer"
       ]
@@ -232,7 +232,7 @@
       ],
       "partition_id": "0__1__2-3__4__5-6__7__8__9__10__11__12__13__14-15",
       "predicted_rank": 9,
-      "predicted_score": -0.13847907550628624,
+      "predicted_score": -0.138479075506,
       "roles": [
         "target_top",
         "uniform_transfer"
@@ -246,7 +246,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6-7__8__9__10__11__12-13__14__15",
       "predicted_rank": 29,
-      "predicted_score": -0.10040513300166033,
+      "predicted_score": -0.100405133002,
       "roles": [
         "uniform_transfer"
       ]
@@ -259,7 +259,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6-7__8__9__10__11__12__13-14__15",
       "predicted_rank": 5,
-      "predicted_score": -0.1458415485355128,
+      "predicted_score": -0.145841548536,
       "roles": [
         "target_top"
       ]
@@ -272,7 +272,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6-7__8__9__10__11__12__13__14-15",
       "predicted_rank": 2,
-      "predicted_score": -0.16877342042170168,
+      "predicted_score": -0.168773420422,
       "roles": [
         "target_top"
       ]
@@ -285,7 +285,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6__7-8__9-10__11__12__13__14__15",
       "predicted_rank": 142,
-      "predicted_score": 0.0009079811409148496,
+      "predicted_score": 0.000907981141,
       "roles": [
         "target_middle"
       ]
@@ -298,7 +298,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6__7__8__9-10__11__12-13__14__15",
       "predicted_rank": 141,
-      "predicted_score": 0.0001053472279409634,
+      "predicted_score": 0.000105347228,
       "roles": [
         "target_middle"
       ]
@@ -311,7 +311,7 @@
       ],
       "partition_id": "0__1__2-3__4__5__6__7__8__9__10__11__12-13__14-15",
       "predicted_rank": 93,
-      "predicted_score": -0.03819374306240421,
+      "predicted_score": -0.038193743062,
       "roles": [
         "uniform_transfer"
       ]
@@ -324,7 +324,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6-7__8__9__10__11__12__13__14-15",
       "predicted_rank": 6,
-      "predicted_score": -0.14418030288085332,
+      "predicted_score": -0.144180302881,
       "roles": [
         "target_top"
       ]
@@ -337,7 +337,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7-8__9__10-11__12__13__14__15",
       "predicted_rank": 261,
-      "predicted_score": 0.09067201345408202,
+      "predicted_score": 0.090672013454,
       "roles": [
         "uniform_transfer"
       ]
@@ -350,7 +350,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7__8-9__10__11__12__13-14__15",
       "predicted_rank": 143,
-      "predicted_score": 0.0022881214829880703,
+      "predicted_score": 0.002288121483,
       "roles": [
         "target_middle",
         "uniform_transfer"
@@ -364,7 +364,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7__8-9__10__11__12__13__14-15",
       "predicted_rank": 107,
-      "predicted_score": -0.020643750403200822,
+      "predicted_score": -0.020643750403,
       "roles": [
         "uniform_transfer"
       ]
@@ -377,7 +377,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7__8__9-10__11__12__13-14__15",
       "predicted_rank": 106,
-      "predicted_score": -0.020737950765063125,
+      "predicted_score": -0.020737950765,
       "roles": [
         "uniform_transfer"
       ]
@@ -390,7 +390,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7__8__9-10__11__12__13__14-15",
       "predicted_rank": 85,
-      "predicted_score": -0.04366982265125202,
+      "predicted_score": -0.043669822651,
       "roles": [
         "uniform_transfer"
       ]
@@ -403,7 +403,7 @@
       ],
       "partition_id": "0__1__2__3-4__5__6__7__8__9__10-11__12__13-14__15",
       "predicted_rank": 197,
-      "predicted_score": 0.04443296400725568,
+      "predicted_score": 0.044432964007,
       "roles": [
         "uniform_transfer"
       ]
@@ -416,7 +416,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6-7__8__9__10__11__12__13__14-15",
       "predicted_rank": 16,
-      "predicted_score": -0.11585973650330439,
+      "predicted_score": -0.115859736503,
       "roles": [
         "uniform_transfer"
       ]
@@ -429,7 +429,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6__7-8__9-10__11__12__13__14__15",
       "predicted_rank": 212,
-      "predicted_score": 0.053821665059312136,
+      "predicted_score": 0.053821665059,
       "roles": [
         "uniform_transfer"
       ]
@@ -442,7 +442,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6__7-8__9__10__11__12__13__14-15",
       "predicted_rank": 159,
-      "predicted_score": 0.015522574768966964,
+      "predicted_score": 0.015522574769,
       "roles": [
         "uniform_transfer"
       ]
@@ -455,7 +455,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6__7__8-9__10__11-12__13__14__15",
       "predicted_rank": 250,
-      "predicted_score": 0.08394797638554316,
+      "predicted_score": 0.083947976386,
       "roles": [
         "uniform_transfer"
       ]
@@ -468,7 +468,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6__7__8-9__10__11__12__13__14-15",
       "predicted_rank": 145,
-      "predicted_score": 0.007676815974348106,
+      "predicted_score": 0.007676815974,
       "roles": [
         "target_middle",
         "uniform_transfer"
@@ -482,7 +482,7 @@
       ],
       "partition_id": "0__1__2__3__4-5__6__7__8__9-10__11__12__13-14__15",
       "predicted_rank": 144,
-      "predicted_score": 0.007582615612485806,
+      "predicted_score": 0.007582615612,
       "roles": [
         "target_middle"
       ]
@@ -495,7 +495,7 @@
       ],
       "partition_id": "0__1__2__3__4__5-6__7-8__9__10__11__12__13-14__15",
       "predicted_rank": 38,
-      "predicted_score": -0.08609223630196347,
+      "predicted_score": -0.086092236302,
       "roles": [
         "uniform_transfer"
       ]
@@ -508,7 +508,7 @@
       ],
       "partition_id": "0__1__2__3__4__5-6__7__8__9-10__11__12__13__14-15",
       "predicted_rank": 8,
-      "predicted_score": -0.1398959392308224,
+      "predicted_score": -0.139895939231,
       "roles": [
         "target_top"
       ]
@@ -521,7 +521,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6-7__8-9__10__11__12__13__14-15",
       "predicted_rank": 4,
-      "predicted_score": -0.14716421189818665,
+      "predicted_score": -0.147164211898,
       "roles": [
         "target_top"
       ]
@@ -534,7 +534,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6-7__8__9-10__11__12__13-14__15",
       "predicted_rank": 3,
-      "predicted_score": -0.14725841226004896,
+      "predicted_score": -0.14725841226,
       "roles": [
         "target_top"
       ]
@@ -547,7 +547,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6-7__8__9-10__11__12__13__14-15",
       "predicted_rank": 1,
-      "predicted_score": -0.17019028414623785,
+      "predicted_score": -0.170190284146,
       "roles": [
         "target_top"
       ]
@@ -560,7 +560,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6-7__8__9__10__11-12__13__14-15",
       "predicted_rank": 10,
-      "predicted_score": -0.13221821402538797,
+      "predicted_score": -0.132218214025,
       "roles": [
         "target_top"
       ]
@@ -573,7 +573,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6-7__8__9__10__11__12-13__14-15",
       "predicted_rank": 7,
-      "predicted_score": -0.14012108701654166,
+      "predicted_score": -0.140121087017,
       "roles": [
         "target_top"
       ]
@@ -586,7 +586,7 @@
       ],
       "partition_id": "0__1__2__3__4__5__6__7-8__9-10__11__12-13__14__15",
       "predicted_rank": 180,
-      "predicted_score": 0.029560314546074856,
+      "predicted_score": 0.029560314546,
       "roles": [
         "uniform_transfer"
       ]
@@ -599,18 +599,18 @@
       ],
       "partition_id": "0__1__2__3__4__5__6__7-8__9-10__11__12__13-14__15",
       "predicted_rank": 113,
-      "predicted_score": -0.015876100987777593,
+      "predicted_score": -0.015876100988,
       "roles": [
         "uniform_transfer"
       ]
     }
   ],
-  "created_at": "2026-08-25T18:34:36.693433+00:00",
+  "created_at": "2026-08-25T18:55:15.756929+00:00",
   "experiment": 2,
   "format_version": 1,
   "num_merges": 3,
   "selection_seed": 20260826,
-  "source_commit": "997dd6fdb3441145d7f1bd065d6f369d5cde1c20",
+  "source_commit": "238a671af92c5459da327614e32eb185a6ad3389",
   "source_discovery_results_sha256": "763aeb36b6bdad064333d48dcad3818f14b109695ebe39e23f23e261b3eb2bcc",
   "stage": "boundary-score-transfer",
   "target_rule": "predicted top 10, centered middle 5, bottom 5",
