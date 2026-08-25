@@ -281,6 +281,7 @@ def candidate_rankings(beta: np.ndarray, num_merges: int) -> list[dict]:
 
 def selection_manifest(
     rankings, *, num_merges, source_hash, score_hash, seed, uniform_size,
+    source_commit=None,
 ):
     roles = defaultdict(list)
     for row in rankings[:10]:
@@ -312,7 +313,7 @@ def selection_manifest(
         "candidate_space_size": len(rankings),
         "source_discovery_results_sha256": source_hash,
         "boundary_effects_sha256": score_hash,
-        "source_commit": git_commit(),
+        "source_commit": source_commit or git_commit(),
         "selection_seed": seed,
         "uniform_sample_size": uniform_size,
         "target_rule": "predicted top 10, centered middle 5, bottom 5",
@@ -432,6 +433,11 @@ def fit_command(args):
         ["partition_id", "actual_delta_nll", "additive_oof_prediction",
          "ridge_oof_prediction", "fold"])
 
+    existing_selection = output_dir / "k3_selection.json"
+    registered_source_commit = (
+        json.loads(existing_selection.read_text(encoding="utf-8"))["source_commit"]
+        if existing_selection.exists() else git_commit()
+    )
     selection_paths = {}
     ranking_paths = {}
     for num_merges, expected_count in ((3, 286), (5, 462)):
@@ -444,7 +450,8 @@ def fit_command(args):
             ["predicted_rank", "partition_id", "predicted_score", "merged_boundaries"])
         manifest = selection_manifest(
             rankings, num_merges=num_merges, source_hash=source_hash,
-            score_hash=effect_hash, seed=args.seed, uniform_size=args.uniform_size)
+            score_hash=effect_hash, seed=args.seed, uniform_size=args.uniform_size,
+            source_commit=registered_source_commit)
         selection_path = output_dir / f"k{num_merges}_selection.json"
         frozen_json(selection_path, manifest)
         selection_paths[num_merges] = selection_path
@@ -453,6 +460,7 @@ def fit_command(args):
     summary = {
         "created_at": utc_now(),
         "source_commit": git_commit(),
+        "selection_source_commit": registered_source_commit,
         "source_discovery_results": str(discovery_path),
         "source_discovery_results_sha256": source_hash,
         "native_h16_nll": native_nll,
