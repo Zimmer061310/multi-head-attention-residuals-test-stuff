@@ -315,6 +315,42 @@ def mixed_width_mhar_eager(
     primitive_width = hidden_size // num_atomic_blocks
     K = norm(V)
     flat_query = query.reshape(hidden_size)
+
+    # Use the identical vectorized contraction as ordinary equal-width MHAR at
+    # both endpoints.  Besides being faster, this avoids bf16 reduction-order
+    # drift in the parity gate before a frozen-checkpoint experiment.
+    if all(len(group) == 1 for group in canonical):
+        num_groups = num_atomic_blocks
+        grouped_width = primitive_width
+        logits = torch.einsum(
+            "h k, n b t h k -> n b t h",
+            flat_query.view(num_groups, grouped_width),
+            K.view(*K.shape[:-1], num_groups, grouped_width),
+        )
+        weights = logits.softmax(dim=0)
+        routed = torch.einsum(
+            "n b t h, n b t h k -> b t h k",
+            weights,
+            V.view(*V.shape[:-1], num_groups, grouped_width),
+        )
+        return routed.reshape(*V.shape[1:-1], hidden_size)
+
+    if all(len(group) == 2 for group in canonical):
+        num_groups = num_atomic_blocks // 2
+        grouped_width = 2 * primitive_width
+        logits = torch.einsum(
+            "h k, n b t h k -> n b t h",
+            flat_query.view(num_groups, grouped_width),
+            K.view(*K.shape[:-1], num_groups, grouped_width),
+        )
+        weights = logits.softmax(dim=0)
+        routed = torch.einsum(
+            "n b t h, n b t h k -> b t h k",
+            weights,
+            V.view(*V.shape[:-1], num_groups, grouped_width),
+        )
+        return routed.reshape(*V.shape[1:-1], hidden_size)
+
     outputs = []
     for group in canonical:
         start = group[0] * primitive_width
