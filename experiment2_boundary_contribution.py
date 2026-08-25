@@ -37,6 +37,12 @@ N_BOUNDARIES = 15
 EXPECTED_K4 = 495
 DEFAULT_SEED = 20260826
 DEFAULT_WANDB_PROJECT = "MHAR Stuff"
+OUTPUT_DECIMALS = 12
+
+
+def stable_float(value: float, decimals: int = OUTPUT_DECIMALS) -> float:
+    """Quantize exported values so frozen artifacts are BLAS-independent."""
+    return round(float(value), decimals)
 
 
 def rankdata(values: np.ndarray) -> np.ndarray:
@@ -246,22 +252,28 @@ def boundary_effect_rows(mixed, indicators, target, beta):
     result = []
     for boundary in range(N_BOUNDARIES):
         selected = indicators[:, boundary].astype(bool)
+        merged_mean = float(target[selected].mean())
+        unmerged_mean = float(target[~selected].mean())
         row = {
             "boundary": boundary,
             "pair": f"({boundary},{boundary + 1})",
-            "beta": float(beta[boundary]),
+            "beta": stable_float(beta[boundary]),
             "relative_rank": order[boundary],
-            "all_frequency": float(selected.mean()),
-            "top10_frequency": float(selected[measured_order[:10]].mean()),
-            "top20_frequency": float(selected[measured_order[:20]].mean()),
-            "top50_frequency": float(selected[measured_order[:50]].mean()),
-            "mean_delta_when_merged": float(target[selected].mean()),
-            "mean_delta_when_not_merged": float(target[~selected].mean()),
+            "all_frequency": stable_float(selected.mean()),
+            "top10_frequency": stable_float(selected[measured_order[:10]].mean()),
+            "top20_frequency": stable_float(selected[measured_order[:20]].mean()),
+            "top50_frequency": stable_float(selected[measured_order[:50]].mean()),
+            "mean_delta_when_merged": stable_float(merged_mean),
+            "mean_delta_when_not_merged": stable_float(unmerged_mean),
+            "_sort_beta": float(beta[boundary]),
         }
-        row["descriptive_not_merged_minus_merged"] = (
-            row["mean_delta_when_not_merged"] - row["mean_delta_when_merged"])
+        row["descriptive_not_merged_minus_merged"] = stable_float(
+            unmerged_mean - merged_mean)
         result.append(row)
-    return sorted(result, key=lambda row: row["beta"])
+    result.sort(key=lambda row: row["_sort_beta"])
+    for row in result:
+        del row["_sort_beta"]
+    return result
 
 
 def candidate_rankings(beta: np.ndarray, num_merges: int) -> list[dict]:
@@ -271,7 +283,7 @@ def candidate_rankings(beta: np.ndarray, num_merges: int) -> list[dict]:
         rows.append({
             "partition_id": mixed_partition_id(partition),
             "merged_boundaries": boundaries,
-            "predicted_score": float(beta[boundaries].sum()),
+            "predicted_score": stable_float(beta[boundaries].sum()),
         })
     rows.sort(key=lambda row: (row["predicted_score"], row["partition_id"]))
     for rank, row in enumerate(rows, 1):

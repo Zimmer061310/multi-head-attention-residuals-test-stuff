@@ -12,6 +12,7 @@ from experiment2_boundary_contribution import (
     predict_additive,
     ridge_features,
     selection_manifest,
+    stable_float,
     transfer_summary,
 )
 from mhar_partition import generate_adjacent_merge_partitions, merged_boundaries
@@ -55,6 +56,20 @@ class AdditiveModelTest(unittest.TestCase):
 
 
 class TransferSelectionTest(unittest.TestCase):
+    def test_frozen_outputs_ignore_sub_precision_blas_differences(self):
+        left = stable_float(0.12345678901234)
+        right = stable_float(0.12345678901235)
+        self.assertEqual(left, right)
+
+        beta_left = np.linspace(-0.07, 0.07, 15)
+        beta_left -= beta_left.mean()
+        beta_right = beta_left.copy()
+        beta_right[0] += 1e-16
+        self.assertEqual(
+            candidate_rankings(beta_left, 3),
+            candidate_rankings(beta_right, 3),
+        )
+
     def test_rankings_and_frozen_roles_have_registered_counts(self):
         beta = np.linspace(-0.07, 0.07, 15)
         beta -= beta.mean()
