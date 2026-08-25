@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +33,7 @@ from experiment2_boundary_contribution import (
 
 FOLLOWUP_SPACES = {1: 15, 2: 91, 6: 210, 7: 36}
 EXHAUSTIVE_K = {1, 7}
+ROOT = Path(__file__).resolve().parent
 
 
 def gate_decisions(transfer_summary: dict) -> dict[int, bool]:
@@ -356,6 +359,70 @@ def analyze_command(args) -> None:
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 
+def evaluation_command(args, *, k: int, selection_path: Path, output_dir: Path) -> list[str]:
+    return [
+        sys.executable,
+        str(ROOT / "experiment2_mixed_width.py"),
+        "evaluate",
+        "--checkpoint", str(Path(args.checkpoint).resolve()),
+        "--artifact", str(Path(args.artifact).resolve()),
+        "--output-dir", str(output_dir.resolve()),
+        "--split", "confirmation",
+        "--selection-manifest", str(selection_path.resolve()),
+        "--device", args.device,
+        "--dtype", args.dtype,
+        "--batch-size", str(args.batch_size),
+        "--wandb-mode", args.wandb_mode,
+        "--wandb-project", args.wandb_project,
+        "--wandb-group", args.wandb_group,
+        "--wandb-run-name", f"exp2-step2000-k{k}-conditional-followup",
+    ]
+
+
+def run_command(args) -> None:
+    gate_path = Path(args.gate_manifest).resolve()
+    gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    eligible = [int(k) for k in gate["eligible_k"]]
+    manifests_dir = Path(args.manifests_dir).resolve()
+    output_dir = Path(args.output_dir).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if not eligible:
+        print("No conditional follow-up is eligible; no GPU evaluation launched.")
+        return
+
+    selections = {}
+    results = {}
+    for k in eligible:
+        selection_path = manifests_dir / f"k{k}_selection.json"
+        registered = gate["manifests"][str(k)]
+        if sha256_file(selection_path) != registered["sha256"]:
+            raise RuntimeError(f"k={k} selection manifest hash differs from frozen gate")
+        k_output = output_dir / f"k{k}"
+        subprocess.run(
+            evaluation_command(
+                args, k=k, selection_path=selection_path, output_dir=k_output),
+            check=True,
+        )
+        selections[k] = selection_path
+        results[k] = k_output / "confirmation_results.jsonl"
+
+    analysis_args = argparse.Namespace(
+        gate_manifest=str(gate_path),
+        output_dir=str(output_dir / "analysis"),
+        wandb_mode=args.wandb_mode,
+        wandb_project=args.wandb_project,
+        wandb_entity=args.wandb_entity,
+        wandb_group=args.wandb_group,
+        wandb_run_name="exp2-step2000-conditional-followup-analysis",
+    )
+    for k in FOLLOWUP_SPACES:
+        setattr(analysis_args, f"k{k}_results", str(results[k]) if k in results else None)
+        setattr(
+            analysis_args, f"k{k}_selection",
+            str(selections[k]) if k in selections else None)
+    analyze_command(analysis_args)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -377,6 +444,18 @@ def build_parser() -> argparse.ArgumentParser:
         analyze.add_argument(f"--k{k}-selection", dest=f"k{k}_selection")
     add_wandb_arguments(analyze)
     analyze.set_defaults(func=analyze_command)
+
+    run = subparsers.add_parser("run")
+    run.add_argument("--gate-manifest", required=True)
+    run.add_argument("--manifests-dir", required=True)
+    run.add_argument("--checkpoint", required=True)
+    run.add_argument("--artifact", required=True)
+    run.add_argument("--output-dir", required=True)
+    run.add_argument("--device", default="cuda")
+    run.add_argument("--dtype", default="bf16")
+    run.add_argument("--batch-size", type=int, default=1)
+    add_wandb_arguments(run)
+    run.set_defaults(func=run_command)
     return parser
 
 

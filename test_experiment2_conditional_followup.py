@@ -1,12 +1,15 @@
 """Tests for the pre-registered conditional Experiment 2 continuation."""
 
 import unittest
+from argparse import Namespace
+from pathlib import Path
 
 import numpy as np
 
 from experiment2_boundary_contribution import candidate_rankings
 from experiment2_conditional_followup import (
     FOLLOWUP_SPACES,
+    evaluation_command,
     exhaustive_manifest,
     gate_decisions,
     sampled_manifest,
@@ -52,6 +55,22 @@ class ConditionalFollowupTest(unittest.TestCase):
         self.assertEqual(
             sum("target_top" in row["roles"] for row in sampled["candidates"]),
             10)
+
+    def test_evaluation_command_preserves_frozen_runtime_settings(self):
+        args = Namespace(
+            checkpoint="checkpoint", artifact="fixed.pt", device="cuda",
+            dtype="bf16", batch_size=1, wandb_mode="online",
+            wandb_project="MHAR Stuff", wandb_group="group")
+        command = evaluation_command(
+            args, k=2, selection_path=Path("selection.json"),
+            output_dir=Path("output"))
+        self.assertIn("--split", command)
+        self.assertEqual(command[command.index("--split") + 1], "confirmation")
+        self.assertEqual(command[command.index("--dtype") + 1], "bf16")
+        self.assertEqual(command[command.index("--batch-size") + 1], "1")
+        self.assertEqual(
+            command[command.index("--wandb-run-name") + 1],
+            "exp2-step2000-k2-conditional-followup")
 
 
 if __name__ == "__main__":

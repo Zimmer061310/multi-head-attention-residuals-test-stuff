@@ -295,6 +295,18 @@ result/selection paths to `experiment2_conditional_followup.py analyze`.
 uniform sampling design. This stage reuses the confirmation split and is
 therefore labeled a sequential follow-up, not a new untouched confirmation.
 
+The checked-in sequential runner performs every eligible evaluation and the
+final analysis without changing the frozen gate:
+
+```bash
+python3 experiment2_conditional_followup.py run \
+  --gate-manifest <conditional-followup-manifests/followup_gate.json> \
+  --manifests-dir <conditional-followup-manifests> \
+  --checkpoint <step-2000-checkpoint> --artifact <fixed-eval.pt> \
+  --output-dir <conditional-followup-results> \
+  --wandb-mode online --wandb-project 'MHAR Stuff'
+```
+
 ## Citation
 
 ```bibtex
