@@ -9,6 +9,7 @@ from pathlib import Path
 from experiment2_mixed_width import (
     NATIVE_H16_ID,
     analyze_command,
+    build_partition_choice_rows,
     paired_bootstrap,
 )
 from mhar_partition import (
@@ -52,6 +53,35 @@ class PairedBootstrapTest(unittest.TestCase):
 
 
 class AnalysisTest(unittest.TestCase):
+    def test_partition_choice_rows_include_native_and_all_495_mixed_choices(self):
+        native = {
+            "partition_id": NATIVE_H16_ID,
+            "nll": 2.8,
+            "merged_boundaries": [],
+            "segment_widths": [80] * 16,
+            "routing_groups": 16,
+        }
+        ranked = []
+        for rank, partition in enumerate(generate_adjacent_merge_partitions(16, 4), 1):
+            ranked.append({
+                "rank": rank,
+                "partition_id": mixed_partition_id(partition),
+                "nll": 2.8 + rank / 1000,
+                "delta_nll_vs_native_h16": rank / 1000,
+                "merged_boundaries": list(merged_boundaries(partition)),
+                "segment_widths": list(mixed_segment_widths(partition)),
+                "routing_groups": 12,
+            })
+
+        rows = build_partition_choice_rows(native, ranked)
+
+        self.assertEqual(len(rows), 496)
+        self.assertEqual(rows[0]["choice_rank"], 1)
+        self.assertEqual(rows[0]["partition_id"], NATIVE_H16_ID)
+        self.assertEqual(rows[0]["delta_nll_vs_native_h16"], 0.0)
+        self.assertEqual(rows[-1]["choice_rank"], 496)
+        self.assertTrue(all(len(row["merged_boundaries"]) == 4 for row in rows[1:]))
+
     def test_analysis_freezes_top5_median_worst_and_native(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -79,6 +109,10 @@ class AnalysisTest(unittest.TestCase):
             )
             self.assertEqual(len(selection["candidates"]), 8)
             self.assertTrue((output / "fig_partition_ranking.png").is_file())
+            self.assertTrue((output / "fig_partition_choice_map.png").is_file())
+            self.assertTrue((output / "fig_partition_choice_map.pdf").is_file())
+            with (output / "partition_choice_map.csv").open(encoding="utf-8") as handle:
+                self.assertEqual(sum(1 for _ in handle), 497)
             self.assertTrue((output / "fig_boundary_associations.pdf").is_file())
             # The immutable selection can be reproduced without changing it.
             first = (output / "confirmation_selection.json").read_bytes()

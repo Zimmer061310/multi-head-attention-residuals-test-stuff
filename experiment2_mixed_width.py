@@ -399,6 +399,32 @@ def build_selection(ranked, discovery_hash):
     }
 
 
+def build_partition_choice_rows(native, ranked):
+    """Return one display/export row for native H16 plus every mixed choice."""
+    rows = [{
+        "choice_rank": 1,
+        "mixed_rank": 0,
+        "partition_id": NATIVE_H16_ID,
+        "nll": native["nll"],
+        "delta_nll_vs_native_h16": 0.0,
+        "merged_boundaries": [],
+        "routing_groups": native.get("routing_groups", 16),
+        "segment_widths": native.get("segment_widths", [80] * 16),
+    }]
+    for row in ranked:
+        rows.append({
+            "choice_rank": row["rank"] + 1,
+            "mixed_rank": row["rank"],
+            "partition_id": row["partition_id"],
+            "nll": row["nll"],
+            "delta_nll_vs_native_h16": row["delta_nll_vs_native_h16"],
+            "merged_boundaries": row["merged_boundaries"],
+            "routing_groups": row.get("routing_groups", 12),
+            "segment_widths": row["segment_widths"],
+        })
+    return rows
+
+
 def analyze_command(args):
     discovery_path = Path(args.discovery_results).resolve()
     output_dir = Path(args.output_dir).resolve()
@@ -417,6 +443,7 @@ def analyze_command(args):
         enriched["rank"] = rank
         enriched["delta_nll_vs_native_h16"] = row["nll"] - native_nll
         ranked.append(enriched)
+    choice_rows = build_partition_choice_rows(by_id[NATIVE_H16_ID], ranked)
 
     discovery_hash = sha256_file(discovery_path)
     selection = build_selection(ranked, discovery_hash)
@@ -496,11 +523,21 @@ def analyze_command(args):
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(ranked)
+    with (output_dir / "partition_choice_map.csv").open(
+            "w", newline="", encoding="utf-8") as handle:
+        fields = [
+            "choice_rank", "mixed_rank", "partition_id", "nll",
+            "delta_nll_vs_native_h16", "merged_boundaries", "routing_groups",
+            "segment_widths",
+        ]
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(choice_rows)
     with (output_dir / "boundary_associations.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(boundary_rows[0]))
         writer.writeheader()
         writer.writerows(boundary_rows)
-    write_figures(output_dir, ranked, boundary_rows, confirmation)
+    write_figures(output_dir, ranked, boundary_rows, confirmation, choice_rows)
     lines = [
         "# Experiment 2 mixed-width boundary search",
         "",
@@ -538,12 +575,22 @@ def analyze_command(args):
             for row in ranked:
                 ranked_table.add_data(*[
                     row.get(column) for column in ranked_table.columns])
+            choice_table = wandb.Table(columns=[
+                "choice_rank", "mixed_rank", "partition_id", "nll",
+                "delta_nll_vs_native_h16", "merged_boundaries", "routing_groups",
+            ])
+            for row in choice_rows:
+                choice_table.add_data(*[
+                    row.get(column) for column in choice_table.columns])
             run.log({
                 "analysis/ranked_partitions": ranked_table,
+                "analysis/partition_choice_map": choice_table,
                 "analysis/best_delta_nll_vs_native_h16": summary["best_delta_nll_vs_native_h16"],
                 "analysis/nll_range": summary["nll_range"],
                 "figures/partition_ranking": wandb.Image(
                     str(output_dir / "fig_partition_ranking.png")),
+                "figures/partition_choice_map": wandb.Image(
+                    str(output_dir / "fig_partition_choice_map.png")),
                 "figures/boundary_associations": wandb.Image(
                     str(output_dir / "fig_boundary_associations.png")),
             })
@@ -562,10 +609,12 @@ def analyze_command(args):
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 
-def write_figures(output_dir, ranked, boundaries, confirmation):
+def write_figures(output_dir, ranked, boundaries, confirmation, choice_rows):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap
+    from matplotlib.patches import Patch
 
     scale = 1000.0
     fig, axis = plt.subplots(figsize=(6.0, 3.8))
@@ -580,6 +629,98 @@ def write_figures(output_dir, ranked, boundaries, confirmation):
     fig.savefig(output_dir / "fig_partition_ranking.png", dpi=300)
     fig.savefig(output_dir / "fig_partition_ranking.pdf")
     plt.close(fig)
+
+    # The ranking curve alone hides which four adjacent H16 boundaries define each
+    # mixed choice. This aligned matrix makes all 496 choices directly inspectable.
+    choice_x = [row["choice_rank"] for row in choice_rows]
+    choice_delta = [row["delta_nll_vs_native_h16"] for row in choice_rows]
+    boundary_matrix = [
+        [int(boundary in row["merged_boundaries"]) for row in choice_rows]
+        for boundary in range(15)
+    ]
+    median_index = 1 + len(ranked) // 2
+    summary_rows = {
+        "Native H16": choice_rows[0],
+        "Best mixed": choice_rows[1],
+        "Median mixed": choice_rows[median_index],
+        "Worst mixed": choice_rows[-1],
+    }
+
+    with plt.rc_context({
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "DejaVu Serif"],
+        "font.size": 9,
+        "axes.titlesize": 12,
+        "axes.labelsize": 10,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "savefig.bbox": "tight",
+    }):
+        fig = plt.figure(figsize=(7.4, 6.0), constrained_layout=True)
+        grid = fig.add_gridspec(2, 1, height_ratios=(2.15, 2.65), hspace=0.04)
+        ranking_axis = fig.add_subplot(grid[0])
+        matrix_axis = fig.add_subplot(grid[1], sharex=ranking_axis)
+
+        ranking_axis.plot(
+            choice_x[1:], choice_delta[1:], color="#0072B2", linewidth=1.6,
+            zorder=2, label="495 mixed-width choices")
+        ranking_axis.scatter(
+            choice_x[1:], choice_delta[1:], color="#0072B2", s=7,
+            linewidths=0, zorder=3)
+        ranking_axis.scatter(
+            [choice_x[0]], [choice_delta[0]], color="#D55E00", marker="D",
+            s=34, linewidths=0.6, edgecolors="white", zorder=4,
+            label="Native H16")
+        ranking_axis.axhline(0.0, color="#2E3440", linewidth=0.8, zorder=1)
+        ranking_axis.set_ylim(-0.05, max(choice_delta) * 1.08)
+        ranking_axis.set_ylabel(r"$\Delta$NLL vs native H16 (nats/token)")
+        fig.suptitle("All 496 routing choices at step 2,000", fontsize=13, weight="bold")
+        ranking_axis.set_title(
+            r"Choices are sorted by discovery-set $\Delta$NLL; lower is better.",
+            loc="left", fontsize=8.5, color="#4B5563", pad=7)
+        summary_text = "\n".join(
+            f"{label}: {row['delta_nll_vs_native_h16']:+.3f}"
+            for label, row in summary_rows.items())
+        ranking_axis.text(
+            0.985, 0.05, summary_text, transform=ranking_axis.transAxes,
+            ha="right", va="bottom", fontsize=8.2, linespacing=1.35,
+            bbox={"boxstyle": "round,pad=0.35", "facecolor": "white",
+                  "edgecolor": "#CBD5E1", "alpha": 0.94})
+        ranking_axis.legend(loc="upper left", frameon=False, fontsize=8.2)
+        ranking_axis.tick_params(axis="x", labelbottom=False)
+        ranking_axis.grid(axis="y", color="#D1D5DB", linewidth=0.6, alpha=0.65)
+
+        matrix_axis.imshow(
+            boundary_matrix, aspect="auto", interpolation="nearest",
+            cmap=ListedColormap(["#F1F5F9", "#0072B2"]), vmin=0, vmax=1,
+            extent=(0.5, len(choice_rows) + 0.5, 14.5, -0.5))
+        matrix_axis.axvline(1.5, color="#D55E00", linewidth=1.2)
+        matrix_axis.set_yticks(
+            range(15), [f"{boundary}–{boundary + 1}" for boundary in range(15)])
+        tick_values = [1, 50, 100, 150, 200, 250, 300, 350, 400, 450, 496]
+        matrix_axis.set_xticks(tick_values, [str(value) for value in tick_values])
+        matrix_axis.set_xlim(0.5, len(choice_rows) + 0.5)
+        matrix_axis.set_xlabel(
+            r"Choice rank (1 native H16 + 495 mixed choices, sorted by $\Delta$NLL)")
+        matrix_axis.set_ylabel("Merged adjacent H16 heads")
+        matrix_axis.spines["top"].set_visible(True)
+        matrix_axis.spines["right"].set_visible(True)
+        matrix_axis.legend(
+            handles=[
+                Patch(facecolor="#0072B2", label="Pair shares one router"),
+                Patch(facecolor="#F1F5F9", edgecolor="#CBD5E1", label="Not merged"),
+            ],
+            loc="upper center", bbox_to_anchor=(0.5, -0.19), ncol=2,
+            frameon=False, fontsize=8.2)
+        matrix_axis.text(
+            0.995, -0.19,
+            "Each mixed column has four blue cells; native H16 has none.",
+            transform=matrix_axis.transAxes, ha="right", va="top", fontsize=7.8,
+            color="#4B5563")
+
+        fig.savefig(output_dir / "fig_partition_choice_map.png", dpi=300)
+        fig.savefig(output_dir / "fig_partition_choice_map.pdf")
+        plt.close(fig)
 
     fig, axis = plt.subplots(figsize=(6.0, 3.8))
     axis.bar(
