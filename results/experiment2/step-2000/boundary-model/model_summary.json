@@ -1,0 +1,64 @@
+{
+  "additive_constraint_sum_beta": 1.3877787807814457e-17,
+  "additive_cv": {
+    "baseline_metrics": {
+      "mae": 0.06268244669352732,
+      "r2": -0.0026339322607260574,
+      "rmse": 0.07610101727154421,
+      "spearman": -0.05125419666717206
+    },
+    "fold_count": 5,
+    "metrics": {
+      "mae": 0.015435345486120331,
+      "r2": 0.932520466458493,
+      "rmse": 0.01974264329642766,
+      "spearman": 0.9715113126827898
+    },
+    "seed": 20260826
+  },
+  "boundary_effects_sha256": "ba9891659b5bdfa338c3a3372061e61a804b9307696b7294e60a416a5a8fdfa8",
+  "created_at": "2026-08-25T18:34:47.249315+00:00",
+  "k4_partition_count": 495,
+  "leading_boundaries": [
+    "(6,7)",
+    "(5,6)",
+    "(14,15)",
+    "(13,14)"
+  ],
+  "mean_k4_delta_nll": 0.7863132743698344,
+  "native_h16_nll": 4.36591859810047,
+  "ridge_nested_cv": {
+    "compatible_pair_count": 91,
+    "design_rank": 91,
+    "fold_count": 5,
+    "inner_fold_count": 4,
+    "metrics": {
+      "mae": 0.002400044549809153,
+      "r2": 0.9980957955272071,
+      "rmse": 0.0033164698497845264,
+      "spearman": 0.9990184263953366
+    },
+    "nominal_design_columns": 107,
+    "seed": 20260826,
+    "selected_alphas": [
+      1.0,
+      0.31622776601683794,
+      0.0001,
+      1.0,
+      1.0
+    ]
+  },
+  "selection_manifests": {
+    "k3": {
+      "path": "/Users/zimmerzhao/.codex/worktrees/9e4d/multi-head-attention-residuals-test-stuff/results/experiment2/step-2000/boundary-model/k3_selection.json",
+      "sha256": "03a258955481203c4420da96d5b408489689c47f7227e603a53395d14f8f24b5"
+    },
+    "k5": {
+      "path": "/Users/zimmerzhao/.codex/worktrees/9e4d/multi-head-attention-residuals-test-stuff/results/experiment2/step-2000/boundary-model/k5_selection.json",
+      "sha256": "febf0cdcf56b574b4ae96aece27e92dad5a599b617c2d50947d2cc79ee256b59"
+    }
+  },
+  "source_commit": "997dd6fdb3441145d7f1bd065d6f369d5cde1c20",
+  "source_discovery_results": "/Users/zimmerzhao/.codex/worktrees/9e4d/multi-head-attention-residuals-test-stuff/results/experiment2/step-2000/discovery_results.jsonl",
+  "source_discovery_results_sha256": "763aeb36b6bdad064333d48dcad3818f14b109695ebe39e23f23e261b3eb2bcc"
+}
