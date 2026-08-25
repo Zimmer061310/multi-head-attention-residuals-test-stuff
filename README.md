@@ -240,6 +240,42 @@ Requirements: PyTorch ≥ 2.4, `transformers`, `triton`, `datasets`, `matplotlib
 and `wandb`. Data defaults to `HuggingFaceFW/fineweb-edu`; pass
 `--data-files 'path/*.parquet'` to use local parquet shards.
 
+## Experiment 2 boundary contribution and transfer
+
+Fit the identifiable centered, sum-to-zero additive boundary model on the
+complete 495-partition `k=4` discovery result. This also runs the nested-CV
+prediction-only ridge diagnostic and freezes separate targeted and uniform
+selection manifests for `k=3` and `k=5`:
+
+```bash
+python3 experiment2_boundary_contribution.py fit \
+  --discovery-results <step-2000-discovery-results.jsonl> \
+  --output-dir <boundary-model-output> \
+  --seed 20260826 --uniform-size 30 \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp2-1b-h16-step-2000
+```
+
+Evaluate each frozen manifest with `experiment2_mixed_width.py evaluate` using
+`--split confirmation` and the unchanged checkpoint/fixed-token artifact. Then
+analyze transfer without combining the targeted and uniform sampling purposes:
+
+```bash
+python3 experiment2_boundary_contribution.py analyze-transfer \
+  --k3-results <k3-confirmation-results.jsonl> \
+  --k3-selection <boundary-model-output/k3_selection.json> \
+  --k5-results <k5-confirmation-results.jsonl> \
+  --k5-selection <boundary-model-output/k5_selection.json> \
+  --output-dir <transfer-analysis-output> \
+  --wandb-mode online --wandb-project 'MHAR Stuff' \
+  --wandb-group mhar-exp2-1b-h16-step-2000
+```
+
+The additive coefficients rank relative boundary-removal damage within a fixed
+merge count. They do not imply improvement over native H16. Ridge interactions
+are retained only as a within-`k=4` prediction diagnostic and are never
+transferred across merge counts.
+
 ## Citation
 
 ```bibtex
