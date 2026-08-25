@@ -276,6 +276,25 @@ merge count. They do not imply improvement over native H16. Ridge interactions
 are retained only as a within-`k=4` prediction diagnostic and are never
 transferred across merge counts.
 
+If the frozen `k=3` or `k=5` directional gate passes, prepare the corresponding
+pre-registered continuation (`k=1/2` for `k=3`; `k=6/7` for `k=5`):
+
+```bash
+python3 experiment2_conditional_followup.py prepare \
+  --discovery-results <step-2000-discovery-results.jsonl> \
+  --boundary-effects <boundary-model-output/boundary_effects.csv> \
+  --transfer-summary <transfer-analysis-output/transfer_summary.json> \
+  --output-dir <conditional-followup-manifests> \
+  --wandb-mode online --wandb-project 'MHAR Stuff'
+```
+
+Evaluate every manifest listed by `followup_gate.json` with
+`experiment2_mixed_width.py evaluate --split confirmation`. Then pass those
+result/selection paths to `experiment2_conditional_followup.py analyze`.
+`k=1` and `k=7` are exhaustive; `k=2` and `k=6` use the frozen targeted plus
+uniform sampling design. This stage reuses the confirmation split and is
+therefore labeled a sequential follow-up, not a new untouched confirmation.
+
 ## Citation
 
 ```bibtex

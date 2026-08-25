@@ -268,6 +268,39 @@ candidate-level table even if transfer is weak or reversed.
 Only if the (k=4\rightarrow k=3/5) transfer is successful should additive
 scores be used to shrink searches for (k=1,2,6,7).
 
+### 10.1 Pre-registered conditional continuation
+
+This continuation was frozen before the (k=3) and (k=5) transfer results were
+complete. Use the already-implemented `directional_conditions_met` field as the
+operational gate; do not revise it after seeing the result.
+
+- If the (k=3) gate passes, continue to (k=1) and (k=2).
+- If the (k=5) gate passes, continue to (k=6) and (k=7).
+- A failed side does not authorize its corresponding continuation.
+
+The valid candidate-space sizes are
+
+\[
+k=1:15,\qquad k=2:91,\qquad k=6:210,\qquad k=7:36.
+\]
+
+Evaluate all candidates for (k=1) and (k=7). For (k=2) and (k=6), freeze the
+same logically separate predicted top 10, middle 5, bottom 5, and
+uniform-without-replacement sample of 30. Sample from the complete candidate
+space without excluding targeted candidates; retain overlapping roles and
+evaluate an overlapping partition once.
+
+Rank every continuation candidate using the unchanged additive score (S(P)).
+Do not refit coefficients, use current transfer losses to change rankings, or
+transfer the ridge interaction model. Evaluate using the same immutable
+checkpoint, fixed confirmation split, dtype, batch size, and native-H16 paired
+baseline as the (k=3/5) run.
+
+Because this stage is conditionally launched after inspecting the (k=3/5)
+confirmation result and reuses the same fixed split, label it a sequential
+follow-up rather than an independent untouched confirmation. Report the full
+candidate table and exact rank correlations even if the continuation fails.
+
 ## 11. Deliverables
 
 Produce and upload to W&B:
