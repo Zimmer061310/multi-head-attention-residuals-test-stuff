@@ -1,0 +1,250 @@
+{
+  "by_k": {
+    "1": {
+      "best_partition": {
+        "actual_delta_nll": 0.04957289849558233,
+        "actual_nll": 4.296553630866147,
+        "k": 1,
+        "merged_boundaries": [
+          14
+        ],
+        "partition_id": "0__1__2__3__4__5__6__7__8__9__10__11__12__13__14-15",
+        "predicted_rank": 3,
+        "predicted_score": -0.048759328166,
+        "roles": [
+          "exhaustive_transfer"
+        ]
+      },
+      "evaluated_candidate_count": 15,
+      "evidence_label": "sequential follow-up on reused confirmation split",
+      "native_confirmation_nll": 4.246980732370565,
+      "rank_metrics": {
+        "affine_intercept": 0.06737650361346348,
+        "affine_slope": 0.13804643240629816,
+        "count": 15,
+        "descriptive_calibrated_mae": 0.006350617604577462,
+        "descriptive_calibrated_rmse": 0.007330538476655771,
+        "spearman": 0.6142857142857142
+      },
+      "results_sha256": "0fb5dc8e6715f21d3816e4d0b4cc73109c658e1e08ce22b73ac7f69b8f9331f9",
+      "selection_sha256": "16459b2ada29f2ca9bb0e6070a0137f9b2c92440fdbb10c9e7ba895666470aad",
+      "targeted": null,
+      "worst_partition": {
+        "actual_delta_nll": 0.08168914660680304,
+        "actual_nll": 4.328669878977368,
+        "k": 1,
+        "merged_boundaries": [
+          12
+        ],
+        "partition_id": "0__1__2__3__4__5__6__7__8__9__10__11__12-13__14__15",
+        "predicted_rank": 9,
+        "predicted_score": 0.019608959254,
+        "roles": [
+          "exhaustive_transfer"
+        ]
+      }
+    },
+    "2": {
+      "best_partition": {
+        "actual_delta_nll": 0.13969008221071633,
+        "actual_nll": 4.386670814581281,
+        "k": 2,
+        "merged_boundaries": [
+          6,
+          14
+        ],
+        "partition_id": "0__1__2__3__4__5__6-7__8__9__10__11__12__13__14-15",
+        "predicted_rank": 1,
+        "predicted_score": -0.159730046271,
+        "roles": [
+          "target_top"
+        ]
+      },
+      "evaluated_candidate_count": 43,
+      "evidence_label": "sequential follow-up on reused confirmation split",
+      "native_confirmation_nll": 4.246980732370565,
+      "rank_metrics": {
+        "affine_intercept": 0.1904062710356594,
+        "affine_slope": 0.30659069595993116,
+        "count": 30,
+        "descriptive_calibrated_mae": 0.00924140857311464,
+        "descriptive_calibrated_rmse": 0.01133411084968705,
+        "spearman": 0.8362625139043381
+      },
+      "results_sha256": "ff46c57b09129275cfa80bed89fb354efba9f1615aabaecbd4b75ece6237bd49",
+      "selection_sha256": "ad1c9913d7afc36819fba1c5c71ba821e9224d2ce9c56502f0eff868c3a49a90",
+      "targeted": {
+        "bottom": {
+          "count": 5,
+          "mean_actual_delta_nll": 0.22057600226453555,
+          "median_actual_delta_nll": 0.22037818914284824
+        },
+        "middle": {
+          "count": 5,
+          "mean_actual_delta_nll": 0.19241442880788978,
+          "median_actual_delta_nll": 0.190197185803485
+        },
+        "top": {
+          "count": 10,
+          "mean_actual_delta_nll": 0.15919183677941823,
+          "median_actual_delta_nll": 0.15684499652038486
+        },
+        "top_minus_bottom_mean_delta": -0.061384165485117326,
+        "top_minus_middle_mean_delta": -0.033222592028471554
+      },
+      "worst_partition": {
+        "actual_delta_nll": 0.23139832562831586,
+        "actual_nll": 4.478379057998881,
+        "k": 2,
+        "merged_boundaries": [
+          0,
+          4
+        ],
+        "partition_id": "0-1__2__3__4-5__6__7__8__9__10__11__12__13__14__15",
+        "predicted_rank": 87,
+        "predicted_score": 0.088440331618,
+        "roles": [
+          "target_bottom"
+        ]
+      }
+    },
+    "6": {
+      "best_partition": {
+        "actual_delta_nll": 1.6198060556823792,
+        "actual_nll": 5.866786788052944,
+        "k": 6,
+        "merged_boundaries": [
+          0,
+          2,
+          6,
+          9,
+          11,
+          14
+        ],
+        "partition_id": "0-1__2-3__4__5__6-7__8__9-10__11-12__13__14-15",
+        "predicted_rank": 5,
+        "predicted_score": -0.107151804201,
+        "roles": [
+          "target_top"
+        ]
+      },
+      "evaluated_candidate_count": 48,
+      "evidence_label": "sequential follow-up on reused confirmation split",
+      "native_confirmation_nll": 4.246980732370565,
+      "rank_metrics": {
+        "affine_intercept": 1.9063411218879325,
+        "affine_slope": 1.996193985728881,
+        "count": 30,
+        "descriptive_calibrated_mae": 0.04654471995061214,
+        "descriptive_calibrated_rmse": 0.05858746880343042,
+        "spearman": 0.8807563959955507
+      },
+      "results_sha256": "be3a395fea66e50dba0e338e7a0dc3e5306e9dcc46017db63742d128d8750304",
+      "selection_sha256": "885c9ff198a1f703d3e394488683e917edf060603d1e0fcb6e5a0e56591cdd9d",
+      "targeted": {
+        "bottom": {
+          "count": 5,
+          "mean_actual_delta_nll": 2.1907666170002775,
+          "median_actual_delta_nll": 2.2053505999135368
+        },
+        "middle": {
+          "count": 5,
+          "mean_actual_delta_nll": 1.820122432615517,
+          "median_actual_delta_nll": 1.8064479660078927
+        },
+        "top": {
+          "count": 10,
+          "mean_actual_delta_nll": 1.6943856191774969,
+          "median_actual_delta_nll": 1.6829818756349626
+        },
+        "top_minus_bottom_mean_delta": -0.49638099782278067,
+        "top_minus_middle_mean_delta": -0.12573681343802012
+      },
+      "worst_partition": {
+        "actual_delta_nll": 2.2368326550704642,
+        "actual_nll": 6.483813387441029,
+        "k": 6,
+        "merged_boundaries": [
+          1,
+          4,
+          7,
+          10,
+          12,
+          14
+        ],
+        "partition_id": "0__1-2__3__4-5__6__7-8__9__10-11__12-13__14-15",
+        "predicted_rank": 208,
+        "predicted_score": 0.136780727742,
+        "roles": [
+          "target_bottom",
+          "uniform_transfer"
+        ]
+      }
+    },
+    "7": {
+      "best_partition": {
+        "actual_delta_nll": 2.5335995552010786,
+        "actual_nll": 6.780580287571643,
+        "k": 7,
+        "merged_boundaries": [
+          0,
+          2,
+          5,
+          7,
+          9,
+          11,
+          14
+        ],
+        "partition_id": "0-1__2-3__4__5-6__7-8__9-10__11-12__13__14-15",
+        "predicted_rank": 4,
+        "predicted_score": -0.056445866119,
+        "roles": [
+          "exhaustive_transfer"
+        ]
+      },
+      "evaluated_candidate_count": 36,
+      "evidence_label": "sequential follow-up on reused confirmation split",
+      "native_confirmation_nll": 4.246980732370565,
+      "rank_metrics": {
+        "affine_intercept": 2.8330976545033875,
+        "affine_slope": 2.4960110433879326,
+        "count": 36,
+        "descriptive_calibrated_mae": 0.08899102149585525,
+        "descriptive_calibrated_rmse": 0.10705396368398189,
+        "spearman": 0.7611325611325612
+      },
+      "results_sha256": "3046d64f15059fa0f173642d64f755f2348770b3045ba1558c44af9a889d1880",
+      "selection_sha256": "3b02da1285c399928d4d29a14c5d763e65c79daa23a9f108090907f389e2fee7",
+      "targeted": null,
+      "worst_partition": {
+        "actual_delta_nll": 3.1485993020811858,
+        "actual_nll": 7.395580034451751,
+        "k": 7,
+        "merged_boundaries": [
+          0,
+          2,
+          4,
+          7,
+          10,
+          12,
+          14
+        ],
+        "partition_id": "0-1__2-3__4-5__6__7-8__9__10-11__12-13__14-15",
+        "predicted_rank": 36,
+        "predicted_score": 0.12536885862,
+        "roles": [
+          "exhaustive_transfer"
+        ]
+      }
+    }
+  },
+  "created_at": "2026-08-26T00:39:57.302585+00:00",
+  "eligible_k": [
+    1,
+    2,
+    6,
+    7
+  ],
+  "gate_manifest_sha256": "0965086f4a4aa20f7491661d445cf2a9a02e223c4637f1edbce1507c2ee6f9db",
+  "source_commit": "d2ec6a6b7f36c20573cce7e1bd522ff429a696d9"
+}

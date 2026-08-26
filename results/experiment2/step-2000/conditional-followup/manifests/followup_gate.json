@@ -1,0 +1,41 @@
+{
+  "boundary_effects_sha256": "6994978ec030e5f3a78e8017dd0540014949e10d10f52b1e160ad88c8525d4c7",
+  "created_at": "2026-08-25T21:16:40.549300+00:00",
+  "directional_conditions": {
+    "k3": true,
+    "k5": true
+  },
+  "eligible_k": [
+    1,
+    2,
+    6,
+    7
+  ],
+  "evidence_label": "sequential follow-up on reused confirmation split",
+  "manifests": {
+    "1": {
+      "candidate_count": 15,
+      "path": "/root/autodl-tmp/experiment2/milestones/step-2000/conditional-followup/manifests/k1_selection.json",
+      "sha256": "16459b2ada29f2ca9bb0e6070a0137f9b2c92440fdbb10c9e7ba895666470aad"
+    },
+    "2": {
+      "candidate_count": 43,
+      "path": "/root/autodl-tmp/experiment2/milestones/step-2000/conditional-followup/manifests/k2_selection.json",
+      "sha256": "ad1c9913d7afc36819fba1c5c71ba821e9224d2ce9c56502f0eff868c3a49a90"
+    },
+    "6": {
+      "candidate_count": 48,
+      "path": "/root/autodl-tmp/experiment2/milestones/step-2000/conditional-followup/manifests/k6_selection.json",
+      "sha256": "885c9ff198a1f703d3e394488683e917edf060603d1e0fcb6e5a0e56591cdd9d"
+    },
+    "7": {
+      "candidate_count": 36,
+      "path": "/root/autodl-tmp/experiment2/milestones/step-2000/conditional-followup/manifests/k7_selection.json",
+      "sha256": "3b02da1285c399928d4d29a14c5d763e65c79daa23a9f108090907f389e2fee7"
+    }
+  },
+  "operational_gate": "k3 directional_conditions_met enables k1/k2; k5 directional_conditions_met enables k6/k7",
+  "source_commit": "d2ec6a6b7f36c20573cce7e1bd522ff429a696d9",
+  "source_discovery_results_sha256": "763aeb36b6bdad064333d48dcad3818f14b109695ebe39e23f23e261b3eb2bcc",
+  "transfer_summary_sha256": "43b1c65062b002baf241413bb2d20437bf592c6443d2ba133fd19ff9f6b18edf"
+}

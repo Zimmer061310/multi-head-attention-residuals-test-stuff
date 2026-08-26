@@ -1,0 +1,789 @@
+{
+  "boundary_effects_sha256": "6994978ec030e5f3a78e8017dd0540014949e10d10f52b1e160ad88c8525d4c7",
+  "candidate_space_size": 210,
+  "candidates": [
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        14
+      ],
+      "partition_id": "0-1__2-3__4-5__6-7__8-9__10__11__12__13__14-15",
+      "predicted_rank": 26,
+      "predicted_score": -0.067767254431,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        6,
+        9,
+        14
+      ],
+      "partition_id": "0-1__2-3__4-5__6-7__8__9-10__11__12__13__14-15",
+      "predicted_rank": 9,
+      "predicted_score": -0.090793326679,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        7,
+        9,
+        13
+      ],
+      "partition_id": "0-1__2-3__4-5__6__7-8__9-10__11__12__13-14__15",
+      "predicted_rank": 169,
+      "predicted_score": 0.063520856479,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        7,
+        9,
+        14
+      ],
+      "partition_id": "0-1__2-3__4-5__6__7-8__9-10__11__12__13__14-15",
+      "predicted_rank": 157,
+      "predicted_score": 0.040588984593,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        7,
+        10,
+        12
+      ],
+      "partition_id": "0-1__2-3__4-5__6__7-8__9__10-11__12-13__14__15",
+      "predicted_rank": 210,
+      "predicted_score": 0.174128186785,
+      "roles": [
+        "target_bottom"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        7,
+        10,
+        13
+      ],
+      "partition_id": "0-1__2-3__4-5__6__7-8__9__10-11__12__13-14__15",
+      "predicted_rank": 205,
+      "predicted_score": 0.128691771252,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        4,
+        8,
+        10,
+        12
+      ],
+      "partition_id": "0-1__2-3__4-5__6__7__8-9__10-11__12-13__14__15",
+      "predicted_rank": 209,
+      "predicted_score": 0.166282427991,
+      "roles": [
+        "target_bottom"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        7,
+        9,
+        12
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7-8__9-10__11__12-13__14__15",
+      "predicted_rank": 107,
+      "predicted_score": -0.015589410944,
+      "roles": [
+        "target_middle"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        7,
+        10,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7-8__9__10-11__12__13__14-15",
+      "predicted_rank": 106,
+      "predicted_score": -0.018786783592,
+      "roles": [
+        "target_middle"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        8,
+        10,
+        12
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7__8-9__10-11__12-13__14__15",
+      "predicted_rank": 159,
+      "predicted_score": 0.041735745034,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7__8-9__10__11-12__13__14-15",
+      "predicted_rank": 51,
+      "predicted_score": -0.053831387038,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        9,
+        11,
+        13
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7__8__9-10__11-12__13-14__15",
+      "predicted_rank": 49,
+      "predicted_score": -0.0539255874,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        5,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5-6__7__8__9__10-11__12-13__14-15",
+      "predicted_rank": 103,
+      "predicted_score": -0.019589417505,
+      "roles": [
+        "target_middle"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        6,
+        8,
+        11,
+        13
+      ],
+      "partition_id": "0-1__2-3__4__5__6-7__8-9__10__11-12__13-14__15",
+      "predicted_rank": 32,
+      "predicted_score": -0.061193860067,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        6,
+        8,
+        11,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5__6-7__8-9__10__11-12__13__14-15",
+      "predicted_rank": 17,
+      "predicted_score": -0.084125731953,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        6,
+        8,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5__6-7__8-9__10__11__12-13__14-15",
+      "predicted_rank": 8,
+      "predicted_score": -0.092028604944,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        6,
+        9,
+        11,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5__6-7__8__9-10__11-12__13__14-15",
+      "predicted_rank": 5,
+      "predicted_score": -0.107151804201,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        2,
+        6,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2-3__4__5__6-7__8__9-10__11__12-13__14-15",
+      "predicted_rank": 2,
+      "predicted_score": -0.115054677192,
+      "roles": [
+        "target_top",
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        3,
+        5,
+        7,
+        9,
+        13
+      ],
+      "partition_id": "0-1__2__3-4__5-6__7-8__9-10__11__12__13-14__15",
+      "predicted_rank": 70,
+      "predicted_score": -0.036432708937,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        3,
+        6,
+        8,
+        10,
+        12
+      ],
+      "partition_id": "0-1__2__3-4__5__6-7__8-9__10-11__12-13__14__15",
+      "predicted_rank": 154,
+      "predicted_score": 0.036034517659,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        3,
+        6,
+        8,
+        10,
+        14
+      ],
+      "partition_id": "0-1__2__3-4__5__6-7__8-9__10-11__12__13__14-15",
+      "predicted_rank": 76,
+      "predicted_score": -0.032333769761,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        3,
+        6,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2__3-4__5__6-7__8__9-10__11__12-13__14-15",
+      "predicted_rank": 10,
+      "predicted_score": -0.090461559652,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        3,
+        7,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2__3-4__5__6__7-8__9__10-11__12-13__14-15",
+      "predicted_rank": 199,
+      "predicted_score": 0.106091666393,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        4,
+        6,
+        8,
+        11,
+        13
+      ],
+      "partition_id": "0-1__2__3__4-5__6-7__8-9__10__11-12__13-14__15",
+      "predicted_rank": 110,
+      "predicted_score": -0.008280176149,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        4,
+        6,
+        8,
+        11,
+        14
+      ],
+      "partition_id": "0-1__2__3__4-5__6-7__8-9__10__11-12__13__14-15",
+      "predicted_rank": 78,
+      "predicted_score": -0.031212048035,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        4,
+        7,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0-1__2__3__4-5__6__7-8__9__10-11__12-13__14-15",
+      "predicted_rank": 207,
+      "predicted_score": 0.134412232771,
+      "roles": [
+        "target_bottom"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        0,
+        5,
+        7,
+        9,
+        11,
+        14
+      ],
+      "partition_id": "0-1__2__3__4__5-6__7-8__9-10__11-12__13__14-15",
+      "predicted_rank": 61,
+      "predicted_score": -0.047402491968,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        13
+      ],
+      "partition_id": "0__1-2__3-4__5-6__7-8__9-10__11__12__13-14__15",
+      "predicted_rank": 74,
+      "predicted_score": -0.034064213965,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        5,
+        7,
+        11,
+        14
+      ],
+      "partition_id": "0__1-2__3-4__5-6__7-8__9__10__11-12__13__14-15",
+      "predicted_rank": 105,
+      "predicted_score": -0.019024015731,
+      "roles": [
+        "target_middle"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        5,
+        8,
+        11,
+        13
+      ],
+      "partition_id": "0__1-2__3-4__5-6__7__8-9__10__11-12__13-14__15",
+      "predicted_rank": 116,
+      "predicted_score": -0.003937902639,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        5,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3-4__5-6__7__8__9-10__11__12-13__14-15",
+      "predicted_rank": 40,
+      "predicted_score": -0.057798719765,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        6,
+        8,
+        10,
+        12
+      ],
+      "partition_id": "0__1-2__3-4__5__6-7__8-9__10-11__12-13__14__15",
+      "predicted_rank": 155,
+      "predicted_score": 0.038403012631,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        6,
+        8,
+        11,
+        13
+      ],
+      "partition_id": "0__1-2__3-4__5__6-7__8-9__10__11-12__13-14__15",
+      "predicted_rank": 73,
+      "predicted_score": -0.034232247555,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        3,
+        6,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3-4__5__6-7__8__9__10-11__12-13__14-15",
+      "predicted_rank": 99,
+      "predicted_score": -0.022922149908,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        4,
+        6,
+        8,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3__4-5__6-7__8-9__10__11__12-13__14-15",
+      "predicted_rank": 68,
+      "predicted_score": -0.036746426054,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        4,
+        6,
+        9,
+        11,
+        14
+      ],
+      "partition_id": "0__1-2__3__4-5__6-7__8__9-10__11-12__13__14-15",
+      "predicted_rank": 56,
+      "predicted_score": -0.051869625311,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        4,
+        7,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3__4-5__6__7-8__9__10-11__12-13__14-15",
+      "predicted_rank": 208,
+      "predicted_score": 0.136780727742,
+      "roles": [
+        "target_bottom",
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        4,
+        8,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3__4-5__6__7__8-9__10-11__12-13__14-15",
+      "predicted_rank": 206,
+      "predicted_score": 0.128934968948,
+      "roles": [
+        "target_bottom"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        1,
+        5,
+        7,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0__1-2__3__4__5-6__7-8__9-10__11__12-13__14-15",
+      "predicted_rank": 53,
+      "predicted_score": -0.052936869987,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        4,
+        6,
+        8,
+        11,
+        14
+      ],
+      "partition_id": "0__1__2-3__4-5__6-7__8-9__10__11-12__13__14-15",
+      "predicted_rank": 13,
+      "predicted_score": -0.084825444036,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        4,
+        6,
+        8,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2-3__4-5__6-7__8-9__10__11__12-13__14-15",
+      "predicted_rank": 7,
+      "predicted_score": -0.092728317027,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        4,
+        6,
+        9,
+        11,
+        14
+      ],
+      "partition_id": "0__1__2-3__4-5__6-7__8__9-10__11-12__13__14-15",
+      "predicted_rank": 4,
+      "predicted_score": -0.107851516284,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        4,
+        6,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2-3__4-5__6-7__8__9-10__11__12-13__14-15",
+      "predicted_rank": 1,
+      "predicted_score": -0.115754389275,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        5,
+        7,
+        9,
+        11,
+        14
+      ],
+      "partition_id": "0__1__2-3__4__5-6__7-8__9-10__11-12__13__14-15",
+      "predicted_rank": 6,
+      "predicted_score": -0.101015887969,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        5,
+        7,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2-3__4__5-6__7-8__9-10__11__12-13__14-15",
+      "predicted_rank": 3,
+      "predicted_score": -0.10891876096,
+      "roles": [
+        "target_top"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        2,
+        5,
+        7,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2-3__4__5-6__7-8__9__10-11__12-13__14-15",
+      "predicted_rank": 65,
+      "predicted_score": -0.043747846188,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        3,
+        5,
+        7,
+        9,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2__3-4__5-6__7-8__9-10__11__12-13__14-15",
+      "predicted_rank": 15,
+      "predicted_score": -0.084325643419,
+      "roles": [
+        "uniform_transfer"
+      ]
+    },
+    {
+      "merged_boundaries": [
+        3,
+        5,
+        7,
+        10,
+        12,
+        14
+      ],
+      "partition_id": "0__1__2__3-4__5-6__7-8__9__10-11__12-13__14-15",
+      "predicted_rank": 104,
+      "predicted_score": -0.019154728647,
+      "roles": [
+        "target_middle"
+      ]
+    }
+  ],
+  "created_at": "2026-08-25T21:16:40.543540+00:00",
+  "evidence_label": "sequential follow-up on reused confirmation split",
+  "experiment": 2,
+  "format_version": 1,
+  "gate_transfer_summary_sha256": "43b1c65062b002baf241413bb2d20437bf592c6443d2ba133fd19ff9f6b18edf",
+  "num_merges": 6,
+  "selection_seed": 20260826,
+  "source_commit": "d2ec6a6b7f36c20573cce7e1bd522ff429a696d9",
+  "source_discovery_results_sha256": "763aeb36b6bdad064333d48dcad3818f14b109695ebe39e23f23e261b3eb2bcc",
+  "stage": "boundary-score-conditional-followup",
+  "target_rule": "predicted top 10, centered middle 5, bottom 5",
+  "uniform_rule": "uniform without replacement from full candidate space",
+  "uniform_sample_size": 30
+}

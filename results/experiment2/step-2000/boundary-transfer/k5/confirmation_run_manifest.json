@@ -1,0 +1,83 @@
+{
+  "architecture_validation": {
+    "mismatches": {},
+    "observed": {
+      "attnres_mode": "full_mh",
+      "attnres_num_heads": 16,
+      "head_dim": 80,
+      "hidden_size": 1280,
+      "intermediate_size": 5120,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 8
+    },
+    "required": {
+      "attnres_mode": "full_mh",
+      "attnres_num_heads": 16,
+      "head_dim": 80,
+      "hidden_size": 1280,
+      "intermediate_size": 5120,
+      "num_attention_heads": 16,
+      "num_hidden_layers": 36,
+      "num_key_value_heads": 8
+    }
+  },
+  "created_at": "2026-08-25T20:09:27.161606+00:00",
+  "fixed_data_metadata": {
+    "dataset": {
+      "data_files": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/eval/*.parquet",
+      "loader": "parquet",
+      "matched_files": [
+        {
+          "bytes": 2151796315,
+          "path": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/eval/002_00000.parquet",
+          "sha256": "547ae182d132c9f06b6ce63149567208ea9f57630bfd9b1a2938e504f0c9ebd7"
+        }
+      ]
+    },
+    "documents_by_split": {
+      "confirmation": 491,
+      "discovery": 477,
+      "total": 968
+    },
+    "documents_consumed": 968,
+    "eos_token_id": 151645,
+    "seed": 20260824,
+    "selection": "single shuffled document stream; discovery precedes confirmation; the boundary document tail is discarded so source documents are disjoint",
+    "sequence_length": 1024,
+    "shuffle_buffer": 10000,
+    "source_commit": "16918734326cb74897cd44537746ef9e71c7e9f6",
+    "split": "train",
+    "tokenizer": "Qwen/Qwen3-0.6B",
+    "tokenizer_class": "Qwen2TokenizerFast",
+    "tokenizer_commit_hash": null,
+    "tokenizer_revision": "c1899de289a04d12100db370d81485cdf75e47ca"
+  },
+  "native_h16_parity": {
+    "atol": 0.02,
+    "max_abs_logit_error": 0.0,
+    "rtol": 0.002
+  },
+  "run_identity": {
+    "artifact_path": "/root/autodl-tmp/experiment2/mixed-width-1b-h16/fixed_eval.pt",
+    "artifact_sha256": "80276b413b27c2da2ed7bc3b1121536f9bc7763b3cc99c3f86e49a83e5705cb3",
+    "batch_size": 1,
+    "checkpoint_path": "/root/autodl-tmp/experiment2/checkpoint-1b-h16-fineweb-edu/step-2000",
+    "checkpoint_sha256": "37a704108ec6fdc6f98f53a8d0c1534ab71d20709a39f35ad99b66b679abdd48",
+    "device_type": "cuda",
+    "dtype": "bf16",
+    "experiment": 2,
+    "mixed_partition_count": 47,
+    "routing_site_count": 73,
+    "selection_manifest_sha256": "60e2bfea2ee36f17fd51fce52e4843c1f963d41d30dca1a042fb74a96901c0ce",
+    "source_commit": "cfc73eee198fef959aebadbffcc7ba3e214b7aa9",
+    "split": "confirmation"
+  },
+  "wandb": {
+    "group": "mhar-exp2-1b-h16-step-2000",
+    "project": "MHAR Stuff",
+    "run_id": "z64ynlsi",
+    "run_name": "exp2-step2000-k5-boundary-transfer",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/z64ynlsi"
+  }
+}

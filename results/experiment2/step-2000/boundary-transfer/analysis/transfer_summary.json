@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-08-25T21:15:28.242798+00:00",
+  "k3": {
+    "directional_conditions_met": true,
+    "targeted": {
+      "bottom": {
+        "count": 5,
+        "mean_actual_delta_nll": 0.4692945649080846,
+        "median_actual_delta_nll": 0.46065741433659113
+      },
+      "middle": {
+        "count": 5,
+        "mean_actual_delta_nll": 0.3926588989772405,
+        "median_actual_delta_nll": 0.3921520856818148
+      },
+      "top": {
+        "count": 10,
+        "mean_actual_delta_nll": 0.3163247360162371,
+        "median_actual_delta_nll": 0.3170617265319078
+      }
+    },
+    "top_minus_bottom_mean_delta": -0.15296982889184746,
+    "top_minus_middle_mean_delta": -0.07633416296100337,
+    "uniform_affine_calibration": {
+      "descriptive_in_sample_mae": 0.013750191762033423,
+      "descriptive_in_sample_rmse": 0.01755029500321088,
+      "intercept": 0.39377931235095004,
+      "slope": 0.5417387735602632
+    },
+    "uniform_count": 30,
+    "uniform_spearman": 0.9208008898776417
+  },
+  "k5": {
+    "directional_conditions_met": true,
+    "targeted": {
+      "bottom": {
+        "count": 5,
+        "mean_actual_delta_nll": 1.4528281690088538,
+        "median_actual_delta_nll": 1.4489763116323822
+      },
+      "middle": {
+        "count": 5,
+        "mean_actual_delta_nll": 1.1726410307376152,
+        "median_actual_delta_nll": 1.1767190936024239
+      },
+      "top": {
+        "count": 10,
+        "mean_actual_delta_nll": 1.019555719017633,
+        "median_actual_delta_nll": 1.0221262877754218
+      }
+    },
+    "top_minus_bottom_mean_delta": -0.43327244999122083,
+    "top_minus_middle_mean_delta": -0.1530853117199822,
+    "uniform_affine_calibration": {
+      "descriptive_in_sample_mae": 0.02033502619678555,
+      "descriptive_in_sample_rmse": 0.02803422875555672,
+      "intercept": 1.1990544239761656,
+      "slope": 1.4082683562219664
+    },
+    "uniform_count": 30,
+    "uniform_spearman": 0.9305895439377085
+  },
+  "native_confirmation_nll": {
+    "k3": 4.246980732370565,
+    "k5": 4.246980732370565
+  },
+  "results_sha256": {
+    "k3": "416bf956ded398adaa785b8a264608eaac27215375daae6e212d52f695dbc2eb",
+    "k5": "5711758bc9367b154c11e951bb157272f81ca24ba78b0b0a6c339b2df17c9727"
+  },
+  "selection_sha256": {
+    "k3": "70564e42bfffa6509cc1ce70f0a11355166af85e089777bb215a1a7b2ccc3c74",
+    "k5": "60e2bfea2ee36f17fd51fce52e4843c1f963d41d30dca1a042fb74a96901c0ce"
+  },
+  "source_commit": "cfc73eee198fef959aebadbffcc7ba3e214b7aa9"
+}
