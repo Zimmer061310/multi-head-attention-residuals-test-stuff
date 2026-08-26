@@ -127,6 +127,26 @@ Training logs to W&B project `MHAR Stuff`, group
 `mhar-exp1-1b-h4-fineweb-edu`. W&B is required: the process aborts instead of
 silently running untracked.
 
+### Train the matched 1B H=8 architectural control
+
+Experiment 2 Stage B uses a separately trained uniform H=8 model. Its launcher
+matches the H=16 recipe in architecture, FineWeb-Edu shards and revisions,
+tokenizer, seed, optimizer, schedule, batch, precision, and total steps; only
+`attnres_heads` and the run/output identity differ. The 2,000, 5,000, 10,000,
+and 20,000 step checkpoints are protected from ordinary two-checkpoint
+rotation.
+
+```bash
+MHAR_PYTHON_BIN=/path/to/python \
+MHAR_OUTPUT_DIR=/fast-disk/experiment2/checkpoint-1b-h8-fineweb-edu \
+MHAR_DATA_FILES='/fast-disk/fineweb-edu-sample-10BT/train/*.parquet' \
+./run_experiment2_train_1b_h8.sh
+```
+
+The run logs to W&B project `MHAR Stuff`, group
+`mhar-exp2-stage-b-1b-h8-fineweb-edu`, and can be resumed from any protected
+milestone by passing its checkpoint directory as the sole argument.
+
 Install the pinned experiment runtime and run the CPU correctness suite:
 
 ```bash

@@ -572,6 +572,13 @@ Use the same:
 
 as the H=8 and H=16 controls.
 
+The first matched architectural control is uniform H=8. Train it from scratch
+with seed 42 and the exact H=16 FineWeb-Edu recipe; only `attnres_num_heads`
+changes from 16 to 8. Preserve checkpoints at 2,000, 5,000, 10,000, and 20,000
+steps so H=8 and H=16 can be compared at equal training progress. The checked-in
+launcher is `run_experiment2_train_1b_h8.sh`, and its W&B group is
+`mhar-exp2-stage-b-1b-h8-fineweb-edu`.
+
 Use at least three independent seeds per architecture.  Report both the
 per-seed results and the across-seed mean with uncertainty.  Because the
 architectures execute different numbers of routing softmaxes, also report

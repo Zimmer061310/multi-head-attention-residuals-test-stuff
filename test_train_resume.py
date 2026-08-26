@@ -1,6 +1,7 @@
 """Tests for resumable from-scratch training checkpoints."""
 
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -12,7 +13,12 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "Attention-Residuals"))
 
 from modeling_qwen3_attnres import Qwen3AttnResConfig, Qwen3AttnResForCausalLM
-from train_scratch import data_files_identity, load_training_state, save_training_checkpoint
+from train_scratch import (
+    data_files_identity,
+    load_training_state,
+    parse_keep_steps,
+    save_training_checkpoint,
+)
 
 
 class FakeTokenizer:
@@ -102,6 +108,57 @@ class ResumeCheckpointTest(unittest.TestCase):
                 "a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1"
                 "b84cd99541461a08e",
             )
+
+    def test_protected_milestones_survive_checkpoint_rotation(self):
+        model, optimizer, scheduler = self.make_model_and_optimizer()
+        identity = {"source_commit": "unit-test", "global_batch_size": 32}
+        tokenizer = FakeTokenizer()
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            for step in (1, 2, 3, 4, 5):
+                save_training_checkpoint(
+                    model=model,
+                    tokenizer=tokenizer,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    global_step=step,
+                    chunks_consumed=step * 8,
+                    run_identity=identity,
+                    out_dir=output,
+                    keep_last=2,
+                    keep_steps=parse_keep_steps("2,4"),
+                    wandb_run_id="wandb-unit-test",
+                    elapsed_training_seconds=float(step),
+                )
+
+            self.assertEqual(
+                sorted(path.name for path in output.glob("step-*")),
+                ["step-2", "step-4", "step-5"],
+            )
+
+    def test_keep_steps_validation(self):
+        self.assertEqual(parse_keep_steps("2000, 5000,2000"), {2000, 5000})
+        with self.assertRaisesRegex(ValueError, "positive"):
+            parse_keep_steps("0,2000")
+        with self.assertRaisesRegex(ValueError, "comma-separated"):
+            parse_keep_steps("two-thousand")
+
+    def test_h8_launcher_matches_h16_scientific_recipe(self):
+        def launcher_flags(name):
+            text = (ROOT / name).read_text(encoding="utf-8")
+            return dict(re.findall(r"^  --([a-z_]+)\s+([^\\\n]+)", text, re.MULTILINE))
+
+        h8 = launcher_flags("run_experiment2_train_1b_h8.sh")
+        h16 = launcher_flags("run_experiment2_train_1b_h16.sh")
+        non_scientific = {"attnres_heads", "keep_steps", "wandb_group", "run_name"}
+        self.assertEqual(
+            {key: value for key, value in h8.items() if key not in non_scientific},
+            {key: value for key, value in h16.items() if key not in non_scientific},
+        )
+        self.assertEqual(h8["attnres_heads"], "8 ")
+        self.assertEqual(h16["attnres_heads"], "16 ")
+        self.assertEqual(h8["keep_steps"], "2000,5000,10000,20000 ")
 
 
 if __name__ == "__main__":

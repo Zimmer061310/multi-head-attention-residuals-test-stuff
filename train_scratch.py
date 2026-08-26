@@ -120,6 +120,12 @@ def parse_args():
                    help="Checkpoint directory containing training_state.pt")
     p.add_argument("--keep_last", type=int, default=2,
                    help="Number of resumable step checkpoints to retain")
+    p.add_argument(
+        "--keep_steps",
+        default="",
+        help="Comma-separated step checkpoints to protect from rotation, e.g. "
+             "2000,5000,10000,20000",
+    )
     return p.parse_args()
 
 
@@ -400,7 +406,19 @@ def unwrap_model(model):
     return value._orig_mod if hasattr(value, "_orig_mod") else value
 
 
-def prune_step_checkpoints(out_dir, keep_last):
+def parse_keep_steps(value):
+    if not value:
+        return frozenset()
+    try:
+        steps = frozenset(int(item.strip()) for item in value.split(","))
+    except ValueError as error:
+        raise ValueError("--keep_steps must be a comma-separated list of integers") from error
+    if any(step < 1 for step in steps):
+        raise ValueError("--keep_steps values must be positive")
+    return steps
+
+
+def prune_step_checkpoints(out_dir, keep_last, keep_steps=()):
     if keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
     out_dir = Path(out_dir).resolve()
@@ -409,14 +427,17 @@ def prune_step_checkpoints(out_dir, keep_last):
         match = re.fullmatch(r"step-(\d+)", candidate.name)
         if match and candidate.is_dir():
             checkpoints.append((int(match.group(1)), candidate))
-    for _, candidate in sorted(checkpoints)[:-keep_last]:
-        shutil.rmtree(candidate)
+    newest = {step for step, _ in sorted(checkpoints)[-keep_last:]}
+    protected = set(keep_steps) | newest
+    for step, candidate in checkpoints:
+        if step not in protected:
+            shutil.rmtree(candidate)
 
 
 def save_training_checkpoint(
     *, model, tokenizer, optimizer, scheduler, global_step, chunks_consumed,
     run_identity, out_dir, keep_last, wandb_run_id, elapsed_training_seconds,
-    final=False,
+    keep_steps=(), final=False,
 ):
     """Atomically save weights plus optimizer/scheduler/RNG state."""
 
@@ -461,7 +482,7 @@ def save_training_checkpoint(
     })
     os.replace(temporary, destination)
     if not final:
-        prune_step_checkpoints(out_dir, keep_last)
+        prune_step_checkpoints(out_dir, keep_last, keep_steps)
     return destination
 
 
@@ -470,6 +491,7 @@ def main():
 
     if args.keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
+    keep_steps = parse_keep_steps(args.keep_steps)
 
     if args.run_name is None:
         args.run_name = f"scratch-{args.mode}-d{args.hidden_size}-L{args.num_layers}-{args.steps//1000}k"
@@ -808,6 +830,7 @@ def main():
                 run_identity=run_identity,
                 out_dir=out_dir,
                 keep_last=args.keep_last,
+                keep_steps=keep_steps,
                 wandb_run_id=wandb_run_id,
                 elapsed_training_seconds=time.time() - run_started,
             )
@@ -849,6 +872,7 @@ def main():
             run_identity=run_identity,
             out_dir=out_dir,
             keep_last=args.keep_last,
+            keep_steps=keep_steps,
             wandb_run_id=wandb_run_id,
             elapsed_training_seconds=time.time() - run_started,
             final=True,
