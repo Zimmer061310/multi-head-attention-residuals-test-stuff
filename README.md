@@ -159,6 +159,33 @@ Valid names are `h16`, `h8`, `mixed-k2`, `mixed-k3`, `mixed-k4-best`,
 model to each GPU; this preserves the single-GPU global-batch-32 recipe and is
 the preferred parallelization strategy for the screening matrix.
 
+### Fresh 7/8-GPU server setup
+
+Do not copy a Python environment from a machine with a different CPU or CUDA
+image. The successful RTX 5090 environment is reconstructed from wheels using
+`requirements-stage-b.txt`; its exact W&B-recorded versions and two frozen
+FineWeb-Edu shard identities are in `stage_b_server_environment.json`.
+
+After cloning the repository on the new server, run interactively:
+
+```bash
+MHAR_BOOTSTRAP_PYTHON=python3.12 ./bootstrap_stage_b_server.sh
+```
+
+The bootstrap installs one shared virtual environment, authenticates GitHub
+and W&B without storing credentials in the repository, downloads/resumes the
+two 4.3 GB total dataset shards, verifies both SHA-256 hashes, checks at least
+seven bf16 GPUs and 700 GiB free disk, and runs the correctness preflight.
+
+Launch one model per GPU (0 through 6) and leave GPU 7 free for evaluation:
+
+```bash
+./launch_experiment2_stage_b_7gpu.sh
+```
+
+The launcher refuses pre-existing screens or output manifests. Resumption is
+therefore always explicit and cannot accidentally overwrite a run.
+
 Install the pinned experiment runtime and run the CPU correctness suite:
 
 ```bash
