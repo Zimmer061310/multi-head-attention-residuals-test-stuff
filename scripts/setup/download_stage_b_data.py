@@ -1,4 +1,4 @@
-"""Download and content-verify the two frozen FineWeb-Edu training shards."""
+"""Download and content-verify frozen Stage B FineWeb-Edu shards."""
 
 import argparse
 import hashlib
@@ -70,9 +70,12 @@ def download_file(spec, destination, timeout=60):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=None)
+    parser.add_argument(
+        "--dataset", choices=("train", "evaluation"), default="train")
     args = parser.parse_args()
     environment = json.loads(ENVIRONMENT.read_text(encoding="utf-8"))
-    dataset = environment["dataset"]
+    dataset = environment[
+        "dataset" if args.dataset == "train" else "evaluation_dataset"]
     output_dir = Path(args.output_dir or dataset["directory"])
     for spec in dataset["files"]:
         download_file(spec, output_dir / spec["name"])

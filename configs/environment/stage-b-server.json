@@ -36,6 +36,17 @@
       }
     ]
   },
+  "evaluation_dataset": {
+    "directory": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/eval",
+    "files": [
+      {
+        "name": "002_00000.parquet",
+        "source_url": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/refs%2Fconvert%2Fparquet/sample-10BT/train/0002.parquet",
+        "bytes": 2151796315,
+        "sha256": "547ae182d132c9f06b6ce63149567208ea9f57630bfd9b1a2938e504f0c9ebd7"
+      }
+    ]
+  },
   "minimum_gpu_count": 8,
   "minimum_gpu_memory_gib": 30,
   "recommended_free_disk_gib": 700,

@@ -608,6 +608,32 @@ therefore mathematical routing cost is controlled, but measured training
 throughput is not yet a systems control. Do not compare runtime until a fused
 mixed-width kernel passes forward, gradient, and optimizer-step parity tests.
 
+### Seed-42 milestone screen and conditional continuation
+
+For the active seed-42 screen, stop each training process immediately after its
+atomic step-2,000 checkpoint appears. Evaluate all eight native trained
+architectures on the same fixed, document-disjoint FineWeb-Edu artifact. The
+artifact is materialized from content-addressed shard `002_00000.parquet`,
+which is not one of the two training shards. Evaluate the preregistered
+discovery and untouched confirmation tensors for every architecture and record
+token-weighted NLL plus per-sequence NLL for paired inference.
+
+Define the step-2,000 result as unresolved (informally, "chaotic") before
+opening it if either condition holds:
+
+1. the Spearman rank correlation between the eight discovery and confirmation
+   rankings is below 0.5; or
+2. none of the preregistered mixed-width contrasts against H8 or H16, including
+   mixed-k4-best versus mixed-k4-worst, has a paired sequence-bootstrap 95%
+   confidence interval excluding zero.
+
+If either condition holds, resume all eight exact optimizer/scheduler/RNG
+states from step 2,000 and stop them again at step 5,000. Repeat the same fixed
+evaluation once at step 5,000; no continuation beyond 5,000 is authorized by
+this gate. If the step-2,000 result is stable and decisive, do not resume.
+This conditional continuation applies only to the Stage B architectural screen
+and does not change the separately locked Stage A milestone sequence.
+
 Use at least three independent seeds per architecture.  Report both the
 per-seed results and the across-seed mean with uncertainty.  Because the
 architectures execute different numbers of routing softmaxes, also report

@@ -33,6 +33,19 @@ class StageBServerSetupTest(unittest.TestCase):
             ],
         )
 
+    def test_evaluation_shard_is_content_addressed_and_disjoint(self):
+        train_names = {row["name"] for row in self.environment["dataset"]["files"]}
+        evaluation = self.environment["evaluation_dataset"]
+        self.assertEqual(len(evaluation["files"]), 1)
+        row = evaluation["files"][0]
+        self.assertNotIn(row["name"], train_names)
+        self.assertEqual(row["name"], "002_00000.parquet")
+        self.assertEqual(row["bytes"], 2151796315)
+        self.assertEqual(
+            row["sha256"],
+            "547ae182d132c9f06b6ce63149567208ea9f57630bfd9b1a2938e504f0c9ebd7",
+        )
+
     def test_eight_gpu_launcher_contains_every_frozen_run(self):
         screening = json.loads(
             (ROOT / "configs/experiment2/stage-b-screening.json").read_text(
