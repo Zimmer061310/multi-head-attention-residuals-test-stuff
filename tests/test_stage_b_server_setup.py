@@ -4,6 +4,9 @@ import json
 import re
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+
+from scripts.setup.preflight_stage_b_server import wandb_viewer_name
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,6 +42,12 @@ class StageBServerSetupTest(unittest.TestCase):
         for row in screening["runs"]:
             self.assertIn(row["id"], launcher)
         self.assertIn("0,1,2,3,4,5,6", launcher)
+
+    def test_wandb_viewer_object_is_supported(self):
+        self.assertEqual(
+            wandb_viewer_name(SimpleNamespace(username="stage-b-user")),
+            "stage-b-user",
+        )
 
 
 if __name__ == "__main__":

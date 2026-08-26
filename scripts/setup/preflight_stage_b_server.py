@@ -18,6 +18,14 @@ def fail(message):
     raise RuntimeError(message)
 
 
+def wandb_viewer_name(viewer):
+    return (
+        getattr(viewer, "username", None)
+        or getattr(viewer, "entity", None)
+        or str(viewer)
+    )
+
+
 def sha256_file(path, chunk_size=8 * 1024 * 1024):
     digest = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -92,7 +100,7 @@ def check_authentication():
     viewer = wandb.Api(timeout=30).viewer
     if not viewer:
         fail("W&B authentication check returned no viewer")
-    print(f"W&B authenticated as: {viewer.get('username') or viewer.get('entity')}", flush=True)
+    print(f"W&B authenticated as: {wandb_viewer_name(viewer)}", flush=True)
 
 
 def check_repository():
