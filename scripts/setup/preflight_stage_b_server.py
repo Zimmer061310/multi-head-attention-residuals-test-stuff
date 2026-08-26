@@ -1,4 +1,4 @@
-"""Fail-fast validation for a fresh seven-GPU Stage B training server."""
+"""Fail-fast validation for a fresh eight-GPU Stage B training server."""
 
 import hashlib
 import importlib

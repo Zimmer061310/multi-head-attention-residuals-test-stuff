@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "name": "Experiment 2 Stage B seven-run screening",
+  "name": "Experiment 2 Stage B eight-run screening",
   "seed": 42,
   "training_steps": 20000,
   "protected_checkpoints": [2000, 5000, 10000, 20000],
@@ -27,6 +27,14 @@
       "merged_boundaries": [],
       "routing_groups": 8,
       "purpose": "strong MHAR baseline",
+      "kernel": "fused_uniform"
+    },
+    {
+      "id": "h4",
+      "attnres_heads": 4,
+      "merged_boundaries": [],
+      "routing_groups": 4,
+      "purpose": "coarse uniform MHAR baseline",
       "kernel": "fused_uniform"
     },
     {

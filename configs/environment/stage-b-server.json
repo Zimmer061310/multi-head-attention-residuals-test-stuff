@@ -36,7 +36,7 @@
       }
     ]
   },
-  "minimum_gpu_count": 7,
+  "minimum_gpu_count": 8,
   "minimum_gpu_memory_gib": 30,
   "recommended_free_disk_gib": 700,
   "wandb_entity": "zimmer061310-ena",

@@ -5,20 +5,20 @@ MHAR_REPO_DIR="${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && p
 MHAR_PYTHON_BIN="${MHAR_PYTHON_BIN:-/root/autodl-tmp/venvs/mhar-stage-b/bin/python}"
 MHAR_OUTPUT_ROOT="${MHAR_OUTPUT_ROOT:-/root/autodl-tmp/experiment2/stage-b-screening}"
 MHAR_LOG_DIR="${MHAR_LOG_DIR:-$MHAR_OUTPUT_ROOT/logs}"
-MHAR_GPU_IDS="${MHAR_GPU_IDS:-0,1,2,3,4,5,6}"
+MHAR_GPU_IDS="${MHAR_GPU_IDS:-0,1,2,3,4,5,6,7}"
 MHAR_WANDB_GROUP="${MHAR_WANDB_GROUP:-mhar-exp2-stage-b-screening-seed42}"
 
 IFS=',' read -r -a GPU_IDS <<< "$MHAR_GPU_IDS"
-VARIANTS=(h16 h8 mixed-k2 mixed-k3 mixed-k4-best mixed-k5 mixed-k4-worst)
+VARIANTS=(h16 h8 mixed-k2 mixed-k3 mixed-k4-best mixed-k5 mixed-k4-worst h4)
 if [[ "${#GPU_IDS[@]}" -ne "${#VARIANTS[@]}" ]]; then
-  echo "MHAR_GPU_IDS must contain exactly seven GPU ids" >&2
+  echo "MHAR_GPU_IDS must contain exactly eight GPU ids" >&2
   exit 2
 fi
 
 mkdir -p "$MHAR_LOG_DIR"
 cd "$MHAR_REPO_DIR"
 
-MHAR_MIN_GPUS=7 MHAR_OUTPUT_ROOT="$MHAR_OUTPUT_ROOT" \
+MHAR_MIN_GPUS=8 MHAR_OUTPUT_ROOT="$MHAR_OUTPUT_ROOT" \
   "$MHAR_PYTHON_BIN" scripts/setup/preflight_stage_b_server.py
 
 for index in "${!VARIANTS[@]}"; do
@@ -44,4 +44,4 @@ for index in "${!VARIANTS[@]}"; do
   echo "launched $variant on physical GPU $gpu in screen $screen_name"
 done
 
-echo "All seven Stage B screening runs launched; GPU 7 remains free when using default ids."
+echo "All eight Stage B screening runs launched across GPUs 0 through 7."

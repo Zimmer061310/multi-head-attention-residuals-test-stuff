@@ -33,15 +33,15 @@ class StageBServerSetupTest(unittest.TestCase):
             ],
         )
 
-    def test_seven_gpu_launcher_contains_every_frozen_run(self):
+    def test_eight_gpu_launcher_contains_every_frozen_run(self):
         screening = json.loads(
             (ROOT / "configs/experiment2/stage-b-screening.json").read_text(
                 encoding="utf-8"))
-        launcher = (ROOT / "scripts/train/launch_experiment2_stage_b_7gpu.sh").read_text(
+        launcher = (ROOT / "scripts/train/launch_experiment2_stage_b_8gpu.sh").read_text(
             encoding="utf-8")
         for row in screening["runs"]:
             self.assertIn(row["id"], launcher)
-        self.assertIn("0,1,2,3,4,5,6", launcher)
+        self.assertIn("0,1,2,3,4,5,6,7", launcher)
 
     def test_wandb_viewer_object_is_supported(self):
         self.assertEqual(

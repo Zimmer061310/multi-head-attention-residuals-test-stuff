@@ -17,15 +17,15 @@ class StageBScreeningTest(unittest.TestCase):
                 encoding="utf-8"))
         self.runs = {row["id"]: row for row in self.manifest["runs"]}
 
-    def test_exact_seven_run_matrix(self):
+    def test_exact_eight_run_matrix(self):
         self.assertEqual(
             set(self.runs),
             {
-                "h16", "h8", "mixed-k2", "mixed-k3", "mixed-k4-best",
+                "h16", "h8", "h4", "mixed-k2", "mixed-k3", "mixed-k4-best",
                 "mixed-k5", "mixed-k4-worst",
             },
         )
-        self.assertEqual(len(self.runs), 7)
+        self.assertEqual(len(self.runs), 8)
         self.assertEqual(self.manifest["protected_checkpoints"], [2000, 5000, 10000, 20000])
 
     def test_mixed_partitions_match_boundaries_and_group_counts(self):

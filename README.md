@@ -36,7 +36,7 @@ src/attention_residuals/            model definitions and routing kernels
 src/training/                       from-scratch and continued-pretraining entry points
 src/experiments/                    frozen Experiment 1 and 2 evaluation workflows
 scripts/setup/                      fresh-server bootstrap and validation
-scripts/train/                      single-run and seven-GPU launchers
+scripts/train/                      single-run and eight-GPU launchers
 scripts/evaluate/                   milestone and post-training controllers
 configs/                            frozen experiment and environment manifests
 docs/plans/                         experiment plans and analysis specifications
@@ -148,19 +148,19 @@ The run logs to W&B project `MHAR Stuff`, group
 `mhar-exp2-stage-b-1b-h8-fineweb-edu`, and can be resumed from any protected
 milestone by passing its checkpoint directory as the sole argument.
 
-The full seven-model Stage B screen is frozen in
+The full eight-model Stage B screen is frozen in
 `configs/experiment2/stage-b-screening.json`. Launch any model on one GPU with:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 ./scripts/train/run_experiment2_stage_b_screen.sh mixed-k4-best
 ```
 
-Valid names are `h16`, `h8`, `mixed-k2`, `mixed-k3`, `mixed-k4-best`,
+Valid names are `h16`, `h8`, `h4`, `mixed-k2`, `mixed-k3`, `mixed-k4-best`,
 `mixed-k5`, and `mixed-k4-worst`. On a multi-GPU host, assign one different
 model to each GPU; this preserves the single-GPU global-batch-32 recipe and is
 the preferred parallelization strategy for the screening matrix.
 
-### Fresh 7/8-GPU server setup
+### Fresh 8-GPU server setup
 
 Do not copy a Python environment from a machine with a different CPU or CUDA
 image. The successful RTX 5090 environment is reconstructed from wheels using
@@ -176,12 +176,12 @@ MHAR_BOOTSTRAP_PYTHON=python3.12 ./scripts/setup/bootstrap_stage_b_server.sh
 The bootstrap installs one shared virtual environment, authenticates GitHub
 and W&B without storing credentials in the repository, downloads/resumes the
 two 4.3 GB total dataset shards, verifies both SHA-256 hashes, checks at least
-seven bf16 GPUs and 700 GiB free disk, and runs the correctness preflight.
+eight bf16 GPUs and 700 GiB free disk, and runs the correctness preflight.
 
-Launch one model per GPU (0 through 6) and leave GPU 7 free for evaluation:
+Launch one model per GPU across all eight GPUs:
 
 ```bash
-./scripts/train/launch_experiment2_stage_b_7gpu.sh
+./scripts/train/launch_experiment2_stage_b_8gpu.sh
 ```
 
 The launcher refuses pre-existing screens or output manifests. Resumption is

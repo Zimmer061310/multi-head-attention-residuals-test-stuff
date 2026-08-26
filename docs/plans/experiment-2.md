@@ -579,14 +579,15 @@ steps so H=8 and H=16 can be compared at equal training progress. The checked-in
 launcher is `scripts/train/run_experiment2_train_1b_h8.sh`, and its W&B group is
 `mhar-exp2-stage-b-1b-h8-fineweb-edu`.
 
-### Frozen seven-run screening matrix
+### Frozen eight-run screening matrix
 
-For the seed-42 architectural screen, train these seven models from scratch:
+For the seed-42 architectural screen, train these eight models from scratch:
 
 | Run | Removed H16 boundaries | Routing groups | Role |
 |---|---:|---:|---|
 | H16 | none | 16 | fine-grained baseline |
 | H8 | all alternating boundaries | 8 | strong MHAR baseline |
+| H4 | uniform 320-dimensional groups | 4 | coarse MHAR baseline |
 | mixed k=2 | `[6,14]` | 14 | light merging |
 | mixed k=3 | `[6,8,14]` | 13 | medium-light merging |
 | mixed k=4 best | `[2,6,9,14]` | 12 | midpoint |
@@ -600,7 +601,7 @@ k=4 models have the same eight 80-dimensional singleton groups and four
 differ. The machine-readable preregistration is
 `configs/experiment2/stage-b-screening.json`.
 
-All seven runs share one W&B group and retain the same 2,000, 5,000, 10,000,
+All eight runs share one W&B group and retain the same 2,000, 5,000, 10,000,
 and 20,000 step checkpoints. Uniform H16/H8 use the existing fused routing
 kernel. Mixed-width routing currently uses the correctness-tested eager path;
 therefore mathematical routing cost is controlled, but measured training

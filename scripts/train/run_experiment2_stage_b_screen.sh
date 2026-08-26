@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-  echo "usage: $0 <h16|h8|mixed-k2|mixed-k3|mixed-k4-best|mixed-k5|mixed-k4-worst> [checkpoint-directory]" >&2
+  echo "usage: $0 <h16|h8|h4|mixed-k2|mixed-k3|mixed-k4-best|mixed-k5|mixed-k4-worst> [checkpoint-directory]" >&2
   exit 2
 fi
 
@@ -18,6 +18,10 @@ case "$MHAR_VARIANT" in
     ;;
   h8)
     MHAR_ATTNRES_HEADS=8
+    MHAR_FUSED=1
+    ;;
+  h4)
+    MHAR_ATTNRES_HEADS=4
     MHAR_FUSED=1
     ;;
   mixed-k2)
