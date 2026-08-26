@@ -106,8 +106,8 @@ def launch_resume(variants, milestone, next_milestone, output_root):
     subprocess.run([
         "screen", "-L", "-Logfile",
         str(Path(output_root) / f"workflow-{next_milestone}.log"), "-dmS",
-        f"mhar-stageb-workflow-{next_milestone}", PYTHON,
-        str(ROOT / "scripts/setup/run_stage_b_milestone_workflow.py"),
+        f"mhar-stageb-workflow-{next_milestone}", PYTHON, "-m",
+        "scripts.setup.run_stage_b_milestone_workflow",
         "--milestone", str(next_milestone), "--output-root", output_root,
         "--no-resume", "--poll-seconds", "30",
     ], check=True)
