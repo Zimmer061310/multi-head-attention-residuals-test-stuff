@@ -2,6 +2,7 @@
 
 import json
 import re
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,7 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 
+from src.training import train_scratch
 from src.attention_residuals.modeling_qwen3_attnres import (
     Qwen3AttnResConfig,
     Qwen3AttnResForCausalLM,
@@ -30,6 +32,9 @@ class FakeTokenizer:
 
 
 class ResumeCheckpointTest(unittest.TestCase):
+    def test_training_entrypoint_imports_sys_for_run_manifest(self):
+        self.assertIs(train_scratch.sys, sys)
+
     def make_model_and_optimizer(self):
         config = Qwen3AttnResConfig(
             vocab_size=64,

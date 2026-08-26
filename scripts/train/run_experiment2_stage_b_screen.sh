@@ -60,6 +60,7 @@ MHAR_HF_ENDPOINT="${MHAR_HF_ENDPOINT:-https://hf-mirror.com}"
 MHAR_DATA_FILES="${MHAR_DATA_FILES:-/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/*.parquet}"
 MHAR_WANDB_PROJECT="${MHAR_WANDB_PROJECT:-MHAR Stuff}"
 MHAR_WANDB_GROUP="${MHAR_WANDB_GROUP:-mhar-exp2-stage-b-screening-seed42}"
+MHAR_MASTER_PORT="${MHAR_MASTER_PORT:-29500}"
 
 mkdir -p "$MHAR_OUTPUT_DIR" "$MHAR_HF_HOME" "$MHAR_WANDB_DIR"
 
@@ -86,6 +87,7 @@ cd "$MHAR_REPO_DIR"
 
 exec "$MHAR_PYTHON_BIN" -m torch.distributed.run \
   --nproc_per_node=1 \
+  --master_port "$MHAR_MASTER_PORT" \
   --module src.training.train_scratch \
   --mode full_mh \
   --attnres_heads "$MHAR_ATTNRES_HEADS" \

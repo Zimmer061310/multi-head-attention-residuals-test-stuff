@@ -40,6 +40,7 @@ for index in "${!VARIANTS[@]}"; do
       MHAR_PYTHON_BIN="$MHAR_PYTHON_BIN" \
       MHAR_OUTPUT_ROOT="$MHAR_OUTPUT_ROOT" \
       MHAR_WANDB_GROUP="$MHAR_WANDB_GROUP" \
+      MHAR_MASTER_PORT="$((29500 + index))" \
       "$MHAR_REPO_DIR/scripts/train/run_experiment2_stage_b_screen.sh" "$variant"
   echo "launched $variant on physical GPU $gpu in screen $screen_name"
 done

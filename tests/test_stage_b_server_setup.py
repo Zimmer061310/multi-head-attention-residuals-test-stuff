@@ -42,6 +42,7 @@ class StageBServerSetupTest(unittest.TestCase):
         for row in screening["runs"]:
             self.assertIn(row["id"], launcher)
         self.assertIn("0,1,2,3,4,5,6,7", launcher)
+        self.assertIn('MHAR_MASTER_PORT="$((29500 + index))"', launcher)
 
     def test_wandb_viewer_object_is_supported(self):
         self.assertEqual(
