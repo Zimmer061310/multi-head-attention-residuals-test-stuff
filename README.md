@@ -32,17 +32,18 @@ attention residuals) supports 8B mid-training: **+3.2 GSM8K, +3.1 GPQA**.
 ## Repository layout
 
 ```
-paper/                              arXiv source + PDF
-Attention-Residuals/
-  modeling_qwen3_attnres.py         Qwen3-style architecture with all attention-residual
-                                    modes (baseline / full / full_mh = MHAR / delta / ...)
-  modeling_llama_attnres.py         Llama-style architecture for converting pretrained
-                                    checkpoints (8B mid-training via delta_mh)
-  mhar_triton.py                    fused Triton routing kernels
-train_scratch.py                    from-scratch pretraining entry point
-train_cpt.py                        continued-pretraining (conversion) entry point
-test_mhar_fused.py                  fused-vs-eager correctness tests
-test_mhar_fused_delta.py            fused-vs-eager tests for the delta variant
+src/attention_residuals/            model definitions and routing kernels
+src/training/                       from-scratch and continued-pretraining entry points
+src/experiments/                    frozen Experiment 1 and 2 evaluation workflows
+scripts/setup/                      fresh-server bootstrap and validation
+scripts/train/                      single-run and seven-GPU launchers
+scripts/evaluate/                   milestone and post-training controllers
+configs/                            frozen experiment and environment manifests
+docs/plans/                         experiment plans and analysis specifications
+requirements/                       pinned Python environments
+tests/                              correctness, parity, and workflow tests
+results/                            checked-in experiment artifacts
+paper/                              arXiv source and PDF
 ```
 
 ## Quick start
@@ -50,35 +51,35 @@ test_mhar_fused_delta.py            fused-vs-eager tests for the delta variant
 From-scratch pretraining with MHAR (`full_mh`, 8 routing heads):
 
 ```bash
-torchrun --nproc_per_node=8 train_scratch.py \
+torchrun --nproc_per_node=8 --module src.training.train_scratch \
     --mode full_mh --attnres_heads 8
 ```
 
 Single-head attention residuals (the `H = 1` special case):
 
 ```bash
-torchrun --nproc_per_node=8 train_scratch.py --mode full
+torchrun --nproc_per_node=8 --module src.training.train_scratch --mode full
 ```
 
 Standard Transformer baseline:
 
 ```bash
-torchrun --nproc_per_node=8 train_scratch.py --mode baseline
+torchrun --nproc_per_node=8 --module src.training.train_scratch --mode baseline
 ```
 
 Convert a pretrained checkpoint with the identity-preserving delta variant
 (zero disruption at step 0), then continue pretraining:
 
 ```bash
-torchrun --nproc_per_node=8 train_cpt.py \
+torchrun --nproc_per_node=8 --module src.training.train_cpt \
     --mode delta_mh --attnres_heads 8
 ```
 
 Verify the fused Triton kernels against the eager path:
 
 ```bash
-python test_mhar_fused.py
-python test_mhar_fused_delta.py
+python -m tests.test_mhar_fused
+python -m tests.test_mhar_fused_delta
 ```
 
 ## Experiment 1: exhaustive residual partitions
@@ -87,7 +88,7 @@ The frozen H=4 compatibility experiment evaluates all 105 pairings of eight
 160-dimensional primitive blocks into four routing groups.  The same partition
 is applied at all 73 routing sites, and every candidate sees the same fixed
 tokens.  The full preregistration is in
-[`experiment 1 plan.md`](experiment%201%20plan.md).
+[`docs/plans/experiment-1.md`](docs/plans/experiment-1.md).
 
 ### Train the preregistered 1B H=4 checkpoint
 
@@ -105,7 +106,7 @@ absolute path, byte size, and SHA-256 are frozen in the run identity.
 MHAR_PYTHON_BIN=/path/to/python \
 MHAR_OUTPUT_DIR=/fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu \
 MHAR_DATA_FILES='/fast-disk/fineweb-edu-sample-10BT/train/*.parquet' \
-./run_experiment1_train_1b_h4.sh
+./scripts/train/run_experiment1_train_1b_h4.sh
 ```
 
 The single-5090 execution uses per-device batch 4 and accumulation 8 to retain
@@ -119,7 +120,7 @@ Resume without changing the schedule or data position:
 ```bash
 MHAR_PYTHON_BIN=/path/to/python \
 MHAR_OUTPUT_DIR=/fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu \
-./run_experiment1_train_1b_h4.sh \
+./scripts/train/run_experiment1_train_1b_h4.sh \
   /fast-disk/experiment1/checkpoint-1b-h4-fineweb-edu/step-500
 ```
 
@@ -140,7 +141,7 @@ rotation.
 MHAR_PYTHON_BIN=/path/to/python \
 MHAR_OUTPUT_DIR=/fast-disk/experiment2/checkpoint-1b-h8-fineweb-edu \
 MHAR_DATA_FILES='/fast-disk/fineweb-edu-sample-10BT/train/*.parquet' \
-./run_experiment2_train_1b_h8.sh
+./scripts/train/run_experiment2_train_1b_h8.sh
 ```
 
 The run logs to W&B project `MHAR Stuff`, group
@@ -148,10 +149,10 @@ The run logs to W&B project `MHAR Stuff`, group
 milestone by passing its checkpoint directory as the sole argument.
 
 The full seven-model Stage B screen is frozen in
-`experiment2_stage_b_screening.json`. Launch any one model on one GPU with:
+`configs/experiment2/stage-b-screening.json`. Launch any model on one GPU with:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 ./run_experiment2_stage_b_screen.sh mixed-k4-best
+CUDA_VISIBLE_DEVICES=0 ./scripts/train/run_experiment2_stage_b_screen.sh mixed-k4-best
 ```
 
 Valid names are `h16`, `h8`, `mixed-k2`, `mixed-k3`, `mixed-k4-best`,
@@ -163,13 +164,13 @@ the preferred parallelization strategy for the screening matrix.
 
 Do not copy a Python environment from a machine with a different CPU or CUDA
 image. The successful RTX 5090 environment is reconstructed from wheels using
-`requirements-stage-b.txt`; its exact W&B-recorded versions and two frozen
-FineWeb-Edu shard identities are in `stage_b_server_environment.json`.
+`requirements/stage-b.txt`; its exact W&B-recorded versions and two frozen
+FineWeb-Edu shard identities are in `configs/environment/stage-b-server.json`.
 
 After cloning the repository on the new server, run interactively:
 
 ```bash
-MHAR_BOOTSTRAP_PYTHON=python3.12 ./bootstrap_stage_b_server.sh
+MHAR_BOOTSTRAP_PYTHON=python3.12 ./scripts/setup/bootstrap_stage_b_server.sh
 ```
 
 The bootstrap installs one shared virtual environment, authenticates GitHub
@@ -180,7 +181,7 @@ seven bf16 GPUs and 700 GiB free disk, and runs the correctness preflight.
 Launch one model per GPU (0 through 6) and leave GPU 7 free for evaluation:
 
 ```bash
-./launch_experiment2_stage_b_7gpu.sh
+./scripts/train/launch_experiment2_stage_b_7gpu.sh
 ```
 
 The launcher refuses pre-existing screens or output manifests. Resumption is
@@ -189,16 +190,16 @@ therefore always explicit and cannot accidentally overwrite a run.
 Install the pinned experiment runtime and run the CPU correctness suite:
 
 ```bash
-python3 -m pip install -r requirements-experiment1.txt
+python3 -m pip install -r requirements/experiment1.txt
 MHAR_RUN_MODEL_INTEGRATION=1 python3 -m unittest -v \
-  test_experiment1_partitions.py test_experiment1_runner.py test_train_resume.py
+  tests.test_experiment1_partitions tests.test_experiment1_runner tests.test_train_resume
 ```
 
 Materialize non-overlapping discovery and confirmation tensors from an explicit
 dataset revision or local parquet manifest:
 
 ```bash
-python3 experiment1_partition_compatibility.py materialize \
+python3 -m src.experiments.experiment1_partition_compatibility materialize \
   --dataset HuggingFaceFW/fineweb-edu \
   --dataset-revision <immutable-revision> \
   --tokenizer Qwen/Qwen3-0.6B \
@@ -213,7 +214,7 @@ Evaluate all 105 partitions on discovery, rank them, evaluate only the selected
 reference/best/worst candidates on confirmation, then write the final report:
 
 ```bash
-python3 experiment1_partition_compatibility.py evaluate \
+python3 -m src.experiments.experiment1_partition_compatibility evaluate \
   --checkpoint <1b-h4-full_mh-checkpoint> \
   --artifact output/experiment1/fixed_eval.pt \
   --output-dir output/experiment1/run \
@@ -221,13 +222,13 @@ python3 experiment1_partition_compatibility.py evaluate \
   --wandb-mode online --wandb-project 'MHAR Stuff' \
   --wandb-group mhar-exp1-1b-h4
 
-python3 experiment1_partition_compatibility.py analyze \
+python3 -m src.experiments.experiment1_partition_compatibility analyze \
   --discovery-results output/experiment1/run/discovery_results.jsonl \
   --output-dir output/experiment1/run/analysis \
   --wandb-mode online --wandb-project 'MHAR Stuff' \
   --wandb-group mhar-exp1-1b-h4
 
-python3 experiment1_partition_compatibility.py evaluate \
+python3 -m src.experiments.experiment1_partition_compatibility evaluate \
   --checkpoint <1b-h4-full_mh-checkpoint> \
   --artifact output/experiment1/fixed_eval.pt \
   --output-dir output/experiment1/run \
@@ -237,7 +238,7 @@ python3 experiment1_partition_compatibility.py evaluate \
   --wandb-mode online --wandb-project 'MHAR Stuff' \
   --wandb-group mhar-exp1-1b-h4
 
-python3 experiment1_partition_compatibility.py analyze \
+python3 -m src.experiments.experiment1_partition_compatibility analyze \
   --discovery-results output/experiment1/run/discovery_results.jsonl \
   --confirmation-results output/experiment1/run/confirmation_results.jsonl \
   --output-dir output/experiment1/run/final-analysis \
@@ -257,7 +258,7 @@ To queue the complete workflow behind the exact 1B H=4 training launcher, run:
 
 ```bash
 MHAR_PYTHON_BIN=/root/autodl-tmp/mhar-venv/bin/python \
-  ./run_experiment1_after_training.sh
+  ./scripts/evaluate/run_experiment1_after_training.sh
 ```
 
 For staged checkpoint inspection, run the milestone controller from a separate
@@ -269,11 +270,11 @@ exits so the result can be reviewed before training resumes:
 ```bash
 MHAR_PYTHON_BIN=/root/autodl-tmp/mhar-venv/bin/python \
 MHAR_REPO_DIR=/root/mhar-experiment \
-./run_experiment1_milestone.sh 2000
+./scripts/evaluate/run_experiment1_milestone.sh 2000
 ```
 
 The preregistered milestones are 2,000, 5,000, 10,000, and 20,000 steps. Resume
-from the reviewed checkpoint with `run_experiment1_train_1b_h4.sh <checkpoint>`
+from the reviewed checkpoint with `scripts/train/run_experiment1_train_1b_h4.sh <checkpoint>`
 before starting the next milestone controller. Each milestone uses a distinct
 W&B group and output directory; the fixed discovery/confirmation artifact is
 shared unchanged across milestones.
@@ -307,7 +308,7 @@ prediction-only ridge diagnostic and freezes separate targeted and uniform
 selection manifests for `k=3` and `k=5`:
 
 ```bash
-python3 experiment2_boundary_contribution.py fit \
+python3 -m src.experiments.experiment2_boundary_contribution fit \
   --discovery-results <step-2000-discovery-results.jsonl> \
   --output-dir <boundary-model-output> \
   --seed 20260826 --uniform-size 30 \
@@ -315,12 +316,12 @@ python3 experiment2_boundary_contribution.py fit \
   --wandb-group mhar-exp2-1b-h16-step-2000
 ```
 
-Evaluate each frozen manifest with `experiment2_mixed_width.py evaluate` using
+Evaluate each frozen manifest with `python3 -m src.experiments.experiment2_mixed_width evaluate` using
 `--split confirmation` and the unchanged checkpoint/fixed-token artifact. Then
 analyze transfer without combining the targeted and uniform sampling purposes:
 
 ```bash
-python3 experiment2_boundary_contribution.py analyze-transfer \
+python3 -m src.experiments.experiment2_boundary_contribution analyze-transfer \
   --k3-results <k3-confirmation-results.jsonl> \
   --k3-selection <boundary-model-output/k3_selection.json> \
   --k5-results <k5-confirmation-results.jsonl> \
@@ -339,7 +340,7 @@ If the frozen `k=3` or `k=5` directional gate passes, prepare the corresponding
 pre-registered continuation (`k=1/2` for `k=3`; `k=6/7` for `k=5`):
 
 ```bash
-python3 experiment2_conditional_followup.py prepare \
+python3 -m src.experiments.experiment2_conditional_followup prepare \
   --discovery-results <step-2000-discovery-results.jsonl> \
   --boundary-effects <boundary-model-output/boundary_effects.csv> \
   --transfer-summary <transfer-analysis-output/transfer_summary.json> \
@@ -348,8 +349,8 @@ python3 experiment2_conditional_followup.py prepare \
 ```
 
 Evaluate every manifest listed by `followup_gate.json` with
-`experiment2_mixed_width.py evaluate --split confirmation`. Then pass those
-result/selection paths to `experiment2_conditional_followup.py analyze`.
+`python3 -m src.experiments.experiment2_mixed_width evaluate --split confirmation`. Then pass those
+result/selection paths to `python3 -m src.experiments.experiment2_conditional_followup analyze`.
 `k=1` and `k=7` are exhaustive; `k=2` and `k=6` use the frozen targeted plus
 uniform sampling design. This stage reuses the confirmation split and is
 therefore labeled a sequential follow-up, not a new untouched confirmation.
@@ -358,7 +359,7 @@ The checked-in sequential runner performs every eligible evaluation and the
 final analysis without changing the frozen gate:
 
 ```bash
-python3 experiment2_conditional_followup.py run \
+python3 -m src.experiments.experiment2_conditional_followup run \
   --gate-manifest <conditional-followup-manifests/followup_gate.json> \
   --manifests-dir <conditional-followup-manifests> \
   --checkpoint <step-2000-checkpoint> --artifact <fixed-eval.pt> \
