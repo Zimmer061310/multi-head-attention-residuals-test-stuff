@@ -40,7 +40,9 @@ if ! gh auth status --hostname github.com >/dev/null 2>&1; then
     echo "GitHub authentication is missing; rerun interactively and complete gh auth login" >&2
     exit 1
   fi
-  gh auth login --hostname github.com --git-protocol https --web
+  # Ubuntu 22.04 ships gh 2.4, whose auth command predates --git-protocol.
+  # setup-git below still configures authenticated HTTPS operations.
+  gh auth login --hostname github.com --web
 fi
 gh auth setup-git
 
