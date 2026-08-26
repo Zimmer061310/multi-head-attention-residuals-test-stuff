@@ -1,0 +1,78 @@
+{
+  "format_version": 1,
+  "name": "Experiment 2 Stage B seven-run screening",
+  "seed": 42,
+  "training_steps": 20000,
+  "protected_checkpoints": [2000, 5000, 10000, 20000],
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp2-stage-b-screening-seed42",
+  "selection_provenance": {
+    "checkpoint": "step-2000 H16 pilot",
+    "discovery_results": "results/experiment2/step-2000/discovery_results.jsonl",
+    "discovery_results_sha256": "763aeb36b6bdad064333d48dcad3818f14b109695ebe39e23f23e261b3eb2bcc",
+    "worst_k4_rule": "maximum discovery NLL among all 495 k=4 choices; ties by partition id"
+  },
+  "runs": [
+    {
+      "id": "h16",
+      "attnres_heads": 16,
+      "merged_boundaries": [],
+      "routing_groups": 16,
+      "purpose": "fine-grained baseline",
+      "kernel": "fused_uniform"
+    },
+    {
+      "id": "h8",
+      "attnres_heads": 8,
+      "merged_boundaries": [],
+      "routing_groups": 8,
+      "purpose": "strong MHAR baseline",
+      "kernel": "fused_uniform"
+    },
+    {
+      "id": "mixed-k2",
+      "attnres_heads": 16,
+      "merged_boundaries": [6, 14],
+      "partition_id": "0__1__2__3__4__5__6-7__8__9__10__11__12__13__14-15",
+      "routing_groups": 14,
+      "purpose": "light merging",
+      "kernel": "eager_mixed_width"
+    },
+    {
+      "id": "mixed-k3",
+      "attnres_heads": 16,
+      "merged_boundaries": [6, 8, 14],
+      "partition_id": "0__1__2__3__4__5__6-7__8-9__10__11__12__13__14-15",
+      "routing_groups": 13,
+      "purpose": "medium-light merging",
+      "kernel": "eager_mixed_width"
+    },
+    {
+      "id": "mixed-k4-best",
+      "attnres_heads": 16,
+      "merged_boundaries": [2, 6, 9, 14],
+      "partition_id": "0__1__2-3__4__5__6-7__8__9-10__11__12__13__14-15",
+      "routing_groups": 12,
+      "purpose": "midpoint and best k=4",
+      "kernel": "eager_mixed_width"
+    },
+    {
+      "id": "mixed-k5",
+      "attnres_heads": 16,
+      "merged_boundaries": [2, 6, 9, 11, 14],
+      "partition_id": "0__1__2-3__4__5__6-7__8__9-10__11-12__13__14-15",
+      "routing_groups": 11,
+      "purpose": "heavier merging",
+      "kernel": "eager_mixed_width"
+    },
+    {
+      "id": "mixed-k4-worst",
+      "attnres_heads": 16,
+      "merged_boundaries": [0, 4, 8, 10],
+      "partition_id": "0-1__2__3__4-5__6__7__8-9__10-11__12__13__14__15",
+      "routing_groups": 12,
+      "purpose": "bad-partition location control",
+      "kernel": "eager_mixed_width"
+    }
+  ]
+}

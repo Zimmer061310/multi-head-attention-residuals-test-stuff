@@ -147,6 +147,18 @@ The run logs to W&B project `MHAR Stuff`, group
 `mhar-exp2-stage-b-1b-h8-fineweb-edu`, and can be resumed from any protected
 milestone by passing its checkpoint directory as the sole argument.
 
+The full seven-model Stage B screen is frozen in
+`experiment2_stage_b_screening.json`. Launch any one model on one GPU with:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 ./run_experiment2_stage_b_screen.sh mixed-k4-best
+```
+
+Valid names are `h16`, `h8`, `mixed-k2`, `mixed-k3`, `mixed-k4-best`,
+`mixed-k5`, and `mixed-k4-worst`. On a multi-GPU host, assign one different
+model to each GPU; this preserves the single-GPU global-batch-32 recipe and is
+the preferred parallelization strategy for the screening matrix.
+
 Install the pinned experiment runtime and run the CPU correctness suite:
 
 ```bash

@@ -579,6 +579,34 @@ steps so H=8 and H=16 can be compared at equal training progress. The checked-in
 launcher is `run_experiment2_train_1b_h8.sh`, and its W&B group is
 `mhar-exp2-stage-b-1b-h8-fineweb-edu`.
 
+### Frozen seven-run screening matrix
+
+For the seed-42 architectural screen, train these seven models from scratch:
+
+| Run | Removed H16 boundaries | Routing groups | Role |
+|---|---:|---:|---|
+| H16 | none | 16 | fine-grained baseline |
+| H8 | all alternating boundaries | 8 | strong MHAR baseline |
+| mixed k=2 | `[6,14]` | 14 | light merging |
+| mixed k=3 | `[6,8,14]` | 13 | medium-light merging |
+| mixed k=4 best | `[2,6,9,14]` | 12 | midpoint |
+| mixed k=5 | `[2,6,9,11,14]` | 11 | heavier merging |
+| mixed k=4 worst | `[0,4,8,10]` | 12 | bad-partition control |
+
+The k=4 worst choice is frozen as the maximum discovery NLL among all 495
+step-2,000 k=4 choices, with ties resolved by partition id. The best and worst
+k=4 models have the same eight 80-dimensional singleton groups and four
+160-dimensional doubleton groups. Only the four removed boundary locations
+differ. The machine-readable preregistration is
+`experiment2_stage_b_screening.json`.
+
+All seven runs share one W&B group and retain the same 2,000, 5,000, 10,000,
+and 20,000 step checkpoints. Uniform H16/H8 use the existing fused routing
+kernel. Mixed-width routing currently uses the correctness-tested eager path;
+therefore mathematical routing cost is controlled, but measured training
+throughput is not yet a systems control. Do not compare runtime until a fused
+mixed-width kernel passes forward, gradient, and optimizer-step parity tests.
+
 Use at least three independent seeds per architecture.  Report both the
 per-seed results and the across-seed mean with uncertainty.  Because the
 architectures execute different numbers of routing softmaxes, also report
