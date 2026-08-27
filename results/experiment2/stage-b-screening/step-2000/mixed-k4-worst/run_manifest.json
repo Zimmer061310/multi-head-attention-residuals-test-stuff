@@ -1,0 +1,31 @@
+{
+  "architecture": {
+    "attnres_mode": "full_mh",
+    "attnres_num_heads": 16,
+    "hidden_size": 1280,
+    "intermediate_size": 5120,
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8
+  },
+  "created_at": "2026-08-27T17:32:49.690822+00:00",
+  "run_identity": {
+    "artifact": "/root/autodl-tmp/experiment2/stage-b-screening/fixed_eval.pt",
+    "artifact_sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "batch_size": 1,
+    "checkpoint": "/root/autodl-tmp/experiment2/stage-b-screening/mixed-k4-worst/step-2000",
+    "checkpoint_sha256": "1151e32bd1deb4f7285f794787242e16ed9cf8cb7bf1e523b17accadfaa18543",
+    "dtype": "bf16",
+    "experiment": "2-stage-b-screening",
+    "milestone": 2000,
+    "screening_seed": 42,
+    "source_commit": "aa800630f7c88a4503acf056cc763eba384c8b44",
+    "variant": "mixed-k4-worst"
+  },
+  "wandb": {
+    "group": "mhar-exp2-stage-b-screening-seed42-step-2000",
+    "project": "MHAR Stuff",
+    "run_id": "c6z7a3x9",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/c6z7a3x9"
+  }
+}

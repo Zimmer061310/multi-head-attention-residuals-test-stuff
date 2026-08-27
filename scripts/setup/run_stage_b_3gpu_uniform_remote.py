@@ -170,7 +170,7 @@ def main():
         flush=True,
     )
     time.sleep(args.shutdown_grace_seconds)
-    subprocess.run(["shutdown", "-h", "now"], check=True)
+    subprocess.run(["/bin/bash", "-lc", "shutdown -h now"], check=True)
 
 
 if __name__ == "__main__":

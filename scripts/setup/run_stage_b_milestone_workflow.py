@@ -238,7 +238,10 @@ def main():
         f"final milestone result uploaded; waiting {args.shutdown_grace_seconds}s "
         "before success-only poweroff", flush=True)
     time.sleep(args.shutdown_grace_seconds)
-    subprocess.run(["shutdown", "-h", "now"], check=True)
+    # SeeCloud exposes shutdown through a provider shell wrapper.  Invoking it
+    # directly with execve can raise ENOEXEC, while the login shell path is the
+    # same path that succeeds interactively.
+    subprocess.run(["/bin/bash", "-lc", "shutdown -h now"], check=True)
 
 
 if __name__ == "__main__":

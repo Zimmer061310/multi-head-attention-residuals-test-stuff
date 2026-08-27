@@ -96,7 +96,7 @@ def main():
     if failed or running or len(completed) != len(variants):
         raise RuntimeError("completion state changed during shutdown grace period")
     print("success conditions revalidated; powering off now", flush=True)
-    subprocess.run(["shutdown", "-h", "now"], check=True)
+    subprocess.run(["/bin/bash", "-lc", "shutdown -h now"], check=True)
 
 
 if __name__ == "__main__":
