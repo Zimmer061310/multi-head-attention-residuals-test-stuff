@@ -21,8 +21,10 @@ import torch.nn as nn
 
 from .mhar_partition import (
     arbitrary_group_mhar_eager,
+    canonicalize_contiguous_partition,
     canonicalize_mixed_partition,
     canonicalize_partition,
+    contiguous_mhar_eager,
     mixed_width_mhar_eager,
 )
 
@@ -477,6 +479,7 @@ def mh_block_attn_res(
     num_heads: int,
     partition=None,               # optional pairs over 2H half-head blocks
     mixed_partition=None,         # optional ordered singleton/doubleton atoms
+    contiguous_partition=None,    # optional arbitrary-width ordered segments
 ) -> torch.Tensor:
     """
     Multi-head block_attn_res: the hidden dim is split into num_heads
@@ -484,8 +487,15 @@ def mh_block_attn_res(
     over depth sources — different subspaces can route to different layers.
     Same parameter count as block_attn_res (the (D,) query is reshaped).
     """
-    if partition is not None and mixed_partition is not None:
-        raise ValueError("partition and mixed_partition are mutually exclusive")
+    active = sum(value is not None for value in (
+        partition, mixed_partition, contiguous_partition))
+    if active > 1:
+        raise ValueError("MHAR runtime partitions are mutually exclusive")
+    if contiguous_partition is not None:
+        V = torch.stack(blocks + [partial_block], dim=0)
+        return contiguous_mhar_eager(
+            V, proj.weight.view(-1), norm, contiguous_partition,
+            num_groups=num_heads)
     if mixed_partition is not None:
         V = torch.stack(blocks + [partial_block], dim=0)
         return mixed_width_mhar_eager(
@@ -690,6 +700,8 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
         self._mhar_partition = None
         # Runtime-only Experiment 2 intervention over the native H atoms.
         self._mhar_mixed_partition = None
+        # Runtime-only Experiment 3E intervention over arbitrary coordinates.
+        self._mhar_contiguous_partition = None
         if self.attnres_mode in ("full_mh", "full_hw", "block_mh") and config.hidden_size % self.attnres_num_heads != 0:
             raise ValueError(
                 f"hidden_size {config.hidden_size} not divisible by attnres_num_heads {self.attnres_num_heads}")
@@ -1518,7 +1530,8 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
                                        self.attn_res_proj, self.attn_res_norm,
                                        self.attnres_num_heads,
                                        partition=self._mhar_partition,
-                                       mixed_partition=self._mhar_mixed_partition)
+                                       mixed_partition=self._mhar_mixed_partition,
+                                       contiguous_partition=self._mhar_contiguous_partition)
             h = self._apply_gate(partial_block, h_attn, "attn")
 
             attn_out, _ = self.self_attn(
@@ -1538,7 +1551,8 @@ class Qwen3AttnResDecoderLayer(GradientCheckpointingLayer):
                                        self.mlp_res_proj, self.mlp_res_norm,
                                        self.attnres_num_heads,
                                        partition=self._mhar_partition,
-                                       mixed_partition=self._mhar_mixed_partition)
+                                       mixed_partition=self._mhar_mixed_partition,
+                                       contiguous_partition=self._mhar_contiguous_partition)
             h = self._apply_gate(partial_block, h_attn, "mlp")
 
             mlp_out = self.mlp(self.post_attention_layernorm(h))
@@ -1645,6 +1659,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
         self.has_sliding_layers = "sliding_attention" in self.config.layer_types
         self._mhar_partition = None
         self._mhar_mixed_partition = None
+        self._mhar_contiguous_partition = None
 
         # Final block_attn_res: produces effective hidden state after all layers
         # by routing over all sources + last partial. Needed for any mode where
@@ -1689,9 +1704,11 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
 
         self._mhar_partition = canonical
         self._mhar_mixed_partition = None
+        self._mhar_contiguous_partition = None
         for layer in self.layers:
             layer._mhar_partition = canonical
             layer._mhar_mixed_partition = None
+            layer._mhar_contiguous_partition = None
         return canonical
 
     @property
@@ -1724,9 +1741,42 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
 
         self._mhar_partition = None
         self._mhar_mixed_partition = canonical
+        self._mhar_contiguous_partition = None
         for layer in self.layers:
             layer._mhar_partition = None
             layer._mhar_mixed_partition = canonical
+            layer._mhar_contiguous_partition = None
+        return canonical
+
+    @property
+    def mhar_contiguous_partition(self):
+        """The runtime-only arbitrary-width contiguous partition."""
+
+        return self._mhar_contiguous_partition
+
+    def set_mhar_contiguous_partition(self, partition, *, min_width=1):
+        """Apply one coordinate-ordered partition to every full_mh site."""
+
+        if partition is None:
+            canonical = None
+        else:
+            if self._attnres_mode != "full_mh":
+                raise ValueError(
+                    "contiguous MHAR partitions require config.attnres_mode='full_mh'")
+            canonical = canonicalize_contiguous_partition(
+                partition,
+                hidden_size=self.config.hidden_size,
+                num_groups=getattr(self.config, "attnres_num_heads", 8),
+                min_width=min_width,
+            )
+
+        self._mhar_partition = None
+        self._mhar_mixed_partition = None
+        self._mhar_contiguous_partition = canonical
+        for layer in self.layers:
+            layer._mhar_partition = None
+            layer._mhar_mixed_partition = None
+            layer._mhar_contiguous_partition = canonical
         return canonical
 
     @merge_with_config_defaults
@@ -1818,6 +1868,7 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
             attnres_mode == "full_mh"
             and self._mhar_partition is None
             and self._mhar_mixed_partition is None
+            and self._mhar_contiguous_partition is None
             and _mhar_fused is not None
             and _mhar_fused.fused_mhar_enabled()
             and inputs_embeds.is_cuda
@@ -1878,6 +1929,9 @@ class Qwen3AttnResModel(Qwen3PreTrainedModel):
                     partition=(self._mhar_partition if attnres_mode == "full_mh" else None),
                     mixed_partition=(
                         self._mhar_mixed_partition if attnres_mode == "full_mh" else None),
+                    contiguous_partition=(
+                        self._mhar_contiguous_partition
+                        if attnres_mode == "full_mh" else None),
                 )
             elif self._needs_final_routing:
                 partial_block = block_attn_res(
@@ -1941,6 +1995,16 @@ class Qwen3AttnResForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
         """Delegate the runtime Experiment 2 intervention to the backbone."""
 
         return self.model.set_mhar_mixed_partition(partition)
+
+    @property
+    def mhar_contiguous_partition(self):
+        return self.model.mhar_contiguous_partition
+
+    def set_mhar_contiguous_partition(self, partition, *, min_width=1):
+        """Delegate the runtime Experiment 3E intervention to the backbone."""
+
+        return self.model.set_mhar_contiguous_partition(
+            partition, min_width=min_width)
 
     @can_return_tuple
     @auto_docstring

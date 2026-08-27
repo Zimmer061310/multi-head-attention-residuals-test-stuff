@@ -11,8 +11,104 @@ Pair = tuple[int, int]
 Partition = tuple[Pair, ...]
 AtomicGroup = tuple[int, ...]
 MixedPartition = tuple[AtomicGroup, ...]
+ContiguousSegment = tuple[int, int]
+ContiguousPartition = tuple[ContiguousSegment, ...]
 
 REFERENCE_PARTITION_H4: Partition = ((0, 1), (2, 3), (4, 5), (6, 7))
+
+
+def canonicalize_contiguous_partition(
+    partition: Iterable[Sequence[int]],
+    *,
+    hidden_size: int,
+    num_groups: int | None = None,
+    min_width: int = 1,
+) -> ContiguousPartition:
+    """Validate ordered half-open coordinate segments covering ``[0, D)``.
+
+    This representation is used by Experiment 3E, where a routing boundary can
+    move by less than the native equal-head width. Coordinates are never
+    reordered and every residual coordinate must occur exactly once.
+    """
+
+    if hidden_size < 1:
+        raise ValueError("hidden_size must be positive")
+    if min_width < 1:
+        raise ValueError("min_width must be positive")
+    segments = tuple(tuple(int(value) for value in segment) for segment in partition)
+    if not segments:
+        raise ValueError("contiguous partition cannot be empty")
+    if num_groups is not None and len(segments) != num_groups:
+        raise ValueError(
+            f"contiguous partition has {len(segments)} groups, expected {num_groups}")
+    cursor = 0
+    for segment in segments:
+        if len(segment) != 2:
+            raise ValueError(f"segments must be (start, end) pairs: {segment!r}")
+        start, end = segment
+        if start != cursor:
+            raise ValueError(
+                "contiguous partition must be ordered with no gaps or overlap; "
+                f"expected start {cursor}, got {start}")
+        if end - start < min_width:
+            raise ValueError(
+                f"segment {segment!r} is narrower than min_width={min_width}")
+        cursor = end
+    if cursor != hidden_size:
+        raise ValueError(
+            f"contiguous partition ends at {cursor}, expected hidden_size={hidden_size}")
+    return segments
+
+
+def contiguous_partition_from_boundaries(
+    boundaries: Iterable[int],
+    *,
+    hidden_size: int,
+    num_groups: int | None = None,
+    min_width: int = 1,
+) -> ContiguousPartition:
+    """Construct coordinate segments from strictly increasing inner boundaries."""
+
+    inner = tuple(int(value) for value in boundaries)
+    if tuple(sorted(inner)) != inner or len(set(inner)) != len(inner):
+        raise ValueError("boundaries must be strictly increasing")
+    if any(value <= 0 or value >= hidden_size for value in inner):
+        raise ValueError(f"boundaries must lie strictly inside [0, {hidden_size}]")
+    endpoints = (0,) + inner + (hidden_size,)
+    segments = tuple(zip(endpoints[:-1], endpoints[1:]))
+    return canonicalize_contiguous_partition(
+        segments,
+        hidden_size=hidden_size,
+        num_groups=num_groups,
+        min_width=min_width,
+    )
+
+
+def contiguous_partition_id(partition: Iterable[Sequence[int]], *, hidden_size: int) -> str:
+    canonical = canonicalize_contiguous_partition(partition, hidden_size=hidden_size)
+    return "__".join(f"{start}-{end}" for start, end in canonical)
+
+
+def parse_contiguous_partition_id(
+    value: str,
+    *,
+    hidden_size: int,
+    num_groups: int | None = None,
+    min_width: int = 1,
+) -> ContiguousPartition:
+    try:
+        segments = tuple(
+            tuple(int(coordinate) for coordinate in segment.split("-"))
+            for segment in value.split("__")
+        )
+    except ValueError as exc:
+        raise ValueError(f"invalid contiguous partition id: {value!r}") from exc
+    return canonicalize_contiguous_partition(
+        segments,
+        hidden_size=hidden_size,
+        num_groups=num_groups,
+        min_width=min_width,
+    )
 
 
 def canonicalize_mixed_partition(
@@ -355,6 +451,65 @@ def mixed_width_mhar_eager(
     for group in canonical:
         start = group[0] * primitive_width
         end = (group[-1] + 1) * primitive_width
+        group_keys = K[..., start:end]
+        group_values = V[..., start:end]
+        group_query = flat_query[start:end]
+        logits = torch.einsum("k, n b t k -> n b t", group_query, group_keys)
+        weights = logits.softmax(dim=0)
+        outputs.append(torch.einsum("n b t, n b t k -> b t k", weights, group_values))
+    return torch.cat(outputs, dim=-1)
+
+
+def contiguous_mhar_eager(
+    V: torch.Tensor,
+    query: torch.Tensor,
+    norm,
+    partition: Iterable[Sequence[int]],
+    *,
+    num_groups: int | None = None,
+    min_width: int = 1,
+) -> torch.Tensor:
+    """Route arbitrary-width ordered coordinate segments with one softmax each.
+
+    Full-width RMS normalization happens before slicing. Query coefficients and
+    routed values remain attached to their original coordinates. This eager
+    reference is intentionally separate from the equal-width Triton kernel.
+    """
+
+    if V.ndim != 4:
+        raise ValueError(f"V must have shape [N,B,T,D], got {tuple(V.shape)}")
+    hidden_size = V.shape[-1]
+    if query.numel() != hidden_size:
+        raise ValueError(
+            f"query contains {query.numel()} coefficients, expected {hidden_size}")
+    canonical = canonicalize_contiguous_partition(
+        partition,
+        hidden_size=hidden_size,
+        num_groups=num_groups,
+        min_width=min_width,
+    )
+    K = norm(V)
+    flat_query = query.reshape(hidden_size)
+
+    widths = tuple(end - start for start, end in canonical)
+    if len(set(widths)) == 1:
+        group_count = len(canonical)
+        group_width = widths[0]
+        logits = torch.einsum(
+            "h k, n b t h k -> n b t h",
+            flat_query.view(group_count, group_width),
+            K.view(*K.shape[:-1], group_count, group_width),
+        )
+        weights = logits.softmax(dim=0)
+        routed = torch.einsum(
+            "n b t h, n b t h k -> b t h k",
+            weights,
+            V.view(*V.shape[:-1], group_count, group_width),
+        )
+        return routed.reshape(*V.shape[1:-1], hidden_size)
+
+    outputs = []
+    for start, end in canonical:
         group_keys = K[..., start:end]
         group_values = V[..., start:end]
         group_query = flat_query[start:end]
