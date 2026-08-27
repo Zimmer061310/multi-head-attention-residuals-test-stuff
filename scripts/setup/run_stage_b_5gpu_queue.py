@@ -81,7 +81,7 @@ def start_subset_pause(target_milestone, output_root):
             "--variants", ",".join(MIXED_VARIANTS),
             "--status-path", str(status),
         ], check=True)
-    return status
+    return screen, status
 
 
 def start_full_controllers(target_milestone, output_root, no_further_resume):
@@ -132,11 +132,12 @@ def main():
     subprocess.run(["screen", "-wipe"], check=False, capture_output=True)
     for gpu, variant in enumerate(MIXED_VARIANTS):
         launch_training(variant, gpu, args.target_milestone, args.output_root, gpu)
-    wave_status = start_subset_pause(args.target_milestone, args.output_root)
+    wave_screen, wave_status = start_subset_pause(
+        args.target_milestone, args.output_root)
     while True:
         if wave_status.is_file():
             status = json.loads(wave_status.read_text(encoding="utf-8"))
-            if status.get("failed"):
+            if status.get("failed") and wave_screen not in active_screen_names():
                 raise RuntimeError(f"mixed wave failed: {status['failed']}")
             if status.get("complete"):
                 break

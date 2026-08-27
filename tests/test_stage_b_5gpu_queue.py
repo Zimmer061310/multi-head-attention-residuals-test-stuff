@@ -12,6 +12,7 @@ from scripts.setup.run_stage_b_5gpu_queue import (
     UNIFORM_VARIANTS,
     launch_training,
     latest_atomic_checkpoint,
+    start_subset_pause,
 )
 
 
@@ -37,6 +38,10 @@ class StageB5GpuQueueTest(unittest.TestCase):
         self.assertEqual(TRAINING_ROOT.name, "mhar-training-81ff305")
         source = inspect.getsource(launch_training)
         self.assertIn('TRAINING_ROOT / "scripts/train/run_experiment2_stage_b_screen.sh"', source)
+
+    def test_subset_pause_returns_screen_and_status_for_stale_state_guard(self):
+        source = inspect.getsource(start_subset_pause)
+        self.assertIn("return screen, status", source)
 
     def test_latest_atomic_checkpoint_before_target(self):
         with tempfile.TemporaryDirectory() as root:
