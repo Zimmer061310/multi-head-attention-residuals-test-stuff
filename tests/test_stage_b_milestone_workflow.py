@@ -8,6 +8,7 @@ from pathlib import Path
 
 from scripts.setup.run_stage_b_milestone_workflow import (
     eval_state,
+    launch_five_gpu_queue,
     launch_resume,
     load_pause_status,
 )
@@ -41,6 +42,11 @@ class StageBMilestoneWorkflowTest(unittest.TestCase):
         self.assertIn('"scripts.setup.run_stage_b_milestone_workflow"', source)
         self.assertNotIn(
             'str(ROOT / "scripts/setup/run_stage_b_milestone_workflow.py")', source)
+
+    def test_five_gpu_followup_uses_queue(self):
+        source = inspect.getsource(launch_five_gpu_queue)
+        self.assertIn('"scripts.setup.run_stage_b_5gpu_queue"', source)
+        self.assertIn('"--no-further-resume"', source)
 
 
 if __name__ == "__main__":

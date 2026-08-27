@@ -110,7 +110,21 @@ def launch_resume(variants, milestone, next_milestone, output_root):
         "scripts.setup.run_stage_b_milestone_workflow",
         "--milestone", str(next_milestone), "--output-root", output_root,
         "--no-resume", "--poll-seconds", "30",
-    ], check=True)
+    ], cwd=ROOT, check=True)
+
+
+def launch_five_gpu_queue(next_milestone, output_root):
+    screen = f"mhar-stageb-queue-{next_milestone}"
+    if screen in active_screen_names():
+        return
+    subprocess.run([
+        "screen", "-L", "-Logfile",
+        str(Path(output_root) / f"queue-{next_milestone}.log"),
+        "-dmS", screen, PYTHON, "-m", "scripts.setup.run_stage_b_5gpu_queue",
+        "--target-milestone", str(next_milestone),
+        "--output-root", output_root, "--poll-seconds", "30",
+        "--no-further-resume",
+    ], cwd=ROOT, check=True)
 
 
 def analyze(milestone, results_root):
@@ -136,6 +150,7 @@ def main():
     parser.add_argument("--output-root", default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--poll-seconds", type=int, default=30)
     parser.add_argument("--shutdown-grace-seconds", type=int, default=4200)
+    parser.add_argument("--gpu-count", type=int, choices=(5, 8), default=8)
     args = parser.parse_args()
     variants = load_spec(args.milestone)
     artifact = Path(args.output_root) / "fixed_eval.pt"
@@ -167,7 +182,10 @@ def main():
         f"milestone decision={summary['decision']} "
         f"rank_spearman={summary['rank_spearman']:+.3f}", flush=True)
     if summary["decision"] == "resume_to_5000" and not args.no_resume:
-        launch_resume(variants, args.milestone, args.next_milestone, args.output_root)
+        if args.gpu_count == 5:
+            launch_five_gpu_queue(args.next_milestone, args.output_root)
+        else:
+            launch_resume(variants, args.milestone, args.next_milestone, args.output_root)
         print(f"all runs resumed toward step {args.next_milestone}", flush=True)
         return
 

@@ -29,6 +29,20 @@ def load_spec(milestone):
     return [row["id"] for row in manifest["runs"]]
 
 
+def select_variants(value, available):
+    if value is None:
+        return list(available)
+    selected = [item.strip() for item in value.split(",") if item.strip()]
+    if not selected:
+        raise ValueError("--variants must contain at least one variant")
+    if len(selected) != len(set(selected)):
+        raise ValueError("--variants contains duplicates")
+    unknown = set(selected) - set(available)
+    if unknown:
+        raise ValueError(f"unknown variants: {sorted(unknown)}")
+    return selected
+
+
 def active_screen_names():
     result = subprocess.run(
         ["screen", "-list"], text=True, capture_output=True, check=False
@@ -109,11 +123,18 @@ def main():
     )
     parser.add_argument("--poll-seconds", type=int, default=10)
     parser.add_argument("--status-path", default=None)
+    parser.add_argument(
+        "--variants", default=None,
+        help="optional comma-separated subset; requires an explicit status path",
+    )
     args = parser.parse_args()
     if args.poll_seconds < 1:
         raise ValueError("poll-seconds must be positive")
 
-    variants = load_spec(args.milestone)
+    available = load_spec(args.milestone)
+    variants = select_variants(args.variants, available)
+    if args.variants is not None and args.status_path is None:
+        raise ValueError("a subset pause requires --status-path")
     status_path = args.status_path or str(
         Path(args.output_root) / f"milestone-{args.milestone}-pause-status.json"
     )

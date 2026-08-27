@@ -5,7 +5,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.setup.pause_stage_b_at_milestone import checkpoint_step, evaluate_state
+from scripts.setup.pause_stage_b_at_milestone import (
+    checkpoint_step,
+    evaluate_state,
+    select_variants,
+)
 
 
 class StageBMilestonePauseTest(unittest.TestCase):
@@ -65,6 +69,15 @@ class StageBMilestonePauseTest(unittest.TestCase):
         self.assertFalse(ready)
         self.assertFalse(running)
         self.assertEqual(failed, {"mixed-k2"})
+
+    def test_variant_subset_is_validated(self):
+        available = ["h16", "h8", "mixed-k2"]
+        self.assertEqual(
+            select_variants("mixed-k2,h16", available), ["mixed-k2", "h16"])
+        with self.assertRaises(ValueError):
+            select_variants("h8,h8", available)
+        with self.assertRaises(ValueError):
+            select_variants("missing", available)
 
 
 if __name__ == "__main__":
