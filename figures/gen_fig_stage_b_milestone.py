@@ -65,7 +65,7 @@ def plot_summary(summary, output_dir):
         "grid.alpha": 0.15,
         "savefig.bbox": "tight",
     }):
-        fig, axis = plt.subplots(figsize=(6.75, 3.7))
+        fig, axis = plt.subplots(figsize=(6.75, 4.05))
         height = 0.34
         axis.barh(
             y - height / 2, discovery_delta, height,
@@ -79,13 +79,15 @@ def plot_summary(summary, output_dir):
         axis.invert_yaxis()
         axis.set_xlabel(r"$\Delta$ token-weighted NLL vs H8 (millinats/token; lower is better)")
         axis.set_title(
-            f"Stage B architecture screen at step {summary['milestone']}", loc="left")
+            f"Stage B architecture screen at step {summary['milestone']}",
+            loc="left", pad=22)
         axis.text(
-            0.0, 1.02,
+            0.0, 1.01,
             f"Discovery/confirmation Spearman: {summary['rank_spearman']:+.3f}",
-            transform=axis.transAxes, fontsize=8.3, color="#4B5563")
-        axis.legend(loc="lower right")
-        fig.tight_layout()
+            transform=axis.transAxes, fontsize=8.3, color="#4B5563",
+            ha="left", va="bottom")
+        axis.legend(loc="upper right")
+        fig.subplots_adjust(left=0.22, right=0.98, top=0.84, bottom=0.16)
         fig.savefig(output_dir / "fig_stage_b_milestone.png", dpi=300)
         fig.savefig(output_dir / "fig_stage_b_milestone.pdf")
         plt.close(fig)
