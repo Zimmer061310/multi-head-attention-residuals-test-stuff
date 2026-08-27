@@ -309,6 +309,10 @@ def analyze_command(args):
     selection_path = Path(args.selection).resolve()
     discovery = load_jsonl_by_id(discovery_path)
     confirmation = load_jsonl_by_id(confirmation_path)
+    seeds = {row.get("seed") for row in (*discovery.values(), *confirmation.values())}
+    steps = {row.get("step") for row in (*discovery.values(), *confirmation.values())}
+    if len(seeds) != 1 or len(steps) != 1:
+        raise RuntimeError("signal results do not share one seed and checkpoint step")
     selection = json.loads(selection_path.read_text(encoding="utf-8"))
     if selection["source_results_sha256"] != sha256_file(discovery_path):
         raise RuntimeError("selection manifest does not match discovery results")
@@ -323,6 +327,8 @@ def analyze_command(args):
         "format_version": 1,
         "created_at": utc_now(),
         "source_commit": git_commit(),
+        "seed": next(iter(seeds)),
+        "step": next(iter(steps)),
         "discovery_results_sha256": sha256_file(discovery_path),
         "confirmation_results_sha256": sha256_file(confirmation_path),
         "selection_sha256": sha256_file(selection_path),

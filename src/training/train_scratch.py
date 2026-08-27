@@ -118,8 +118,23 @@ def parse_args():
                    help="Use FSDP full-shard (ZeRO-3) instead of DDP — required for 7B+")
     p.add_argument("--grad_ckpt", action="store_true",
                    help="Activation checkpointing on each decoder layer (cuts memory for 7B+)")
-    p.add_argument("--resume_from", default=None,
-                   help="Checkpoint directory containing training_state.pt")
+    continuation = p.add_mutually_exclusive_group()
+    continuation.add_argument(
+        "--resume_from", default=None,
+        help="Checkpoint directory for an exact same-run resume")
+    continuation.add_argument(
+        "--branch_from", default=None,
+        help="Experiment 3 parent checkpoint for a validated new training branch")
+    p.add_argument(
+        "--branch_manifest", default=None,
+        help="Frozen Experiment 3C branch-selection manifest; required with --branch_from")
+    p.add_argument(
+        "--branch_role", default=None,
+        choices=("predicted-good", "predicted-bad", "random", "unchanged"),
+        help="Frozen Experiment 3C role; required with --branch_from")
+    p.add_argument(
+        "--stop_after_step", type=int, default=None,
+        help="Stop at this global step without changing the full LR schedule in --steps")
     p.add_argument("--keep_last", type=int, default=2,
                    help="Number of resumable step checkpoints to retain")
     p.add_argument(
@@ -155,7 +170,7 @@ def git_commit():
 def training_identity(args, world_size):
     """Fields that must remain fixed for a scientifically exact resume."""
 
-    return {
+    identity = {
         "source_commit": git_commit(),
         "mode": args.mode,
         "attnres_heads": args.attnres_heads,
@@ -193,6 +208,17 @@ def training_identity(args, world_size):
         "fsdp": args.fsdp,
         "grad_ckpt": args.grad_ckpt,
     }
+    if args.branch_from:
+        branch_manifest = json.loads(
+            Path(args.branch_manifest).read_text(encoding="utf-8"))
+        identity["branch"] = {
+            "role": args.branch_role,
+            "parent_checkpoint": str(Path(args.branch_from).resolve()),
+            "parent_checkpoint_sha256": branch_manifest["parent_checkpoint_sha256"],
+            "selection_manifest": str(Path(args.branch_manifest).resolve()),
+            "selection_manifest_sha256": sha256_file(Path(args.branch_manifest)),
+        }
+    return identity
 
 
 def sha256_file(path, chunk_size=8 * 1024 * 1024):
@@ -200,6 +226,21 @@ def sha256_file(path, chunk_size=8 * 1024 * 1024):
     with Path(path).open("rb") as handle:
         while chunk := handle.read(chunk_size):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def sha256_tree(path):
+    path = Path(path).resolve()
+    if path.is_file():
+        return sha256_file(path)
+    digest = hashlib.sha256()
+    for candidate in sorted(value for value in path.rglob("*") if value.is_file()):
+        relative = candidate.relative_to(path).as_posix().encode("utf-8")
+        digest.update(len(relative).to_bytes(8, "big"))
+        digest.update(relative)
+        with candidate.open("rb") as handle:
+            while chunk := handle.read(8 * 1024 * 1024):
+                digest.update(chunk)
     return digest.hexdigest()
 
 
@@ -321,9 +362,10 @@ def token_stream(dataset_name, config_name, tokenizer, seq_len, rank, world_size
 
 def build_model(args, device):
     """Build model from scratch based on mode."""
-    if args.resume_from:
+    source_checkpoint = args.resume_from or args.branch_from
+    if source_checkpoint:
         if args.fsdp:
-            raise NotImplementedError("--resume_from is currently supported for DDP runs")
+            raise NotImplementedError("checkpoint continuation is currently supported for DDP runs")
         if args.mode == "baseline":
             model_class = Qwen3ForCausalLM
         elif args.mode == "moe":
@@ -332,7 +374,7 @@ def build_model(args, device):
         else:
             model_class = Qwen3AttnResForCausalLM
         model = model_class.from_pretrained(
-            args.resume_from, dtype=torch.bfloat16).to(device=device)
+            source_checkpoint, dtype=torch.bfloat16).to(device=device)
         validate_model_config(model, args)
         if args.mixed_partition:
             from src.attention_residuals.mhar_partition import parse_mixed_partition_id
@@ -420,6 +462,59 @@ def parse_keep_steps(value):
     return steps
 
 
+BRANCH_SCIENTIFIC_IDENTITY_KEYS = frozenset({
+    "mode", "attnres_heads", "hidden_size", "num_layers", "num_heads",
+    "num_kv_heads", "intermediate_size", "dataset", "dataset_name",
+    "dataset_revision", "data_files", "tokenizer", "tokenizer_revision",
+    "seq_len", "steps", "per_gpu_batch_size", "grad_accum", "world_size",
+    "global_batch_size", "lr", "lr_min", "warmup", "max_norm", "optimizer",
+    "optimizer_betas", "optimizer_eps", "weight_decay", "precision", "seed",
+})
+
+
+def validate_branch_invocation(args, *, verify_parent_hash=False):
+    if not args.branch_from:
+        if args.branch_manifest or args.branch_role:
+            raise ValueError("--branch_manifest/--branch_role require --branch_from")
+        return None
+    if not args.branch_manifest or not args.branch_role:
+        raise ValueError("--branch_from requires --branch_manifest and --branch_role")
+    manifest_path = Path(args.branch_manifest).resolve()
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    branches = payload.get("branches", {})
+    if args.branch_role not in branches:
+        raise ValueError(f"branch manifest has no role {args.branch_role!r}")
+    row = branches[args.branch_role]
+    expected_partition = row.get("partition_id")
+    if args.mixed_partition != expected_partition:
+        raise ValueError(
+            "--mixed_partition does not match frozen branch role: "
+            f"expected={expected_partition!r}, observed={args.mixed_partition!r}")
+    parent = Path(args.branch_from).resolve()
+    if verify_parent_hash:
+        observed_hash = sha256_tree(parent)
+        if payload.get("parent_checkpoint_sha256") != observed_hash:
+            raise RuntimeError("branch parent checkpoint hash differs from frozen manifest")
+    return payload
+
+
+def validate_branch_parent_identity(parent_identity, current_identity):
+    mismatches = {
+        key: {
+            "parent": parent_identity.get(key),
+            "branch": current_identity.get(key),
+        }
+        for key in BRANCH_SCIENTIFIC_IDENTITY_KEYS
+        if parent_identity.get(key) != current_identity.get(key)
+    }
+    if mismatches:
+        raise RuntimeError(
+            "branch parent scientific identity mismatch:\n"
+            + json.dumps(mismatches, indent=2, sort_keys=True))
+    if parent_identity.get("mixed_partition") is not None:
+        raise RuntimeError("Experiment 3C branches require a native H16 parent")
+
+
 def prune_step_checkpoints(out_dir, keep_last, keep_steps=()):
     if keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
@@ -493,6 +588,7 @@ def main():
 
     if args.keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
+    validate_branch_invocation(args)
     keep_steps = parse_keep_steps(args.keep_steps)
 
     if args.run_name is None:
@@ -509,20 +605,54 @@ def main():
     torch.cuda.set_device(device)
     is_main = rank == 0
 
+    if args.branch_from:
+        verification = [None]
+        if is_main:
+            try:
+                validate_branch_invocation(args, verify_parent_hash=True)
+                verification[0] = {"ok": True}
+            except Exception as exc:
+                verification[0] = {
+                    "ok": False,
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                }
+        dist.broadcast_object_list(verification, src=0)
+        if not verification[0]["ok"]:
+            raise RuntimeError(
+                "Experiment 3 branch verification failed on rank 0: "
+                f"{verification[0]['error_type']}: {verification[0]['error']}")
+
     torch.manual_seed(args.seed + rank)
 
+    continuation_checkpoint = args.resume_from or args.branch_from
+    resume_state = (
+        load_training_state(continuation_checkpoint)
+        if continuation_checkpoint else None)
     run_identity = training_identity(args, world_size)
+    if args.resume_from and resume_state is not None:
+        saved_branch = resume_state["run_identity"].get("branch")
+        if saved_branch is not None:
+            run_identity["branch"] = saved_branch
     if (args.expected_global_batch is not None
             and run_identity["global_batch_size"] != args.expected_global_batch):
         raise ValueError(
             f"expected global batch {args.expected_global_batch}, got "
             f"{run_identity['global_batch_size']}")
-    resume_state = load_training_state(args.resume_from) if args.resume_from else None
-    if resume_state is not None and resume_state["run_identity"] != run_identity:
-        raise RuntimeError(
-            "resume checkpoint identity does not match this invocation:\n"
-            f"saved={json.dumps(resume_state['run_identity'], sort_keys=True)}\n"
-            f"current={json.dumps(run_identity, sort_keys=True)}")
+    if resume_state is not None:
+        if args.branch_from:
+            validate_branch_parent_identity(resume_state["run_identity"], run_identity)
+        elif resume_state["run_identity"] != run_identity:
+            raise RuntimeError(
+                "resume checkpoint identity does not match this invocation:\n"
+                f"saved={json.dumps(resume_state['run_identity'], sort_keys=True)}\n"
+                f"current={json.dumps(run_identity, sort_keys=True)}")
+    start_step = int(resume_state["global_step"]) if resume_state else 0
+    target_step = args.stop_after_step or args.steps
+    if not start_step < target_step <= args.steps:
+        raise ValueError(
+            "--stop_after_step must be greater than the starting step and no greater "
+            f"than --steps; start={start_step}, target={target_step}, steps={args.steps}")
 
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -534,7 +664,7 @@ def main():
         if resume_state is None:
             raise RuntimeError(
                 "output directory already contains a run manifest; pass --resume_from "
-                "with a saved checkpoint or choose a new --out_dir")
+                "for that branch/run or choose a new --out_dir")
     else:
         manifest = {
             "format_version": 1,
@@ -548,7 +678,9 @@ def main():
 
     # ── W&B ──
     use_wandb = False
-    wandb_run_id = resume_state.get("wandb_run_id") if resume_state else None
+    wandb_run_id = (
+        None if args.branch_from
+        else resume_state.get("wandb_run_id") if resume_state else None)
     if is_main:
         try:
             import wandb
@@ -560,6 +692,8 @@ def main():
                 tags=[
                     "mhar", "full-mh", f"h{args.attnres_heads}", "1b", "fineweb-edu",
                     *( ["mixed-width", "experiment-2"] if args.mixed_partition else []),
+                    *( ["experiment-3", "actionability", args.branch_role]
+                       if args.branch_from else []),
                 ],
                 id=wandb_run_id,
                 resume="allow" if wandb_run_id else None,
@@ -732,7 +866,7 @@ def main():
 
     val_iter = iter(val_stream) if val_stream is not None else None
 
-    global_step = int(resume_state["global_step"]) if resume_state else 0
+    global_step = start_step
     accum_step = 0
     accum_loss = 0.0
     t0 = time.time()
@@ -751,7 +885,7 @@ def main():
 
     batch_buf = []
     for chunk in stream:
-        if global_step >= args.steps:
+        if global_step >= target_step:
             break
 
         chunks_consumed += 1
