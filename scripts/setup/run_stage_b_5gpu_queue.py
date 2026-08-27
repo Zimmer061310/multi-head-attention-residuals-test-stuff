@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import time
@@ -17,6 +18,9 @@ from scripts.setup.pause_stage_b_at_milestone import (
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = "/root/autodl-tmp/venvs/mhar-stage-b/bin/python"
 DEFAULT_OUTPUT_ROOT = "/root/autodl-tmp/experiment2/stage-b-screening"
+EXPECTED_TRAINING_COMMIT = "81ff30572d5dd5dadba715290897d6b10aa58587"
+TRAINING_ROOT = Path(os.environ.get(
+    "MHAR_TRAINING_REPO", "/root/mhar-training-81ff305"))
 MIXED_VARIANTS = (
     "mixed-k2", "mixed-k3", "mixed-k4-best", "mixed-k5", "mixed-k4-worst")
 UNIFORM_VARIANTS = ("h16", "h8", "h4")
@@ -55,7 +59,7 @@ def launch_training(variant, gpu, target_milestone, output_root, port_index):
         f"MHAR_OUTPUT_ROOT={output_root}",
         "MHAR_WANDB_GROUP=mhar-exp2-stage-b-screening-seed42",
         f"MHAR_MASTER_PORT={29500 + port_index}",
-        str(ROOT / "scripts/train/run_experiment2_stage_b_screen.sh"),
+        str(TRAINING_ROOT / "scripts/train/run_experiment2_stage_b_screen.sh"),
         variant, str(checkpoint),
     ], check=True)
     print(f"launched {variant} on GPU {gpu} from {checkpoint.name}", flush=True)
@@ -114,6 +118,13 @@ def main():
     parser.add_argument("--poll-seconds", type=int, default=30)
     parser.add_argument("--no-further-resume", action="store_true")
     args = parser.parse_args()
+    observed_commit = subprocess.run(
+        ["git", "-C", str(TRAINING_ROOT), "rev-parse", "HEAD"],
+        text=True, capture_output=True, check=True).stdout.strip()
+    if observed_commit != EXPECTED_TRAINING_COMMIT:
+        raise RuntimeError(
+            "training worktree must remain at the checkpoint source commit: "
+            f"expected {EXPECTED_TRAINING_COMMIT}, observed {observed_commit}")
     available = set(load_spec(args.target_milestone))
     if available != set(MIXED_VARIANTS) | set(UNIFORM_VARIANTS):
         raise RuntimeError("five-GPU queue variants do not match the frozen screen")

@@ -2,11 +2,15 @@
 
 import tempfile
 import unittest
+import inspect
 from pathlib import Path
 
 from scripts.setup.run_stage_b_5gpu_queue import (
+    EXPECTED_TRAINING_COMMIT,
     MIXED_VARIANTS,
+    TRAINING_ROOT,
     UNIFORM_VARIANTS,
+    launch_training,
     latest_atomic_checkpoint,
 )
 
@@ -25,6 +29,14 @@ class StageB5GpuQueueTest(unittest.TestCase):
         self.assertEqual(len(MIXED_VARIANTS), 5)
         self.assertEqual(len(UNIFORM_VARIANTS), 3)
         self.assertEqual(len(set(MIXED_VARIANTS) | set(UNIFORM_VARIANTS)), 8)
+
+    def test_resume_uses_immutable_training_worktree(self):
+        self.assertEqual(
+            EXPECTED_TRAINING_COMMIT,
+            "81ff30572d5dd5dadba715290897d6b10aa58587")
+        self.assertEqual(TRAINING_ROOT.name, "mhar-training-81ff305")
+        source = inspect.getsource(launch_training)
+        self.assertIn('TRAINING_ROOT / "scripts/train/run_experiment2_stage_b_screen.sh"', source)
 
     def test_latest_atomic_checkpoint_before_target(self):
         with tempfile.TemporaryDirectory() as root:
