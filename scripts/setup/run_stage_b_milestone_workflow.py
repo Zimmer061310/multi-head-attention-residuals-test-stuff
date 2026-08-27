@@ -49,10 +49,36 @@ def eval_state(variants, results_root, active_screens, milestone):
     return completed, running, failed
 
 
-def launch_evaluations(variants, milestone, output_root):
+def five_gpu_eval_assignments(variants):
+    assignments = [[] for _ in range(5)]
+    for index, variant in enumerate(variants):
+        assignments[index % 5].append(variant)
+    return [values for values in assignments if values]
+
+
+def launch_evaluations(variants, milestone, output_root, gpu_count=8):
     results_root = Path(output_root) / "milestones" / f"step-{milestone}"
     log_root = results_root / "logs"
     log_root.mkdir(parents=True, exist_ok=True)
+    if gpu_count == 5:
+        for gpu, assigned in enumerate(five_gpu_eval_assignments(variants)):
+            if all((results_root / variant / "result.json").is_file()
+                   for variant in assigned):
+                continue
+            screen = f"mhar-stageb-eval-{milestone}-gpu-{gpu}"
+            if screen in active_screen_names():
+                continue
+            subprocess.run([
+                "screen", "-L", "-Logfile", str(log_root / f"gpu-{gpu}.log"),
+                "-dmS", screen, "env", f"CUDA_VISIBLE_DEVICES={gpu}",
+                f"MHAR_PYTHON_BIN={PYTHON}", f"MHAR_TRAIN_ROOT={output_root}",
+                PYTHON, "-m", "scripts.evaluate.run_stage_b_eval_worker",
+                "--milestone", str(milestone), "--variants", ",".join(assigned),
+            ], cwd=ROOT, check=True)
+            print(
+                f"launched evaluation worker GPU {gpu}: {assigned}", flush=True)
+        return results_root
+
     active = active_screen_names()
     for variant in variants:
         result = results_root / variant / "result.json"
@@ -69,6 +95,20 @@ def launch_evaluations(variants, milestone, output_root):
         ], check=True)
         print(f"launched fixed evaluation: {variant} on GPU {GPU_BY_VARIANT[variant]}", flush=True)
     return results_root
+
+
+def five_gpu_eval_state(variants, results_root, active_screens, milestone):
+    completed = {
+        variant for variant in variants
+        if (Path(results_root) / variant / "result.json").is_file()
+    }
+    workers = {
+        f"mhar-stageb-eval-{milestone}-gpu-{gpu}" for gpu in range(5)
+    }
+    missing = set(variants) - completed
+    if workers & active_screens:
+        return completed, missing, set()
+    return completed, set(), missing
 
 
 def launch_resume(variants, milestone, next_milestone, output_root):
@@ -164,10 +204,15 @@ def main():
     if not artifact.is_file():
         raise FileNotFoundError(f"fixed evaluation artifact is missing: {artifact}")
 
-    results_root = launch_evaluations(variants, args.milestone, args.output_root)
+    results_root = launch_evaluations(
+        variants, args.milestone, args.output_root, args.gpu_count)
     while True:
-        completed, running, failed = eval_state(
-            variants, results_root, active_screen_names(), args.milestone)
+        if args.gpu_count == 5:
+            completed, running, failed = five_gpu_eval_state(
+                variants, results_root, active_screen_names(), args.milestone)
+        else:
+            completed, running, failed = eval_state(
+                variants, results_root, active_screen_names(), args.milestone)
         print(
             f"evaluation completed={len(completed)}/{len(variants)} "
             f"running={sorted(running)} failed={sorted(failed)}", flush=True)

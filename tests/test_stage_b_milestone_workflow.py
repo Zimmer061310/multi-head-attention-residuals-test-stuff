@@ -8,6 +8,8 @@ from pathlib import Path
 
 from scripts.setup.run_stage_b_milestone_workflow import (
     eval_state,
+    five_gpu_eval_assignments,
+    five_gpu_eval_state,
     launch_five_gpu_queue,
     launch_resume,
     load_pause_status,
@@ -47,6 +49,25 @@ class StageBMilestoneWorkflowTest(unittest.TestCase):
         source = inspect.getsource(launch_five_gpu_queue)
         self.assertIn('"scripts.setup.run_stage_b_5gpu_queue"', source)
         self.assertIn('"--no-further-resume"', source)
+
+    def test_five_gpu_evaluation_queues_all_eight_variants(self):
+        variants = [f"v{index}" for index in range(8)]
+        assignments = five_gpu_eval_assignments(variants)
+        self.assertEqual(len(assignments), 5)
+        self.assertEqual([len(values) for values in assignments], [2, 2, 2, 1, 1])
+        self.assertEqual({value for values in assignments for value in values}, set(variants))
+
+    def test_five_gpu_eval_state_treats_queued_variants_as_running(self):
+        with tempfile.TemporaryDirectory() as root:
+            result = Path(root) / "h16"
+            result.mkdir()
+            (result / "result.json").write_text("{}", encoding="utf-8")
+            completed, running, failed = five_gpu_eval_state(
+                ["h16", "h8", "h4"], root,
+                {"mhar-stageb-eval-2000-gpu-0"}, 2000)
+        self.assertEqual(completed, {"h16"})
+        self.assertEqual(running, {"h8", "h4"})
+        self.assertFalse(failed)
 
 
 if __name__ == "__main__":
