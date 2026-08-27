@@ -367,6 +367,26 @@ python3 -m src.experiments.experiment2_conditional_followup run \
   --wandb-mode online --wandb-project 'MHAR Stuff'
 ```
 
+## Experiment 3: training-time boundary learnability
+
+Experiment 3 deliberately precedes any learnable-boundary architecture. It
+tests whether model-local boundary preferences exist during training, remain
+stable over a short horizon, and improve future optimization when followed.
+The master preregistration and executable subplans are:
+
+- [`docs/plans/experiment-3.md`](docs/plans/experiment-3.md)
+- [`docs/plans/experiment-3a-boundary-signal.md`](docs/plans/experiment-3a-boundary-signal.md)
+- [`docs/plans/experiment-3b-temporal-stability.md`](docs/plans/experiment-3b-temporal-stability.md)
+- [`docs/plans/experiment-3c-actionability.md`](docs/plans/experiment-3c-actionability.md)
+- [`docs/plans/experiment-3d-cross-seed.md`](docs/plans/experiment-3d-cross-seed.md)
+- [`docs/plans/experiment-3e-landscape.md`](docs/plans/experiment-3e-landscape.md)
+
+The proof chain is locked: signal existence, short-term temporal stability,
+branched-training actionability, and within-seed replication across three
+seeds. Boundary-ID agreement across seeds is not required. A separate local
+movement grid determines whether a later learner should use soft boundaries or
+discrete periodic restructuring.
+
 ## Citation
 
 ```bibtex
