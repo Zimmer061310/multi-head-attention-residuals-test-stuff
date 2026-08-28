@@ -380,6 +380,7 @@ The master preregistration and executable subplans are:
 - [`docs/plans/experiment-3c-actionability.md`](docs/plans/experiment-3c-actionability.md)
 - [`docs/plans/experiment-3d-cross-seed.md`](docs/plans/experiment-3d-cross-seed.md)
 - [`docs/plans/experiment-3e-landscape.md`](docs/plans/experiment-3e-landscape.md)
+- [`docs/runbooks/experiment-3.md`](docs/runbooks/experiment-3.md) — exact GPU setup and execution commands
 
 The proof chain is locked: signal existence, short-term temporal stability,
 branched-training actionability, and within-seed replication across three

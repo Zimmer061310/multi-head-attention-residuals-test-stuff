@@ -71,11 +71,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", default=None)
     parser.add_argument(
-        "--dataset", choices=("train", "evaluation"), default="train")
+        "--dataset", choices=("train", "evaluation", "experiment3-evaluation"),
+        default="train")
     args = parser.parse_args()
     environment = json.loads(ENVIRONMENT.read_text(encoding="utf-8"))
-    dataset = environment[
-        "dataset" if args.dataset == "train" else "evaluation_dataset"]
+    dataset_keys = {
+        "train": "dataset",
+        "evaluation": "evaluation_dataset",
+        "experiment3-evaluation": "experiment3_evaluation_dataset",
+    }
+    dataset = environment[dataset_keys[args.dataset]]
     output_dir = Path(args.output_dir or dataset["directory"])
     for spec in dataset["files"]:
         download_file(spec, output_dir / spec["name"])

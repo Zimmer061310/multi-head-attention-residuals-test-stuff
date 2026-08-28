@@ -1,0 +1,3 @@
+# Exact RTX 5090 software stack used by the preceding MHAR experiments.
+# Experiment 3 deliberately changes no numerical dependency.
+-r stage-b.txt

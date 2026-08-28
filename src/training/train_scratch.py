@@ -158,6 +158,40 @@ def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def append_jsonl(path, value):
+    """Durably append one local metric row so W&B is never the sole record."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(value, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def truncate_metrics_after_step(path, step):
+    """Drop uncheckpointed metric rows before replaying from an atomic resume."""
+    path = Path(path)
+    if not path.is_file():
+        return
+    kept = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid training metric JSONL at {path}:{line_number}") from exc
+        if int(row["step"]) <= step:
+            kept.append(row)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8") as handle:
+        for row in kept:
+            handle.write(json.dumps(row, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, path)
+
+
 def git_commit():
     try:
         return subprocess.check_output(
@@ -674,6 +708,8 @@ def main():
         }
         if is_main:
             atomic_write_json(run_manifest_path, manifest)
+    if is_main and resume_state is not None:
+        truncate_metrics_after_step(out_dir / "training_metrics.jsonl", start_step)
     dist.barrier()
 
     # ── W&B ──
@@ -935,6 +971,25 @@ def main():
                 print(f"step {global_step:6d} | loss {avg_loss:.4f} | "
                       f"lr {lr_now:.2e} | grad_norm {grad_norm:.3f} | "
                       f"{tok_sec/1e3:.1f}k tok/s | {mem_gb:.1f}GB")
+
+                metric_row = {
+                    "created_at": utc_now(),
+                    "step": global_step,
+                    "loss": avg_loss,
+                    "lr": lr_now,
+                    "grad_norm": float(grad_norm),
+                    "tokens_per_second": tok_sec,
+                    "peak_cuda_allocated_gib": (
+                        torch.cuda.max_memory_allocated() / 2**30),
+                    "chunks_consumed": chunks_consumed,
+                    "tokens_consumed": (
+                        global_step * run_identity["global_batch_size"] * args.seq_len),
+                    "elapsed_hours": (time.time() - run_started) / 3600,
+                    "seed": args.seed,
+                    "branch_role": args.branch_role,
+                    "mixed_partition": args.mixed_partition,
+                }
+                append_jsonl(out_dir / "training_metrics.jsonl", metric_row)
 
                 if use_wandb:
                     import wandb

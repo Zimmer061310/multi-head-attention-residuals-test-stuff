@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import random
 from pathlib import Path
 
@@ -342,6 +343,44 @@ def analyze_command(args):
         writer = csv.DictWriter(handle, fieldnames=summary["candidate_rows"][0].keys())
         writer.writeheader()
         writer.writerows(summary["candidate_rows"])
+    combined_results = output_dir / "signal_results.jsonl"
+    with combined_results.open("w", encoding="utf-8") as handle:
+        for split, rows in (("discovery", discovery), ("confirmation", confirmation)):
+            for candidate_id in sorted(rows):
+                handle.write(json.dumps({**rows[candidate_id], "split": split}, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    planned_selection = output_dir / f"signal_selection_step-{summary['step']}.json"
+    atomic_write_json(planned_selection, selection)
+    discovery_manifest_path = discovery_path.parent / "discovery_run_manifest.json"
+    confirmation_manifest_path = confirmation_path.parent / "confirmation_run_manifest.json"
+    if not discovery_manifest_path.is_file() or not confirmation_manifest_path.is_file():
+        raise FileNotFoundError("signal split run manifests are required")
+    discovery_identity = json.loads(
+        discovery_manifest_path.read_text(encoding="utf-8"))["run_identity"]
+    confirmation_identity = json.loads(
+        confirmation_manifest_path.read_text(encoding="utf-8"))["run_identity"]
+    if discovery_identity["checkpoint"] != confirmation_identity["checkpoint"]:
+        raise RuntimeError("signal splits used different checkpoints")
+    if discovery_identity["artifact_sha256"] != confirmation_identity["artifact_sha256"]:
+        raise RuntimeError("signal splits used different artifacts")
+    atomic_write_json(output_dir / "signal_run_manifest.json", {
+        "format_version": 1,
+        "seed": summary["seed"],
+        "step": summary["step"],
+        "source_commit": summary["source_commit"],
+        "discovery_results_sha256": summary["discovery_results_sha256"],
+        "confirmation_results_sha256": summary["confirmation_results_sha256"],
+        "combined_results_sha256": sha256_file(combined_results),
+        "selection_sha256": sha256_file(planned_selection),
+        "protocol_sha256": sha256_file(PROTOCOL_PATH),
+        "checkpoint": discovery_identity["checkpoint"],
+        "artifact_sha256": discovery_identity["artifact_sha256"],
+        "discovery_run_manifest_sha256": sha256_file(discovery_manifest_path),
+        "confirmation_run_manifest_sha256": sha256_file(confirmation_manifest_path),
+    })
+    from figures.gen_fig_experiment3 import plot_signal
+    figure_files = plot_signal(output_dir / "boundary_signal_map.csv", output_dir)
     if args.wandb_mode != "disabled":
         import wandb
 
@@ -364,12 +403,18 @@ def analyze_command(args):
             "signal/gate_passed": int(summary["signal_gate_passed"]),
             "signal/top_three_jaccard": summary["top_three_jaccard"],
             "signal/candidates": table,
+            "signal/figure": wandb.Image(str(figure_files[0])),
         })
         summary["wandb"] = {"run_id": run.id, "run_url": run.url}
         atomic_write_json(output_dir / "signal_summary.json", summary)
         artifact = wandb.Artifact("experiment3-signal-analysis", type="experiment-results")
         artifact.add_file(str(output_dir / "signal_summary.json"))
         artifact.add_file(str(output_dir / "boundary_signal_map.csv"))
+        artifact.add_file(str(combined_results))
+        artifact.add_file(str(output_dir / "signal_run_manifest.json"))
+        artifact.add_file(str(planned_selection))
+        for path in figure_files:
+            artifact.add_file(str(path))
         run.log_artifact(artifact)
         run.finish()
     print(json.dumps(summary, indent=2))

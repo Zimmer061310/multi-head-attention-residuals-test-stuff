@@ -44,6 +44,13 @@ For each seed independently:
 5. branch the exact step-1,500 state and continue each branch to step 2,000;
 6. evaluate future branch NLL on the unchanged fixed artifact.
 
+The seed-42 3A/3B gates authorize the initial 3C test. If seed 42 then passes
+the 3C actionability gate, seeds 43 and 44 run this full procedure even when a
+seed-local 3A or 3B gate fails. Otherwise the replication experiment would
+select only favorable seeds and could not measure the preregistered “at least
+two of three” criteria. Failed local gates remain failures in the final table;
+they are never relabeled as passes.
+
 Never use another seed's score, winning boundary, or branch outcome to select a
 boundary for the current seed.
 

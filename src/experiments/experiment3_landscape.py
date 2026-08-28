@@ -34,6 +34,7 @@ from src.experiments.experiment3_common import (
     load_jsonl_by_id,
     load_mhar_model,
     paired_bootstrap,
+    sha256_json,
     spearman,
 )
 from src.experiments.experiment3_signal import PROTOCOL_PATH, add_wandb_args, protocol
@@ -248,6 +249,15 @@ def landscape_analysis(discovery, confirmation, *, spec, samples, seed):
             points.sort(key=lambda row: row["offset"])
             if [row["offset"] for row in points] != spec["offsets"]:
                 raise RuntimeError(f"boundary {boundary_index} has incomplete offset grid")
+            for index, point in enumerate(points):
+                point["first_difference_from_previous"] = (
+                    None if index == 0
+                    else point["delta_nll"] - points[index - 1]["delta_nll"])
+                point["second_difference_centered"] = (
+                    None if index == 0 or index == len(points) - 1
+                    else points[index + 1]["delta_nll"]
+                    - 2 * point["delta_nll"]
+                    + points[index - 1]["delta_nll"])
             by_split[split] = points
             for point in points:
                 curve_rows.append({
@@ -359,6 +369,45 @@ def analyze_command(args):
         writer = csv.DictWriter(handle, fieldnames=analysis["boundary_metrics"][0].keys())
         writer.writeheader()
         writer.writerows(analysis["boundary_metrics"])
+    combined_path = output_dir / "boundary_move_results.jsonl"
+    combined_rows = []
+    for split, rows in (("discovery", discovery), ("confirmation", confirmation)):
+        for candidate_id in sorted(rows):
+            combined_rows.append({**rows[candidate_id], "split": split})
+    combined_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in combined_rows),
+        encoding="utf-8",
+    )
+    discovery_manifest = discovery_path.parent / "discovery_run_manifest.json"
+    confirmation_manifest = confirmation_path.parent / "confirmation_run_manifest.json"
+    if not discovery_manifest.is_file() or not confirmation_manifest.is_file():
+        raise FileNotFoundError("landscape run manifests are required for aggregate output")
+    discovery_identity = json.loads(
+        discovery_manifest.read_text(encoding="utf-8"))["run_identity"]
+    confirmation_identity = json.loads(
+        confirmation_manifest.read_text(encoding="utf-8"))["run_identity"]
+    if discovery_identity["checkpoint"] != confirmation_identity["checkpoint"]:
+        raise RuntimeError("landscape splits used different checkpoints")
+    if discovery_identity["artifact_sha256"] != confirmation_identity["artifact_sha256"]:
+        raise RuntimeError("landscape splits used different artifacts")
+    atomic_write_json(output_dir / "boundary_move_manifest.json", {
+        "format_version": 1,
+        "source_commit": summary["source_commit"],
+        "protocol_sha256": summary["protocol_sha256"],
+        "checkpoint": discovery_identity["checkpoint"],
+        "artifact_sha256": discovery_identity["artifact_sha256"],
+        "candidate_grid_sha256": sha256_json(sorted({
+            row["candidate_id"] for row in combined_rows})),
+        "candidate_count": len({row["candidate_id"] for row in combined_rows}),
+        "measurement_count": len(combined_rows),
+        "discovery_run_manifest_sha256": sha256_file(discovery_manifest),
+        "confirmation_run_manifest_sha256": sha256_file(confirmation_manifest),
+        "combined_results_sha256": sha256_file(combined_path),
+    })
+    from figures.gen_fig_experiment3 import plot_landscape
+    figure_files = plot_landscape(
+        output_dir / "boundary_landscape_curves.csv", output_dir,
+        output_dir / "boundary_landscape_metrics.csv")
     if args.wandb_mode != "disabled":
         import wandb
 
@@ -382,6 +431,8 @@ def analyze_command(args):
             "landscape/median_roughness": summary["median_normalized_roughness"],
             "landscape/soft_compatible": int(summary["soft_learning_compatible"]),
             "landscape/boundaries": table,
+            "landscape/curve_figure": wandb.Image(str(figure_files[0])),
+            "landscape/roughness_figure": wandb.Image(str(figure_files[3])),
         })
         summary["wandb"] = {"run_id": run.id, "run_url": run.url}
         atomic_write_json(output_dir / "boundary_landscape_summary.json", summary)
@@ -390,8 +441,12 @@ def analyze_command(args):
             "boundary_landscape_summary.json",
             "boundary_landscape_curves.csv",
             "boundary_landscape_metrics.csv",
+            "boundary_move_results.jsonl",
+            "boundary_move_manifest.json",
         ):
             artifact.add_file(str(output_dir / name))
+        for path in figure_files:
+            artifact.add_file(str(path))
         run.log_artifact(artifact)
         run.finish()
     print(json.dumps(summary, indent=2))

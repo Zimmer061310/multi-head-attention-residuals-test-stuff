@@ -31,6 +31,7 @@ def seed_record(seed, good_minus_random, *, signal=True, stability=True):
             "contrasts": [
                 contrast("predicted-good", "random", good_minus_random),
                 contrast("predicted-good", "predicted-bad", good_value - bad_value),
+                contrast("predicted-good", "unchanged", good_value - 4.1),
             ],
         },
         "selection": {

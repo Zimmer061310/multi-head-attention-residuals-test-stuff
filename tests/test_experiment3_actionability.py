@@ -83,6 +83,21 @@ class Experiment3ActionabilityTest(unittest.TestCase):
                     random_seed=1,
                 )
 
+    def test_replication_selection_records_but_does_not_filter_local_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / "weights.bin").write_bytes(b"checkpoint")
+            manifest = build_branch_selection(
+                discovery_rows(),
+                parent_checkpoint=Path(directory),
+                signal_summary={"signal_gate_passed": False, "step": 1500},
+                temporal_summary={"stability_gate_passed": True},
+                random_seed=1,
+                require_upstream_gates=False,
+            )
+        self.assertFalse(manifest["local_signal_gate_passed"])
+        self.assertTrue(manifest["local_stability_gate_passed"])
+        self.assertFalse(manifest["local_gates_required_for_selection"])
+
     def test_actionability_gate_uses_good_minus_random_confirmation(self):
         results = {
             "predicted-good": branch_result("predicted-good", 4.0),

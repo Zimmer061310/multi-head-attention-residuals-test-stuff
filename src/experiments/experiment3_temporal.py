@@ -174,12 +174,43 @@ def analyze_command(args):
     }
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    for row in analysis["pair_metrics"]:
+        row["seed"] = summary["seed"]
     atomic_write_json(output_dir / "temporal_summary.json", summary)
     with (output_dir / "temporal_correlations.csv").open(
             "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=analysis["pair_metrics"][0].keys())
         writer.writeheader()
         writer.writerows(analysis["pair_metrics"])
+    regret_fields = (
+        "split", "step_t", "step_u", "selected_at_t",
+        "selected_future_delta_nll", "future_best_delta_nll", "future_regret")
+    with (output_dir / "temporal_regret.csv").open(
+            "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=regret_fields)
+        writer.writeheader()
+        writer.writerows({key: row[key] for key in regret_fields}
+                         for row in analysis["pair_metrics"])
+    trajectory_rows = []
+    for split, vectors in (("discovery", discovery), ("confirmation", confirmation)):
+        for step, scores in sorted(vectors.items()):
+            for candidate_id, delta_nll in sorted(scores.items()):
+                trajectory_rows.append({
+                    "split": split,
+                    "step": step,
+                    "candidate_id": candidate_id,
+                    "boundary": int(candidate_id.split("-")[1]),
+                    "delta_nll": delta_nll,
+                })
+    with (output_dir / "boundary_score_trajectories.csv").open(
+            "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=trajectory_rows[0].keys())
+        writer.writeheader()
+        writer.writerows(trajectory_rows)
+    from figures.gen_fig_experiment3 import plot_score_trajectories, plot_temporal
+    figure_files = plot_temporal(output_dir / "temporal_correlations.csv", output_dir)
+    figure_files += plot_score_trajectories(
+        output_dir / "boundary_score_trajectories.csv", output_dir)
     if args.wandb_mode != "disabled":
         import wandb
 
@@ -202,12 +233,18 @@ def analyze_command(args):
             "stability/median_discovery_spearman": (
                 summary["median_primary_discovery_spearman"]),
             "stability/pairs": table,
+            "stability/matrix_figure": wandb.Image(str(figure_files[0])),
+            "stability/trajectory_figure": wandb.Image(str(figure_files[3])),
         })
         summary["wandb"] = {"run_id": run.id, "run_url": run.url}
         atomic_write_json(output_dir / "temporal_summary.json", summary)
         artifact = wandb.Artifact("experiment3-temporal-analysis", type="experiment-results")
         artifact.add_file(str(output_dir / "temporal_summary.json"))
         artifact.add_file(str(output_dir / "temporal_correlations.csv"))
+        artifact.add_file(str(output_dir / "temporal_regret.csv"))
+        artifact.add_file(str(output_dir / "boundary_score_trajectories.csv"))
+        for path in figure_files:
+            artifact.add_file(str(path))
         run.log_artifact(artifact)
         run.finish()
     print(json.dumps(summary, indent=2))

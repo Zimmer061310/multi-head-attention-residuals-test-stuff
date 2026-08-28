@@ -122,6 +122,8 @@ def cross_seed_analysis(seed_records, *, samples, bootstrap_seed, gate_spec):
             record["actionability"], "predicted-good", "random")
         good_bad = find_contrast(
             record["actionability"], "predicted-good", "predicted-bad")
+        good_unchanged = find_contrast(
+            record["actionability"], "predicted-good", "unchanged")
         branches = record["selection"]["branches"]
         rows.append({
             "seed": seed,
@@ -142,6 +144,9 @@ def cross_seed_analysis(seed_records, *, samples, bootstrap_seed, gate_spec):
             "good_minus_bad": good_bad["mean_delta_nll"],
             "good_minus_bad_ci95_low": good_bad["ci95_low"],
             "good_minus_bad_ci95_high": good_bad["ci95_high"],
+            "good_minus_unchanged": good_unchanged["mean_delta_nll"],
+            "good_minus_unchanged_ci95_low": good_unchanged["ci95_low"],
+            "good_minus_unchanged_ci95_high": good_unchanged["ci95_high"],
         })
     nested = nested_seed_sequence_bootstrap(
         seed_records, samples=samples, seed=bootstrap_seed)
@@ -154,6 +159,28 @@ def cross_seed_analysis(seed_records, *, samples, bootstrap_seed, gate_spec):
         and good_beats_random >= gate_spec["minimum_good_beats_random_seeds"]
         and nested["mean_seed_level_good_minus_random"] < 0
     )
+    contrast_descriptives = {}
+    for key in ("good_minus_random", "good_minus_bad", "good_minus_unchanged"):
+        values = np.asarray([row[key] for row in rows], dtype=np.float64)
+        contrast_descriptives[key] = {
+            "mean": float(values.mean()),
+            "median": float(np.median(values)),
+            "minimum": float(values.min()),
+            "maximum": float(values.max()),
+            "range": float(values.max() - values.min()),
+            "negative_seed_count": int((values < 0).sum()),
+        }
+    good_ids = [row["good_boundary"] for row in rows]
+    boundary_id_overlap = {
+        "good_ids_by_seed": {
+            str(row["seed"]): row["good_boundary"] for row in rows},
+        "unique_good_id_count": len(set(good_ids)),
+        "all_good_ids_match": len(set(good_ids)) == 1,
+        "matching_seed_pair_count": sum(
+            good_ids[i] == good_ids[j]
+            for i in range(len(good_ids)) for j in range(i + 1, len(good_ids))),
+        "interpretation": "descriptive only; boundary-ID agreement is not a gate",
+    }
     return {
         "seed_rows": rows,
         "signal_pass_seed_count": signal_passes,
@@ -163,6 +190,8 @@ def cross_seed_analysis(seed_records, *, samples, bootstrap_seed, gate_spec):
         "replication_gate_passed": replication_passed,
         "gate_definition": gate_spec,
         "nested_bootstrap": nested,
+        "contrast_descriptives": contrast_descriptives,
+        "boundary_id_overlap": boundary_id_overlap,
         "good_boundary_ids_are_descriptive_only": True,
     }
 
@@ -199,6 +228,8 @@ def analyze_command(args):
         writer = csv.DictWriter(handle, fieldnames=analysis["seed_rows"][0].keys())
         writer.writeheader()
         writer.writerows(analysis["seed_rows"])
+    from figures.gen_fig_experiment3 import plot_cross_seed
+    figure_files = plot_cross_seed(output_dir / "cross_seed_summary.csv", output_dir)
     if args.wandb_mode != "disabled":
         import wandb
 
@@ -223,12 +254,16 @@ def analyze_command(args):
             "replication/mean_good_minus_random": summary["nested_bootstrap"][
                 "mean_seed_level_good_minus_random"],
             "replication/seeds": table,
+            "replication/actionability_figure": wandb.Image(str(figure_files[0])),
+            "replication/boundary_id_figure": wandb.Image(str(figure_files[3])),
         })
         summary["wandb"] = {"run_id": run.id, "run_url": run.url}
         atomic_write_json(output_dir / "cross_seed_summary.json", summary)
         artifact = wandb.Artifact("experiment3-cross-seed-analysis", type="experiment-results")
         artifact.add_file(str(output_dir / "cross_seed_summary.json"))
         artifact.add_file(str(output_dir / "cross_seed_summary.csv"))
+        for path in figure_files:
+            artifact.add_file(str(path))
         run.log_artifact(artifact)
         run.finish()
     print(json.dumps(summary, indent=2))

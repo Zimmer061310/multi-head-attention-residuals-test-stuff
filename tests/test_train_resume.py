@@ -21,6 +21,7 @@ from src.training.train_scratch import (
     load_training_state,
     parse_keep_steps,
     save_training_checkpoint,
+    truncate_metrics_after_step,
 )
 
 
@@ -149,6 +150,16 @@ class ResumeCheckpointTest(unittest.TestCase):
             parse_keep_steps("0,2000")
         with self.assertRaisesRegex(ValueError, "comma-separated"):
             parse_keep_steps("two-thousand")
+
+    def test_resume_truncates_uncheckpointed_local_metrics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "training_metrics.jsonl"
+            path.write_text("".join(
+                json.dumps({"step": step, "loss": 4 - step / 1000}) + "\n"
+                for step in (100, 200, 300, 400)), encoding="utf-8")
+            truncate_metrics_after_step(path, 200)
+            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            self.assertEqual([row["step"] for row in rows], [100, 200])
 
     def test_h8_launcher_matches_h16_scientific_recipe(self):
         def launcher_flags(name):

@@ -41,10 +41,11 @@ def build_branch_selection(
     signal_summary,
     temporal_summary,
     random_seed,
+    require_upstream_gates=True,
 ):
-    if not signal_summary.get("signal_gate_passed"):
+    if require_upstream_gates and not signal_summary.get("signal_gate_passed"):
         raise RuntimeError("Experiment 3A signal gate did not pass")
-    if not temporal_summary.get("stability_gate_passed"):
+    if require_upstream_gates and not temporal_summary.get("stability_gate_passed"):
         raise RuntimeError("Experiment 3B stability gate did not pass")
     ranked = scored_h16_candidates(discovery_rows)
     if len(ranked) != 15:
@@ -62,6 +63,9 @@ def build_branch_selection(
         "parent_checkpoint_sha256": parent_info["sha256"],
         "parent_step": signal_summary.get("step", 1500),
         "random_seed": random_seed,
+        "local_signal_gate_passed": bool(signal_summary.get("signal_gate_passed")),
+        "local_stability_gate_passed": bool(temporal_summary.get("stability_gate_passed")),
+        "local_gates_required_for_selection": require_upstream_gates,
         "middle_rank_pool": [row["candidate_id"] for row in middle],
         "branches": {
             "predicted-good": {
@@ -100,14 +104,38 @@ def select_command(args):
     temporal_path = Path(args.temporal_summary).resolve()
     signal_summary = json.loads(signal_path.read_text(encoding="utf-8"))
     temporal_summary = json.loads(temporal_path.read_text(encoding="utf-8"))
+    if signal_summary.get("seed") != args.seed or temporal_summary.get("seed") != args.seed:
+        raise RuntimeError("signal and temporal summaries must match --seed")
     if signal_summary.get("discovery_results_sha256") != sha256_file(discovery_path):
         raise RuntimeError("signal summary does not match branch discovery results")
+    parent_info = checkpoint_identity(Path(args.parent_checkpoint))
+    parent_training = parent_info.get("training_manifest")
+    if parent_training is None:
+        raise FileNotFoundError("actionability parent requires training_manifest.json")
+    if int(parent_training["global_step"]) != spec["primary_probe_step"]:
+        raise RuntimeError("actionability parent is not the step-1,500 checkpoint")
+    if parent_training["run_identity"].get("seed") != args.seed:
+        raise RuntimeError("actionability parent seed does not match --seed")
+    replication_authorization = None
+    if args.cross_seed_replication:
+        if args.seed not in (43, 44):
+            raise ValueError("cross-seed replication bypass is only valid for seeds 43 and 44")
+        if not args.seed42_actionability_summary:
+            raise ValueError("cross-seed replication requires --seed42-actionability-summary")
+        authorization_path = Path(args.seed42_actionability_summary).resolve()
+        replication_authorization = json.loads(
+            authorization_path.read_text(encoding="utf-8"))
+        if replication_authorization.get("seed") != 42:
+            raise RuntimeError("replication authorization is not a seed-42 result")
+        if not replication_authorization.get("actionability_gate_passed"):
+            raise RuntimeError("seed-42 actionability did not authorize cross-seed branches")
     manifest = build_branch_selection(
         load_jsonl_by_id(discovery_path),
         parent_checkpoint=Path(args.parent_checkpoint),
         signal_summary=signal_summary,
         temporal_summary=temporal_summary,
         random_seed=spec["branch_random_seed"] + args.seed,
+        require_upstream_gates=not args.cross_seed_replication,
     )
     manifest.update({
         "seed": args.seed,
@@ -116,6 +144,10 @@ def select_command(args):
         "signal_summary_sha256": sha256_file(signal_path),
         "temporal_summary_sha256": sha256_file(temporal_path),
         "protocol_sha256": sha256_file(PROTOCOL_PATH),
+        "cross_seed_replication": bool(args.cross_seed_replication),
+        "seed42_actionability_authorization_sha256": (
+            sha256_file(Path(args.seed42_actionability_summary).resolve())
+            if args.cross_seed_replication else None),
     })
     output = Path(args.output).resolve()
     if output.is_file():
@@ -124,8 +156,12 @@ def select_command(args):
         right = {key: value for key, value in manifest.items() if key != "created_at"}
         if left != right:
             raise RuntimeError("refusing to overwrite a different branch manifest")
+        atomic_write_json(
+            output.with_name(f"branch_selection_seed{args.seed}.json"), existing)
         return
     atomic_write_json(output, manifest)
+    atomic_write_json(
+        output.with_name(f"branch_selection_seed{args.seed}.json"), manifest)
     print(json.dumps(manifest, indent=2))
 
 
@@ -334,12 +370,30 @@ def analyze_command(args):
     }
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    training_root = Path(args.training_root).resolve()
+    combined_training_path = output_dir / "branch_training_metrics.jsonl"
+    with combined_training_path.open("w", encoding="utf-8") as destination:
+        for role in BRANCH_ROLES:
+            source = training_root / role / "training_metrics.jsonl"
+            if not source.is_file():
+                raise FileNotFoundError(f"missing branch training metrics: {source}")
+            for line in source.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                if row.get("branch_role") != role:
+                    raise RuntimeError(f"training metric role mismatch in {source}")
+                destination.write(json.dumps(row, sort_keys=True) + "\n")
     atomic_write_json(output_dir / "actionability_results.json", summary)
     with (output_dir / "actionability_contrasts.csv").open(
             "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=analysis["contrasts"][0].keys())
         writer.writeheader()
         writer.writerows(analysis["contrasts"])
+    from figures.gen_fig_experiment3 import plot_actionability, plot_training_curves
+    figure_files = plot_actionability(
+        output_dir / "actionability_contrasts.csv", output_dir)
+    figure_files += plot_training_curves(combined_training_path, output_dir)
     if args.wandb_mode != "disabled":
         import wandb
 
@@ -361,12 +415,17 @@ def analyze_command(args):
             "actionability/gate_passed": int(summary["actionability_gate_passed"]),
             "actionability/strong_result": int(summary["strong_actionability_result"]),
             "actionability/contrasts": table,
+            "actionability/future_nll_figure": wandb.Image(str(figure_files[0])),
+            "actionability/training_curve_figure": wandb.Image(str(figure_files[3])),
         })
         summary["wandb"] = {"run_id": run.id, "run_url": run.url}
         atomic_write_json(output_dir / "actionability_results.json", summary)
         artifact = wandb.Artifact("experiment3-actionability-analysis", type="experiment-results")
         artifact.add_file(str(output_dir / "actionability_results.json"))
         artifact.add_file(str(output_dir / "actionability_contrasts.csv"))
+        artifact.add_file(str(combined_training_path))
+        for path in figure_files:
+            artifact.add_file(str(path))
         run.log_artifact(artifact)
         run.finish()
     print(json.dumps(summary, indent=2))
@@ -382,6 +441,8 @@ def build_parser():
     select.add_argument("--temporal-summary", required=True)
     select.add_argument("--parent-checkpoint", required=True)
     select.add_argument("--output", required=True)
+    select.add_argument("--cross-seed-replication", action="store_true")
+    select.add_argument("--seed42-actionability-summary", default=None)
     select.set_defaults(func=select_command)
 
     evaluate = subparsers.add_parser("evaluate")
@@ -398,6 +459,7 @@ def build_parser():
 
     analyze = subparsers.add_parser("analyze")
     analyze.add_argument("--results-root", required=True)
+    analyze.add_argument("--training-root", required=True)
     analyze.add_argument("--output-dir", required=True)
     add_wandb_args(analyze)
     analyze.set_defaults(func=analyze_command)

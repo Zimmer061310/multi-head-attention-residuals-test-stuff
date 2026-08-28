@@ -47,6 +47,18 @@
       }
     ]
   },
+  "experiment3_evaluation_dataset": {
+    "directory": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/experiment3-eval",
+    "source_commit": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+    "files": [
+      {
+        "name": "003_00000.parquet",
+        "source_url": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/10BT/003_00000.parquet",
+        "bytes": 2152437524,
+        "sha256": "22184e6eb25759ddd97783751ffc73e1705dfa2542e630dae1f2a8bac8ee6ddb"
+      }
+    ]
+  },
   "minimum_gpu_count": 8,
   "minimum_gpu_memory_gib": 30,
   "recommended_free_disk_gib": 700,
