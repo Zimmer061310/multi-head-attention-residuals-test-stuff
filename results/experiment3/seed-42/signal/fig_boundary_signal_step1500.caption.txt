@@ -1,0 +1,1 @@
+Boundary-removal NLL relative to native H16 on the locked discovery and confirmation splits. Lower values are better; the figure measures frozen preference, not future training benefit.

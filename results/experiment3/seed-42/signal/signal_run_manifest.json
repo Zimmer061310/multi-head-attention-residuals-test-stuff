@@ -1,0 +1,81 @@
+{
+  "artifact_sha256": "1a239dfc65c3b4f9184ccbdc28e9165b4bc452312a2d7360d6b7519fafb1a5af",
+  "checkpoint": {
+    "path": "/root/autodl-tmp/experiment2/stage-b-screening/h16/step-1500",
+    "sha256": "701bbc71f21052c166d7140c759c737935478204667d2176cc242bc88e5f88e0",
+    "training_manifest": {
+      "chunks_consumed": 48000,
+      "created_at": "2026-08-27T03:08:14.639960+00:00",
+      "elapsed_training_seconds": 32884.94871211052,
+      "format_version": 1,
+      "global_step": 1500,
+      "run_identity": {
+        "attnres_heads": 16,
+        "compile": false,
+        "compile_model": false,
+        "data_files": {
+          "files": [
+            {
+              "bytes": 2152819114,
+              "path": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/000_00000.parquet",
+              "sha256": "b1ba7b2ce4cb5ea6ef42dca40263eabb85f37700d01693a68e9b30a31d78e871"
+            },
+            {
+              "bytes": 2152222432,
+              "path": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/001_00000.parquet",
+              "sha256": "3fcf2dc69cd52503986276d3d2d26a8c356d0f2ea28a0de4fdbda8cf87755693"
+            }
+          ],
+          "pattern": "/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/*.parquet"
+        },
+        "dataset": "HuggingFaceFW/fineweb-edu",
+        "dataset_name": "sample-10BT",
+        "dataset_revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+        "fsdp": false,
+        "fused": true,
+        "global_batch_size": 32,
+        "grad_accum": 8,
+        "grad_ckpt": true,
+        "hidden_size": 1280,
+        "intermediate_size": 5120,
+        "lr": 0.0005,
+        "lr_min": 5e-05,
+        "max_norm": 1.0,
+        "mixed_partition": null,
+        "mode": "full_mh",
+        "num_heads": 16,
+        "num_kv_heads": 8,
+        "num_layers": 36,
+        "optimizer": "AdamW",
+        "optimizer_betas": [
+          0.9,
+          0.95
+        ],
+        "optimizer_eps": 1e-08,
+        "per_gpu_batch_size": 4,
+        "precision": "bf16",
+        "seed": 42,
+        "seq_len": 1024,
+        "source_commit": "81ff30572d5dd5dadba715290897d6b10aa58587",
+        "steps": 20000,
+        "tokenizer": "Qwen/Qwen3-0.6B",
+        "tokenizer_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+        "warmup": 1000,
+        "weight_decay": 0.1,
+        "world_size": 1
+      },
+      "wandb_run_id": "sixuergj"
+    }
+  },
+  "combined_results_sha256": "97e522dafb324164c03a28e67e5bc2ccaae8621ef06c66a73dc10e443ae295e4",
+  "confirmation_results_sha256": "77d871caeaf9bf655ce5cd3eb1a14d08bd293a66885e6ab8ac29f6e994752030",
+  "confirmation_run_manifest_sha256": "f705e114966217bba7095195cda35fe59f4ba3a790534a2aa590f611c0f4a5f1",
+  "discovery_results_sha256": "9f8d2ac036e17e1ade022409f8514dabfea3f3df7a4247aaf97be42c7539ca17",
+  "discovery_run_manifest_sha256": "ad5fe4511ffb3e2195150791a6bebf1dacb7eb23be5d662f8d4498a515074b28",
+  "format_version": 1,
+  "protocol_sha256": "92857c991365f900f10908a9e47518229e69f1ecf39b5df2aaa5ab4deb8aa266",
+  "seed": 42,
+  "selection_sha256": "75c7067094d9293a2eaa24c279c4f05b6488ff4c73c72eb3c78e65c01c4593ab",
+  "source_commit": "df779640bbde0b974dfca6290f314f49bc1b1d24",
+  "step": 1500
+}

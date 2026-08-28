@@ -1,0 +1,1 @@
+Trajectories of all 15 native-H16 single-boundary-removal scores. Lines track boundary indices within a split; crossings reveal preference drift and do not imply causal training benefit.

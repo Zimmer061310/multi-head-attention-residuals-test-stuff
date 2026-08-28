@@ -1,0 +1,1 @@
+Normalized discrete curvature for each boundary landscape. Lower values indicate smoother local responses; the dashed threshold is a preregistered mechanism-selection heuristic, not a differentiability proof.

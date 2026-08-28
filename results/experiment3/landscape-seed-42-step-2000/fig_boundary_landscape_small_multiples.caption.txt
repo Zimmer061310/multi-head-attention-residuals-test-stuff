@@ -1,0 +1,1 @@
+Local H8 boundary-displacement landscapes. Each panel moves one boundary while preserving all other boundaries; lower is better. Smoothness supports a parameterization choice but does not itself prove future training gains.
