@@ -6,6 +6,7 @@ MHAR_REPO_DIR="${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && p
 MHAR_BRANCH_MANIFEST="${MHAR_BRANCH_MANIFEST:?set MHAR_BRANCH_MANIFEST}"
 MHAR_PARENT_CHECKPOINT="${MHAR_PARENT_CHECKPOINT:?set MHAR_PARENT_CHECKPOINT}"
 MHAR_ROLE="${MHAR_ROLE:?set MHAR_ROLE}"
+MHAR_MASTER_PORT="${MHAR_MASTER_PORT:-29700}"
 MHAR_OUTPUT_ROOT="${MHAR_OUTPUT_ROOT:-/root/autodl-tmp/experiment3/actionability}"
 MHAR_HF_HOME="${MHAR_HF_HOME:-/root/autodl-tmp/huggingface}"
 MHAR_WANDB_DIR="${MHAR_WANDB_DIR:-/root/autodl-tmp/wandb}"
@@ -49,6 +50,7 @@ fi
 cd "$MHAR_REPO_DIR"
 exec "$MHAR_PYTHON_BIN" -m torch.distributed.run \
   --nproc_per_node=1 \
+  --master_port "$MHAR_MASTER_PORT" \
   --module src.training.train_scratch \
   --mode full_mh \
   --attnres_heads 16 \

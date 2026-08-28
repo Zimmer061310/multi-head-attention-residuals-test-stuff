@@ -34,7 +34,11 @@ class Experiment3ServerSetupTests(unittest.TestCase):
         self.assertIn("MHAR_CONTROLLER_REPO_DIR", launcher)
         self.assertIn("MHAR_TRAINING_REPO_DIR", launcher)
         self.assertIn("MHAR_RESUME_SEED${seed}", launcher)
+        self.assertIn("MHAR_MASTER_PORT_BASE", launcher)
+        self.assertIn("watch_experiment3_h16_probe_stop.sh", launcher)
         self.assertIn('cd "$MHAR_TRAINING_REPO_DIR"', runner)
+        self.assertIn('--master_port "$MHAR_MASTER_PORT"', runner)
+        self.assertIn('STOP_ARGS=(--stop_after_step "$MHAR_TARGET_STEP")', runner)
         self.assertIn('cd "$MHAR_REPO_DIR"', branch_runner)
         self.assertNotIn("MHAR_TRAINING_REPO_DIR", branch_runner)
 

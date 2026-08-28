@@ -5,6 +5,7 @@ MHAR_REPO_DIR="${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && p
 MHAR_LOG_DIR="${MHAR_LOG_DIR:-/root/autodl-tmp/experiment3/actionability/logs}"
 MHAR_BRANCH_MANIFEST="${MHAR_BRANCH_MANIFEST:?set MHAR_BRANCH_MANIFEST}"
 MHAR_PARENT_CHECKPOINT="${MHAR_PARENT_CHECKPOINT:?set MHAR_PARENT_CHECKPOINT}"
+MHAR_MASTER_PORT_BASE="${MHAR_MASTER_PORT_BASE:-29700}"
 
 command -v screen >/dev/null || { echo "screen is required" >&2; exit 1; }
 mkdir -p "$MHAR_LOG_DIR"
@@ -19,6 +20,7 @@ for index in "${!roles[@]}"; do
   fi
   screen -L -Logfile "$MHAR_LOG_DIR/${role}.log" -dmS "$session" \
     env CUDA_VISIBLE_DEVICES="$index" \
+      MHAR_MASTER_PORT="$((MHAR_MASTER_PORT_BASE + index))" \
       MHAR_REPO_DIR="$MHAR_REPO_DIR" \
       MHAR_BRANCH_MANIFEST="$MHAR_BRANCH_MANIFEST" \
       MHAR_PARENT_CHECKPOINT="$MHAR_PARENT_CHECKPOINT" \
