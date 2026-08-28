@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
@@ -29,6 +30,18 @@ def verify_file(path, spec):
     )
 
 
+def resolve_source_url(source_url, endpoint=None):
+    """Use a transport mirror without changing the content-addressed spec."""
+    endpoint = endpoint or os.environ.get("MHAR_HF_ENDPOINT") or os.environ.get("HF_ENDPOINT")
+    if not endpoint:
+        return source_url
+    source = urlparse(source_url)
+    mirror = urlparse(endpoint)
+    if source.hostname != "huggingface.co" or not mirror.scheme or not mirror.netloc:
+        return source_url
+    return f"{mirror.scheme}://{mirror.netloc}{source.path}"
+
+
 def download_file(spec, destination, timeout=60):
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -42,7 +55,10 @@ def download_file(spec, destination, timeout=60):
     partial = destination.with_suffix(destination.suffix + ".part")
     existing = partial.stat().st_size if partial.exists() else 0
     headers = {"Range": f"bytes={existing}-"} if existing else {}
-    with requests.get(spec["source_url"], headers=headers, stream=True, timeout=timeout) as response:
+    source_url = resolve_source_url(spec["source_url"])
+    if source_url != spec["source_url"]:
+        print(f"using verified-content mirror: {source_url}", flush=True)
+    with requests.get(source_url, headers=headers, stream=True, timeout=timeout) as response:
         if existing and response.status_code != 206:
             partial.unlink()
             existing = 0

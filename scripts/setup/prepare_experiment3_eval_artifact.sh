@@ -8,7 +8,7 @@ MHAR_ARTIFACT="${MHAR_ARTIFACT:-/root/autodl-tmp/experiment3/fixed_eval.pt}"
 MHAR_HF_HOME="${MHAR_HF_HOME:-/root/autodl-tmp/huggingface}"
 
 export HF_HOME="$MHAR_HF_HOME"
-export HF_ENDPOINT="${HF_ENDPOINT:-https://huggingface.co}"
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export TOKENIZERS_PARALLELISM=false
 
 cd "$MHAR_REPO_DIR"

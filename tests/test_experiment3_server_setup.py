@@ -6,10 +6,24 @@ from pathlib import Path
 import torch
 
 from scripts.setup import preflight_experiment3_server as preflight
+from scripts.setup.download_stage_b_data import resolve_source_url
 from src.experiments.experiment1_partition_compatibility import save_fixed_eval_artifact
 
 
 class Experiment3ServerSetupTests(unittest.TestCase):
+    def test_huggingface_mirror_changes_transport_only(self):
+        source = (
+            "https://huggingface.co/datasets/org/repo/resolve/revision/file.parquet"
+        )
+        self.assertEqual(
+            resolve_source_url(source, "https://hf-mirror.com"),
+            "https://hf-mirror.com/datasets/org/repo/resolve/revision/file.parquet",
+        )
+        self.assertEqual(
+            resolve_source_url("https://example.com/file", "https://hf-mirror.com"),
+            "https://example.com/file",
+        )
+
     def test_probe_launcher_separates_controller_and_locked_training_worktrees(self):
         root = Path(__file__).resolve().parents[1]
         launcher = (root / "scripts/train/launch_experiment3_h16_probes_3gpu.sh").read_text()
