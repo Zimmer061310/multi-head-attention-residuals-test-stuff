@@ -118,11 +118,11 @@ def analyze_temporal(discovery, confirmation, *, adjacent_pairs):
     if len(primary_discovery) != len(adjacent) or len(primary_confirmation) != len(adjacent):
         raise RuntimeError("missing preregistered adjacent-time comparisons")
     discovery_correlations = [row["spearman"] for row in primary_discovery]
-    same_sign = sum(
+    same_sign = int(sum(
         np.sign(row["spearman"])
         == np.sign(primary_confirmation[(row["step_t"], row["step_u"])]["spearman"])
         for row in primary_discovery
-    )
+    ))
     gate = (
         all(value > 0 for value in discovery_correlations)
         and statistics.median(discovery_correlations) >= 0.5

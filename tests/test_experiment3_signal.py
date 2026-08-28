@@ -87,6 +87,7 @@ class Experiment3SignalTest(unittest.TestCase):
         self.assertTrue(summary["stability_gate_passed"])
         self.assertEqual(summary["confirmation_same_sign_pairs"], 3)
         self.assertAlmostEqual(summary["median_primary_discovery_spearman"], 1.0)
+        json.dumps(summary)
 
 
 if __name__ == "__main__":
