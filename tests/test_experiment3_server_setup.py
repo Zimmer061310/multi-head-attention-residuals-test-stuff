@@ -1,7 +1,9 @@
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import torch
 
@@ -11,6 +13,16 @@ from src.experiments.experiment1_partition_compatibility import save_fixed_eval_
 
 
 class Experiment3ServerSetupTests(unittest.TestCase):
+    def test_artifact_only_preflight_does_not_require_local_source_shard(self):
+        with mock.patch.object(
+            sys,
+            "argv",
+            ["preflight", "--artifact", "/content-addressed/fixed_eval.pt", "--artifact-only"],
+        ), mock.patch.object(preflight, "check_artifact", return_value="locked-digest"), \
+                mock.patch.object(preflight, "check_source_shard") as source_check:
+            preflight.main()
+        source_check.assert_not_called()
+
     def test_huggingface_mirror_changes_transport_only(self):
         source = (
             "https://huggingface.co/datasets/org/repo/resolve/revision/file.parquet"

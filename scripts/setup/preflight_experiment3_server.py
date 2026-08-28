@@ -120,7 +120,8 @@ def main() -> None:
         "/root/autodl-tmp/experiment3"))
     parser.add_argument("--artifact-only", action="store_true")
     args = parser.parse_args()
-    check_source_shard(args.eval_dir)
+    if not args.artifact_only:
+        check_source_shard(args.eval_dir)
     digest = check_artifact(args.artifact)
     if not args.artifact_only:
         check_packages()
