@@ -54,6 +54,19 @@ class Experiment3ServerSetupTests(unittest.TestCase):
         self.assertIn('cd "$MHAR_REPO_DIR"', branch_runner)
         self.assertNotIn("MHAR_TRAINING_REPO_DIR", branch_runner)
 
+    def test_distributed_split_worker_is_atomic_and_content_checked(self):
+        root = Path(__file__).resolve().parents[1]
+        worker = (
+            root / "scripts/evaluate/run_experiment3_distributed_split_worker.sh"
+        ).read_text()
+        self.assertIn("training_manifest.json", worker)
+        self.assertIn("training_state.pt", worker)
+        self.assertIn("model.safetensors", worker)
+        self.assertIn("checkpoint_partial", worker)
+        self.assertIn("checkpoint_complete \"$checkpoint_partial\"", worker)
+        self.assertIn("mv \"$checkpoint_partial\" \"$MHAR_CHECKPOINT\"", worker)
+        self.assertIn("--artifact-only", worker)
+
     def test_locked_shard_is_new_and_content_addressed(self):
         environment = preflight.ENVIRONMENT
         candidate = environment["experiment3_evaluation_dataset"]["files"][0]
