@@ -14,6 +14,7 @@ MHAR_WANDB_GROUP="${MHAR_WANDB_GROUP:-mhar-exp3-boundary-learnability-seed${MHAR
 MHAR_POLL_SECONDS="${MHAR_POLL_SECONDS:-30}"
 MHAR_REMOTE_PORT="${MHAR_REMOTE_PORT:-22}"
 MHAR_REMOTE_KEY="${MHAR_REMOTE_KEY:-/root/.ssh/mhar_transfer_ed25519}"
+MHAR_REMOTE_PYTHON="${MHAR_REMOTE_PYTHON:-/root/miniconda3/bin/python3}"
 MHAR_SYNC_PORT="${MHAR_SYNC_PORT:-$MHAR_REMOTE_PORT}"
 MHAR_SYNC_KEY="${MHAR_SYNC_KEY:-$MHAR_REMOTE_KEY}"
 
@@ -48,7 +49,7 @@ PY
 remote_checkpoint_complete() {
   ssh -i "$MHAR_REMOTE_KEY" -p "$MHAR_REMOTE_PORT" \
     -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$MHAR_REMOTE_HOST" \
-    python3 - "$MHAR_REMOTE_CHECKPOINT" "$MHAR_SEED" "$MHAR_STEP" <<'PY'
+    "$MHAR_REMOTE_PYTHON" - "$MHAR_REMOTE_CHECKPOINT" "$MHAR_SEED" "$MHAR_STEP" <<'PY'
 import json
 import pathlib
 import sys

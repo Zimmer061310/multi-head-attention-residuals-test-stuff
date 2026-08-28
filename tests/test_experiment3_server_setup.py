@@ -62,6 +62,7 @@ class Experiment3ServerSetupTests(unittest.TestCase):
         self.assertIn("training_manifest.json", worker)
         self.assertIn("training_state.pt", worker)
         self.assertIn("model.safetensors", worker)
+        self.assertIn("MHAR_REMOTE_PYTHON", worker)
         self.assertIn("checkpoint_partial", worker)
         self.assertIn("checkpoint_complete \"$checkpoint_partial\"", worker)
         self.assertIn("mv \"$checkpoint_partial\" \"$MHAR_CHECKPOINT\"", worker)
