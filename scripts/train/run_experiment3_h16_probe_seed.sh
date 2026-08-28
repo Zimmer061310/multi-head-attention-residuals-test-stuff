@@ -2,7 +2,8 @@
 set -euo pipefail
 
 MHAR_PYTHON_BIN="${MHAR_PYTHON_BIN:-python3}"
-MHAR_REPO_DIR="${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+MHAR_CONTROLLER_REPO_DIR="${MHAR_CONTROLLER_REPO_DIR:-${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}}"
+MHAR_TRAINING_REPO_DIR="${MHAR_TRAINING_REPO_DIR:-$MHAR_CONTROLLER_REPO_DIR}"
 MHAR_SEED="${MHAR_SEED:?set MHAR_SEED to 42, 43, or 44}"
 MHAR_OUTPUT_ROOT="${MHAR_OUTPUT_ROOT:-/root/autodl-tmp/experiment3/checkpoints/h16}"
 MHAR_DATA_FILES="${MHAR_DATA_FILES:-/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/*.parquet}"
@@ -22,7 +23,7 @@ RESUME_ARGS=()
 if [[ $# -gt 1 ]]; then echo "usage: $0 [checkpoint-directory]" >&2; exit 2; fi
 if [[ $# -eq 1 ]]; then RESUME_ARGS=(--resume_from "$1"); fi
 
-cd "$MHAR_REPO_DIR"
+cd "$MHAR_TRAINING_REPO_DIR"
 exec "$MHAR_PYTHON_BIN" -m torch.distributed.run --nproc_per_node=1 \
   --module src.training.train_scratch \
   --mode full_mh --attnres_heads 16 \

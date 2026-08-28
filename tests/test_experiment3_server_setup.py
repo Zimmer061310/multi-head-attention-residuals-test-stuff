@@ -10,6 +10,20 @@ from src.experiments.experiment1_partition_compatibility import save_fixed_eval_
 
 
 class Experiment3ServerSetupTests(unittest.TestCase):
+    def test_probe_launcher_separates_controller_and_locked_training_worktrees(self):
+        root = Path(__file__).resolve().parents[1]
+        launcher = (root / "scripts/train/launch_experiment3_h16_probes_3gpu.sh").read_text()
+        runner = (root / "scripts/train/run_experiment3_h16_probe_seed.sh").read_text()
+        branch_runner = (
+            root / "scripts/train/run_experiment3_actionability_branch.sh"
+        ).read_text()
+        self.assertIn("MHAR_CONTROLLER_REPO_DIR", launcher)
+        self.assertIn("MHAR_TRAINING_REPO_DIR", launcher)
+        self.assertIn("MHAR_RESUME_SEED${seed}", launcher)
+        self.assertIn('cd "$MHAR_TRAINING_REPO_DIR"', runner)
+        self.assertIn('cd "$MHAR_REPO_DIR"', branch_runner)
+        self.assertNotIn("MHAR_TRAINING_REPO_DIR", branch_runner)
+
     def test_locked_shard_is_new_and_content_addressed(self):
         environment = preflight.ENVIRONMENT
         candidate = environment["experiment3_evaluation_dataset"]["files"][0]

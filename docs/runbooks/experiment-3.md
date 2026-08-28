@@ -59,6 +59,25 @@ match the architecture, optimizer, scheduler, data, tokenizer, seed, and source
 revision. Resume one interrupted seed by passing its atomic checkpoint to
 `run_experiment3_h16_probe_seed.sh`.
 
+When the controllers and the locked training source are separate worktrees,
+keep evaluation on the Experiment 3 commit and launch training with:
+
+```bash
+MHAR_CONTROLLER_REPO_DIR=/root/mhar-experiment \
+MHAR_TRAINING_REPO_DIR=/root/mhar-training-81ff305 \
+MHAR_RESUME_SEED42=/root/autodl-tmp/experiment2/stage-b-screening/h16/step-2000 \
+  scripts/train/launch_experiment3_h16_probes_3gpu.sh
+```
+
+The per-seed resume variables are `MHAR_RESUME_SEED42`,
+`MHAR_RESUME_SEED43`, and `MHAR_RESUME_SEED44`. An unset variable starts that
+seed from scratch. This preserves the source revision recorded in reused
+training manifests while allowing the newer controllers to analyze results.
+Experiment 3C branches must instead run from the Experiment 3 controller
+worktree because exact branch-state support was added there; its parent
+validation deliberately compares the locked scientific recipe rather than the
+controller commit.
+
 ## 3. Run 3A and 3B for one seed
 
 ```bash
