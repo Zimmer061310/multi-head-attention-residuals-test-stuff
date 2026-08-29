@@ -1,0 +1,53 @@
+{
+  "best": "remove-03",
+  "bottom_three": [
+    "remove-12",
+    "remove-14",
+    "remove-13"
+  ],
+  "created_at": "2026-08-28T21:46:36.727487+00:00",
+  "delta_nll": {
+    "remove-00": 0.028774750430796026,
+    "remove-01": 0.026310586509816325,
+    "remove-02": 0.025524010290031818,
+    "remove-03": 0.023298126045443013,
+    "remove-04": 0.025012467031022112,
+    "remove-05": 0.026167340991783306,
+    "remove-06": 0.025655610820065178,
+    "remove-07": 0.02805687744946095,
+    "remove-08": 0.026589510610958378,
+    "remove-09": 0.025951436304742614,
+    "remove-10": 0.025048039642364017,
+    "remove-11": 0.02549402035576165,
+    "remove-12": 0.03071128727753436,
+    "remove-13": 0.03469261512495336,
+    "remove-14": 0.0322181668099768
+  },
+  "format_version": 1,
+  "ranking": [
+    "remove-03",
+    "remove-04",
+    "remove-10",
+    "remove-11",
+    "remove-02",
+    "remove-06",
+    "remove-09",
+    "remove-05",
+    "remove-01",
+    "remove-08",
+    "remove-07",
+    "remove-00",
+    "remove-12",
+    "remove-14",
+    "remove-13"
+  ],
+  "source_commit": "4b6c068ee5300433f4ef91cdead4541547ac6590",
+  "source_results": "/root/autodl-tmp/experiment3/results/seed-43/probes/step-1500/discovery_results.jsonl",
+  "source_results_sha256": "4f193a2195b5dcb25b99bed7419cde745ae941a6506016cfb18fc43e1f55db71",
+  "top_three": [
+    "remove-03",
+    "remove-04",
+    "remove-10"
+  ],
+  "worst": "remove-13"
+}

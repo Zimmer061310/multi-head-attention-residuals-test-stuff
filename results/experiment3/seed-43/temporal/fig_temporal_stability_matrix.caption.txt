@@ -1,0 +1,1 @@
+Rank correlation of the 15 boundary-removal scores between checkpoints. Positive correlation means a measurement retains directional information; it does not establish actionability.
