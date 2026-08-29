@@ -32,6 +32,11 @@ MHAR_OUTPUT_DIR="$MHAR_OUTPUT_ROOT/$MHAR_ROLE"
 mkdir -p "$MHAR_OUTPUT_DIR" "$MHAR_HF_HOME" "$MHAR_WANDB_DIR"
 export HF_HOME="$MHAR_HF_HOME"
 export WANDB_DIR="$MHAR_WANDB_DIR"
+# All pinned tokenizer assets are already present in the local cache. Prevent a
+# transformers compatibility probe from making an unnecessary Hub API request;
+# AutoDL may block huggingface.co even while W&B remains reachable.
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export PYTHONUNBUFFERED=1
 export TOKENIZERS_PARALLELISM=false
