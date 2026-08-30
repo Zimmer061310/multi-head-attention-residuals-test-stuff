@@ -14,6 +14,12 @@ from src.training.train_scratch import checkpoint_due, parse_keep_steps
 
 
 class WashoutTest(unittest.TestCase):
+    def test_cli_string_paths_hash_identically_to_path_objects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "manifest.json"
+            path.write_text('{"test": true}', encoding="utf-8")
+            self.assertEqual(washout.sha256_file(str(path)), washout.sha256_file(path))
+
     def small_rows(self, gaps=None):
         protocol = washout.spec().copy()
         protocol.update(sequences_per_split=4, sequence_length=5, bootstrap_samples=100)

@@ -64,3 +64,19 @@ acknowledged it stays on; monitor promptly to avoid unnecessary billing. Verify
 provider power status if available; an unreachable SSH endpoint alone is only
 consistent with shutdown, not independent proof of billing state. Close the
 heartbeat after completion/shutdown reporting.
+
+## Startup deviation, 2026-08-30
+
+The first attempt at commit `39fc117` stopped at approximately 12:31 CST,
+before any loss evaluation or optimizer updates. The file-hashing helper used
+by the evaluator accepted `Path` objects but not the string paths supplied by
+the CLI. All three workers exited; the controller recorded `FAILED.json` and
+correctly refused training/analysis/shutdown.
+
+The fix uses the existing path-normalizing SHA-256 helper; hashes and scientific
+computation are identical. A string-path regression test was added. Preserve
+the failed root as `/root/autodl-tmp/experiment5-startup-failed-39fc117` and its
+controller log alongside it. Keep the old execution worktree intact and deploy
+the tested fix to `/root/mhar-experiment5-run` before creating a fresh
+`/root/autodl-tmp/experiment5` run. No accepted result, parent, artifact, branch,
+recipe or tolerance is changed.

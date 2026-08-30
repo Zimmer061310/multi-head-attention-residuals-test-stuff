@@ -10,11 +10,10 @@ from pathlib import Path
 
 import numpy as np
 
-from src.experiments.experiment1_partition_compatibility import sha256_file
 from src.experiments.experiment3_actionability import apply_branch
 from src.experiments.experiment3_common import evaluate_tokens, load_artifact_split, load_mhar_model, paired_bootstrap
 from src.experiments.experiment4_short_horizon import PARTITIONS, ROLES
-from src.training.train_scratch import atomic_write_json, sha256_tree
+from src.training.train_scratch import atomic_write_json, sha256_file, sha256_tree
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL = ROOT / "configs/experiment5/protocol.json"
