@@ -1,0 +1,47 @@
+{
+  "branch_manifest_sha256": "70200b6cc0a3e10b7ad9bd5724518296024b080f6a22872f7db3bf6c9d248e24",
+  "details": [
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "predicted-good",
+      "split": "confirmation"
+    },
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "predicted-good",
+      "split": "discovery"
+    },
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "predicted-bad",
+      "split": "confirmation"
+    },
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "predicted-bad",
+      "split": "discovery"
+    },
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "unchanged",
+      "split": "confirmation"
+    },
+    {
+      "max_sequence_error": 0.0,
+      "nll_error": 0.0,
+      "role": "unchanged",
+      "split": "discovery"
+    }
+  ],
+  "measurement_hashes": {
+    "predicted-bad-000.json": "9f3c9458ebcd5725f743abc9b510de694532779ce6588430ea711c135f7edec2",
+    "predicted-good-000.json": "33bfc2e910b9245ae4bbf516a6bfdda19b34a831cb2799dd6bb938905ba0d495",
+    "unchanged-000.json": "161883f75407c8d17ed9638e967e9c8a5cc42e89140b1f5d65f35ad7a7aec5ab"
+  },
+  "passed": true
+}
