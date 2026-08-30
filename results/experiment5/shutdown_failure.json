@@ -1,0 +1,4 @@
+{
+  "error": "[Errno 8] Exec format error: 'shutdown'",
+  "type": "OSError"
+}
