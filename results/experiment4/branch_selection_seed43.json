@@ -1,0 +1,36 @@
+{
+  "branches": {
+    "predicted-bad": {
+      "candidate_id": "remove-13",
+      "label": "B",
+      "partition_id": "0__1__2__3__4__5__6__7__8__9__10__11__12__13-14__15"
+    },
+    "predicted-good": {
+      "candidate_id": "remove-03",
+      "label": "A",
+      "partition_id": "0__1__2__3-4__5__6__7__8__9__10__11__12__13__14__15"
+    },
+    "unchanged": {
+      "candidate_id": "native-h16",
+      "label": "C",
+      "partition_id": null
+    }
+  },
+  "endpoint_step": 2000,
+  "experiment": "4-short-horizon-actionability",
+  "format_version": 1,
+  "frozen_probe": {
+    "best_candidate": "remove-03",
+    "confirmation_best_minus_worst_nll": -0.01105651818215847,
+    "confirmation_ci95": [
+      -0.012314494664315135,
+      -0.009782705514226109
+    ],
+    "discovery_confirmation_spearman": 0.9392857142857142,
+    "worst_candidate": "remove-13"
+  },
+  "log_every": 10,
+  "parent_checkpoint_sha256": "ece1370fb201f3ba661424bdb7126a4b1d59221bccba6e46332372e63c9faaeb",
+  "seed": 43,
+  "source_step": 1500
+}

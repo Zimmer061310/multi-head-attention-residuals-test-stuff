@@ -1,0 +1,38 @@
+{
+  "_runtime": 3,
+  "_step": 0,
+  "_timestamp": 1788038507.8253758,
+  "_wandb.runtime": 3,
+  "analysis/decision_adaptive": 1,
+  "analysis/delta_figure": {
+    "_type": "image-file",
+    "format": "png",
+    "height": 864,
+    "path": "media/images/analysis/delta_figure_0_5a0964fbac6eaa1e6501.png",
+    "sha256": "5a0964fbac6eaa1e6501b7dc547a2ed7d8cb23b2558919c228bea4079b4092ab",
+    "size": 111284,
+    "width": 1620
+  },
+  "analysis/early_mean_A_minus_B": -0.0017471790313720705,
+  "analysis/loss_figure": {
+    "_type": "image-file",
+    "format": "png",
+    "height": 900,
+    "path": "media/images/analysis/loss_figure_0_dfdc67a2fe702122a68e.png",
+    "sha256": "dfdc67a2fe702122a68ed0dd9cd424eac91ad8ce916628577296d506bb5caaa8",
+    "size": 147481,
+    "width": 1620
+  },
+  "analysis/paired_losses": {
+    "_latest_artifact_path": "wandb-client-artifact://5ml26nd6ytj3kjqhqzcu8sf2urytbssbokehlukseamy0g56mc2ymz8b1ausaxt4g17bkxyc9slp86nnd03g2cp5oq0nhcg83ykqy1rqj1ymwrv6w6cn5ep40xc3pz7s:latest/analysis/paired_losses.table.json",
+    "_type": "table-file",
+    "artifact_path": "wandb-client-artifact://9hkciuzls2wfp9fdgzmu48tq2ryklpx2xmc0hkzgiy2kb2ehgrwzpyd730kbmm1qxno0td3z851x3uq8idawuut14rc0pc3ifgr3ut87f2d08v4m8xgi98uc8y4v68h1/analysis/paired_losses.table.json",
+    "log_mode": "IMMUTABLE",
+    "ncols": 7,
+    "nrows": 50,
+    "path": "media/table/analysis/paired_losses_0_ee1d799e17bfe22a67a6.table.json",
+    "sha256": "ee1d799e17bfe22a67a648c9928da153e9829b06093745e770e82b6ce3fa977f",
+    "size": 6497
+  },
+  "analysis/primary_mean_A_minus_B": -0.0002287769317626953
+}

@@ -1,0 +1,76 @@
+{
+  "clear_short_horizon_actionability": true,
+  "consistently_directional_actionability": true,
+  "decision": "investigate_adaptive_grouping",
+  "experiment": "4-short-horizon-actionability",
+  "format_version": 1,
+  "horizons": [
+    {
+      "cumulative_mean_A_minus_B": -0.0017471790313720703,
+      "cumulative_mean_A_minus_B_ci95": [
+        -0.0019259452819824219,
+        -0.00043125152587890624
+      ],
+      "cumulative_mean_A_minus_C": 0.0009403705596923828,
+      "cumulative_mean_C_minus_B": -0.002687549591064453,
+      "endpoint_A_minus_B": -0.0020437240600585938,
+      "horizon_step": 1600,
+      "steps_after_branch": 100,
+      "trailing_100_mean_A_minus_B": -0.0017471790313720703
+    },
+    {
+      "cumulative_mean_A_minus_B": -0.0008655309677124024,
+      "cumulative_mean_A_minus_B_ci95": [
+        -0.0012898683547973634,
+        -0.00014052391052246093
+      ],
+      "cumulative_mean_A_minus_C": 0.0007554292678833008,
+      "cumulative_mean_C_minus_B": -0.0016209602355957032,
+      "endpoint_A_minus_B": 0.0023784637451171875,
+      "horizon_step": 1700,
+      "steps_after_branch": 200,
+      "trailing_100_mean_A_minus_B": 1.6117095947265624e-05
+    },
+    {
+      "cumulative_mean_A_minus_B": -0.000188446044921875,
+      "cumulative_mean_A_minus_B_ci95": [
+        -0.0008657948176066081,
+        0.00048415025075276694
+      ],
+      "cumulative_mean_A_minus_C": 0.0007034619649251302,
+      "cumulative_mean_C_minus_B": -0.0008919080098470052,
+      "endpoint_A_minus_B": 0.007855415344238281,
+      "horizon_step": 1800,
+      "steps_after_branch": 300,
+      "trailing_100_mean_A_minus_B": 0.0011657238006591796
+    },
+    {
+      "cumulative_mean_A_minus_B": -0.00037833452224731443,
+      "cumulative_mean_A_minus_B_ci95": [
+        -0.0008178377151489258,
+        0.00043064951896667456
+      ],
+      "cumulative_mean_A_minus_C": 0.0005903840065002441,
+      "cumulative_mean_C_minus_B": -0.0009687185287475586,
+      "endpoint_A_minus_B": 0.000507354736328125,
+      "horizon_step": 1900,
+      "steps_after_branch": 400,
+      "trailing_100_mean_A_minus_B": -0.0009479999542236328
+    },
+    {
+      "cumulative_mean_A_minus_B": -0.0002287769317626953,
+      "cumulative_mean_A_minus_B_ci95": [
+        -0.0006712930202484131,
+        0.00035231804847717227
+      ],
+      "cumulative_mean_A_minus_C": 0.00044629096984863284,
+      "cumulative_mean_C_minus_B": -0.0006750679016113281,
+      "endpoint_A_minus_B": 0.0037450790405273438,
+      "horizon_step": 2000,
+      "steps_after_branch": 500,
+      "trailing_100_mean_A_minus_B": 0.00036945343017578123
+    }
+  ],
+  "paired_observations": 50,
+  "wandb_url": "https://wandb.ai/zimmer061310-ena/MHAR+stuff/runs/42j2s8ip"
+}

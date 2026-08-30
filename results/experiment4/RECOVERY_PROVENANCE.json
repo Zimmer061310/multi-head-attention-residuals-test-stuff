@@ -1,0 +1,10 @@
+{
+  "analysis_run_id": "42j2s8ip",
+  "branch_manifest_sha256": "ddb04b9ec66baa3627df8c19fbf4333b0b338e13ed647bb6f328907c05e76ed0",
+  "frozen_source_commit": "a6cdf76762d15ab43a41e89827066b568bdd457e",
+  "method": "Original W&B table and figures downloaded with SHA-256 verification; table checked against all 150 original per-run loss observations. Summary deterministically recomputed using unchanged frozen analysis, with logged scalar/decision matches. Branch manifest deterministically reconstructed and byte-SHA256 matched to all three training configs.",
+  "no_training_or_analysis_rerun": true,
+  "recovered_at_utc": "2026-08-30T02:03:49.906264+00:00",
+  "remote_checkpoint_status": "All three finished W&B summaries record completed_steps=2000, latest_checkpoint_step=2000, and final checkpoint paths. Checkpoint files remain remote and were not downloaded.",
+  "server_access": "SSH closed connections in three attempts, including outside sandbox. No direct final-checkpoint or power-state inspection was possible."
+}
