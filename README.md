@@ -34,7 +34,7 @@ attention residuals) supports 8B mid-training: **+3.2 GSM8K, +3.1 GPQA**.
 ```
 src/attention_residuals/            model definitions and routing kernels
 src/training/                       from-scratch and continued-pretraining entry points
-src/experiments/                    frozen Experiment 1 and 2 evaluation workflows
+src/experiments/                    frozen partition and boundary experiment workflows
 scripts/setup/                      fresh-server bootstrap and validation
 scripts/train/                      single-run and eight-GPU launchers
 scripts/evaluate/                   milestone and post-training controllers
@@ -47,6 +47,11 @@ paper/                              arXiv source and PDF
 ```
 
 ## Quick start
+
+Experiment 5 setup: [fixed-validation washout plan](<docs/plans/Experiment 5 - Fixed Validation Boundary Washout.md>)
+and [three-GPU runbook](docs/runbooks/experiment5-three-gpu.md). It measures A/B/C
+on the original held-out examples after 0/1/2/5/10/20/50/100 optimizer updates;
+its metric is distinct from Experiment 4's training losses.
 
 From-scratch pretraining with MHAR (`full_mh`, 8 routing heads):
 

@@ -1,0 +1,22 @@
+{
+  "experiment": "5-fixed-validation-washout",
+  "seed": 43,
+  "source_step": 1500,
+  "endpoint_step": 1600,
+  "offsets": [0, 1, 2, 5, 10, 20, 50, 100],
+  "parent_checkpoint_sha256": "ece1370fb201f3ba661424bdb7126a4b1d59221bccba6e46332372e63c9faaeb",
+  "artifact_sha256": "1a239dfc65c3b4f9184ccbdc28e9165b4bc452312a2d7360d6b7519fafb1a5af",
+  "reference_results_sha256": "558b44cf6490e884166f31cbeacd5c542e288e7a4baffc4bd9f0f555ad8a744e",
+  "splits": ["confirmation", "discovery"],
+  "primary_split": "confirmation",
+  "sequences_per_split": 512,
+  "sequence_length": 1024,
+  "eval_batch_size": 1,
+  "dtype": "bf16",
+  "step0_nll_atol": 0.00001,
+  "step0_sequence_atol": 0.0001,
+  "bootstrap_samples": 10000,
+  "bootstrap_seed": 20260830,
+  "practical_equivalence_margin_nll": 0.001,
+  "shutdown_grace_seconds": 600
+}

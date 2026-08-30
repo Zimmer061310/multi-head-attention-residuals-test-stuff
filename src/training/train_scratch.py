@@ -91,6 +91,9 @@ def parse_args():
     p.add_argument("--warmup", type=int, default=1000)
     p.add_argument("--max_norm", type=float, default=1.0)
     p.add_argument("--save_every", type=int, default=2000)
+    p.add_argument("--save_steps", default="",
+                   help="Additional absolute optimizer steps to save and protect; "
+                        "comma-separated. --save_every 0 disables periodic saves.")
     p.add_argument("--eval_every", type=int, default=500,
                    help="Run validation every N steps (0 to disable)")
     p.add_argument("--eval_steps", type=int, default=50,
@@ -496,6 +499,10 @@ def parse_keep_steps(value):
     return steps
 
 
+def checkpoint_due(step, save_every, save_steps=()):
+    return step in save_steps or (save_every > 0 and step % save_every == 0)
+
+
 BRANCH_SCIENTIFIC_IDENTITY_KEYS = frozenset({
     "mode", "attnres_heads", "hidden_size", "num_layers", "num_heads",
     "num_kv_heads", "intermediate_size", "dataset", "dataset_name",
@@ -623,7 +630,12 @@ def main():
     if args.keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
     validate_branch_invocation(args)
-    keep_steps = parse_keep_steps(args.keep_steps)
+    if args.save_every < 0:
+        raise ValueError("--save_every must be nonnegative")
+    save_steps = parse_keep_steps(args.save_steps)
+    if args.fsdp and save_steps:
+        raise ValueError("explicit --save_steps is only supported without FSDP")
+    keep_steps = parse_keep_steps(args.keep_steps) | save_steps
 
     if args.run_name is None:
         args.run_name = f"scratch-{args.mode}-d{args.hidden_size}-L{args.num_layers}-{args.steps//1000}k"
@@ -687,6 +699,8 @@ def main():
         raise ValueError(
             "--stop_after_step must be greater than the starting step and no greater "
             f"than --steps; start={start_step}, target={target_step}, steps={args.steps}")
+    if any(step <= start_step or step > target_step for step in save_steps):
+        raise ValueError("--save_steps must fall after the starting step and at/before the target")
 
     out_dir = Path(args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1010,7 +1024,7 @@ def main():
                 t0 = time.time()
         accum_loss = 0.0
 
-        if not args.fsdp and is_main and global_step % args.save_every == 0:
+        if not args.fsdp and is_main and checkpoint_due(global_step, args.save_every, save_steps):
             ckpt_dir = save_training_checkpoint(
                 model=model,
                 tokenizer=tokenizer,
