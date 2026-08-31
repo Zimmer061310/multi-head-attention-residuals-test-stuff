@@ -108,6 +108,13 @@ is an observed loss ranking.
 Later reports refer to this pilot. Detailed numerical results, including any
 retention trend, are not reproduced here because its result bundle is absent.
 
+![Experiment 1: exact partition counts by pair retention and coordinate distance, not measured NLL](figures/readme/fig_experiment1_partition_space.png)
+
+**Design-space figure, not a loss result.** Both panels enumerate the same 105
+partitions using the experiment's generator. The bars count candidate
+partitions; their heights do not indicate model quality.
+[Vector PDF](figures/readme/fig_experiment1_partition_space.pdf).
+
 ### Experiment 2 — frozen search versus training from scratch
 
 **Stage A: frozen H16.** Sixteen width 80 atoms are merged only in adjacent,
@@ -118,6 +125,15 @@ four width 160 groups and eight width 80 groups. Including native H16 gives
 On the discovery set, native H16 NLL was 4.365919. The best and worst mixed
 choices had ΔNLL **+0.628321** and **+1.013157** relative to native H16.
 Here “best” means least harmful among the tested mixed choices.
+
+![Experiment 2A: discovery delta NLL and merged boundaries for all 496 routing choices](results/experiment2/step-2000/partition-map/fig_partition_choice_map.png)
+
+**Frozen step-2000 checkpoint.** The top panel shows discovery ΔNLL relative to
+native H16; the bottom panel shows the four removed boundaries of each mixed
+choice. Native H16 is one reference point at zero, not a family of partitions.
+The 495 mixed choices are sorted by measured loss, so the rising curve is a
+ranking—not evidence of a monotonic locality effect.
+[Vector PDF](results/experiment2/step-2000/partition-map/fig_partition_choice_map.pdf).
 
 A centered, sum-to-zero additive boundary model predicted within-k=4 damage
 with cross-validated Spearman 0.971511. Its frozen score transferred to uniform
@@ -145,6 +161,14 @@ frozen from Stage A; they are not hindsight labels for the training result.
 | Mixed k=2 | [6,14] | 14 | 4.238565 | +0.101538 |
 | H16 | Uniform 16×80 | 16 | 4.248184 | +0.111157 |
 
+![Experiment 2B: eight-model from-scratch screen, delta NLL relative to H8 on both fixed splits](results/experiment2/stage-b-screening/step-2000/analysis/fig_stage_b_milestone.png)
+
+**From-scratch screen at step 2000.** Bars show ΔNLL versus H8 in
+**millinats/token** (1000×NLL difference); error bars are confirmation-set
+paired 95% intervals, not uncertainty across training seeds. “Best” and “worst”
+retain their earlier frozen-search labels.
+[Vector PDF](results/experiment2/stage-b-screening/step-2000/analysis/fig_stage_b_milestone.pdf).
+
 Discovery and confirmation rankings matched exactly (Spearman 1.0), so the
 frozen gate stopped training at 2000 rather than resuming to 5000.
 The H4−H8 interval includes zero: there is no resolved difference, not proof
@@ -170,6 +194,16 @@ partition on fixed discovery/confirmation splits. At step 1500:
 | 42 | 0.9786 | remove-06 / remove-01 | Pass | 0.4321 | Fail |
 | 43 | 0.9393 | remove-03 / remove-13 | Pass | 0.6000 | Fail |
 | 44 | 0.9286 | remove-03 / remove-13 | Pass | 0.3607 | Fail |
+
+![Experiment 3: strong within-checkpoint ranking agreement across three seeds, but all temporal-stability gates fail](figures/readme/fig_experiment3_gate_summary.png)
+
+**Signal and temporal stability are different tests.** Left: discovery versus
+confirmation rank agreement at step 1500. Right: discovery rank agreement
+between successive saved checkpoints for each seed. The temporal 0.5 threshold
+applies to the **median**, with additional positive-correlation and confirmation
+sign-agreement requirements. These are measured correlations, not confidence
+intervals or proof that an adaptive learner succeeds.
+[Vector PDF](figures/readme/fig_experiment3_gate_summary.pdf).
 
 Temporal comparisons are 1000→1500, 1500→2000, and 2000→3000. Seed 43 failed despite
 its median because the final adjacent correlation was negative (−0.1214).
@@ -210,6 +244,13 @@ The first 100-step window had cumulative mean A−B **−0.001747**
 **−0.000229**, with CI [−0.000671,+0.000352]. C had the lowest mean logged loss.
 This is an early within-run signal, not a durable gain or a validated adaptive
 architecture. The metric mismatch with Experiment 3 motivated Experiment 5.
+
+![Experiment 4: A-minus-B logged training-loss differences from step 1510 through 2000](results/experiment4/fig_short_horizon_delta.png)
+
+**Training losses, not fixed-validation NLL.** Each plotted value is A−B on
+the corresponding logged optimizer step, sampled every 10 updates. Negative
+favors A. Lines connect observations; they are not smoothed curves or a
+measurement of every intervening update.
 
 [Plan](docs/plans/experiment-4-short-horizon-actionability.md) ·
 [Report](results/experiment4/FINAL_REPORT.md) ·
@@ -382,6 +423,19 @@ Fused-kernel checks require a compatible CUDA/Triton environment:
 python3 -m tests.test_mhar_fused
 python3 -m tests.test_mhar_fused_delta
 ```
+
+The new README design-count and all-seed summary figures are reproducible from
+the partition generator and accepted JSON summaries; no GPU or new evaluation
+is needed:
+
+```bash
+python3 -m figures.gen_fig_readme_overview
+python3 -m unittest tests.test_readme_figures
+```
+
+[Figure data and input hashes](figures/readme/figure_data.json) preserve their
+provenance. Existing Experiment 2/4/5 images are embedded directly from accepted
+result directories and remain unchanged.
 
 W&B launchers use project `MHAR Stuff`; the saved project's URL is
 [MHAR stuff](https://wandb.ai/zimmer061310-ena/MHAR%20stuff).

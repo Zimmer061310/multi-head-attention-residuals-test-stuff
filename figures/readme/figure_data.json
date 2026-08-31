@@ -1,0 +1,206 @@
+{
+  "experiment1": {
+    "kind": "exact_design_counts_not_measured_nll",
+    "partitions": 105,
+    "retention_percent": [
+      100,
+      50,
+      25,
+      0
+    ],
+    "retention_counts": [
+      1,
+      12,
+      32,
+      60
+    ],
+    "mean_pair_distance": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0
+    ],
+    "distance_counts": [
+      1,
+      6,
+      12,
+      20,
+      24,
+      18,
+      24
+    ]
+  },
+  "experiment3": [
+    {
+      "seed": 42,
+      "signal_spearman": 0.9785714285714284,
+      "signal_passed": true,
+      "signal_gate": {
+        "best_minus_worst_confirmation_ci_high_below_zero": true,
+        "minimum_spearman": 0.5
+      },
+      "best_worst_ci95": [
+        -0.030163878202438356,
+        -0.02478836877271533
+      ],
+      "adjacent_pairs": [
+        [
+          1000,
+          1500
+        ],
+        [
+          1500,
+          2000
+        ],
+        [
+          2000,
+          3000
+        ]
+      ],
+      "temporal_spearman": [
+        0.4678571428571427,
+        0.43214285714285705,
+        0.38214285714285706
+      ],
+      "temporal_median": 0.43214285714285705,
+      "temporal_passed": false,
+      "temporal_gate": {
+        "adjacent_pairs": [
+          [
+            1000,
+            1500
+          ],
+          [
+            1500,
+            2000
+          ],
+          [
+            2000,
+            3000
+          ]
+        ],
+        "all_discovery_spearman_positive": true,
+        "minimum_confirmation_same_sign_pairs": 2,
+        "minimum_median_discovery_spearman": 0.5
+      }
+    },
+    {
+      "seed": 43,
+      "signal_spearman": 0.9392857142857142,
+      "signal_passed": true,
+      "signal_gate": {
+        "best_minus_worst_confirmation_ci_high_below_zero": true,
+        "minimum_spearman": 0.5
+      },
+      "best_worst_ci95": [
+        -0.012314494664315135,
+        -0.009782705514226109
+      ],
+      "adjacent_pairs": [
+        [
+          1000,
+          1500
+        ],
+        [
+          1500,
+          2000
+        ],
+        [
+          2000,
+          3000
+        ]
+      ],
+      "temporal_spearman": [
+        0.6178571428571428,
+        0.6,
+        -0.12142857142857141
+      ],
+      "temporal_median": 0.6,
+      "temporal_passed": false,
+      "temporal_gate": {
+        "adjacent_pairs": [
+          [
+            1000,
+            1500
+          ],
+          [
+            1500,
+            2000
+          ],
+          [
+            2000,
+            3000
+          ]
+        ],
+        "all_discovery_spearman_positive": true,
+        "minimum_confirmation_same_sign_pairs": 2,
+        "minimum_median_discovery_spearman": 0.5
+      }
+    },
+    {
+      "seed": 44,
+      "signal_spearman": 0.9285714285714284,
+      "signal_passed": true,
+      "signal_gate": {
+        "best_minus_worst_confirmation_ci_high_below_zero": true,
+        "minimum_spearman": 0.5
+      },
+      "best_worst_ci95": [
+        -0.008351582777686417,
+        -0.0062044273945502946
+      ],
+      "adjacent_pairs": [
+        [
+          1000,
+          1500
+        ],
+        [
+          1500,
+          2000
+        ],
+        [
+          2000,
+          3000
+        ]
+      ],
+      "temporal_spearman": [
+        0.37499999999999994,
+        0.3607142857142856,
+        0.32499999999999996
+      ],
+      "temporal_median": 0.3607142857142856,
+      "temporal_passed": false,
+      "temporal_gate": {
+        "adjacent_pairs": [
+          [
+            1000,
+            1500
+          ],
+          [
+            1500,
+            2000
+          ],
+          [
+            2000,
+            3000
+          ]
+        ],
+        "all_discovery_spearman_positive": true,
+        "minimum_confirmation_same_sign_pairs": 2,
+        "minimum_median_discovery_spearman": 0.5
+      }
+    }
+  ],
+  "source_sha256": {
+    "results/experiment3/seed-42/signal/signal_summary.json": "74b9909cbb2781842fff26055db186c7a0fe1412518422391f51499f3800ddfc",
+    "results/experiment3/seed-42/temporal/temporal_summary.json": "c47ce66616c56ad67a3f9adc82da9f47942f9cabfe3a29bb8195489d970208b5",
+    "results/experiment3/seed-43/signal/signal_summary.json": "79028662e79fe54d0527a07778b762107a34f34e0d94896924af253a3ae79917",
+    "results/experiment3/seed-43/temporal/temporal_summary.json": "2954915161eeedfc2458bd568da8436d639e9a1a77e7eb96dec605ed05473083",
+    "results/experiment3/seed-44/signal/signal_summary.json": "9b49e785e02a7b7f83be9abf888609ef8a334e5908cc167f0cfa0ca4ffd41116",
+    "results/experiment3/seed-44/temporal/temporal_summary.json": "f25d5829924190f7bdd00caa6b2a68b2c9d51ac82d9f3713475a78061bec702e",
+    "src/attention_residuals/mhar_partition.py": "9a229a2dddd0180613b22c9216b6693e0c1fcf05305e0d3eac21cc4de86ba742"
+  }
+}
