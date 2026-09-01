@@ -138,3 +138,9 @@ python3 -m src.experiments.experiment6_screening analyze \
   --results-root /root/autodl-tmp/experiment6/screening/results \
   --output-dir /root/autodl-tmp/experiment6/screening/analysis
 ```
+
+On a rented server, `run_experiment6_controller.py` waits for five valid
+step-2,000 checkpoints, evaluates the five new variants in parallel, runs the
+frozen analysis, commits and pushes compact results, and shuts the server down
+after a ten-minute grace period. Any incomplete training/evaluation, failed
+push, or live GPU process blocks shutdown.
