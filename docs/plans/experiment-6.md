@@ -29,6 +29,8 @@ All runs use the prior matched recipe:
   `c1899de289a04d12100db370d81485cdf75e47ca`;
 - AdamW, bf16, peak LR 5e-4, minimum LR 5e-5, and 1,000-step warmup;
 - the original 20,000-step schedule, stopped atomically at step 2,000;
+- atomic checkpoints every 100 steps, retaining the latest two plus protected
+  500/1,000/1,500/2,000 milestones for balance-loss recovery;
 - seed 42 and the same packed data order;
 - the Experiment 2 Stage B document-disjoint fixed evaluation artifact with
   SHA-256 `29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691`.

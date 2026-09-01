@@ -55,6 +55,8 @@ class Experiment6ScreeningTest(unittest.TestCase):
         script = (root / "scripts/train/run_experiment6_screen.sh").read_text()
         self.assertIn("--steps 20000", script)
         self.assertIn("--stop_after_step 2000", script)
+        self.assertIn("--save_every 100", script)
+        self.assertIn("--keep_steps 500,1000,1500,2000", script)
         self.assertIn('--experiment6_variant "$MHAR_VARIANT"', script)
         self.assertIn("--num_heads 16", script)
         self.assertIn("--num_kv_heads 8", script)

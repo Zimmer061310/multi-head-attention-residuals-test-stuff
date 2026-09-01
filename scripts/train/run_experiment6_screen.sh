@@ -87,9 +87,9 @@ exec "$MHAR_PYTHON_BIN" -m torch.distributed.run \
   --tokenizer Qwen/Qwen3-0.6B \
   --tokenizer_revision c1899de289a04d12100db370d81485cdf75e47ca \
   --grad_ckpt \
-  --save_every 500 \
+  --save_every 100 \
   --keep_last 2 \
-  --keep_steps 2000 \
+  --keep_steps 500,1000,1500,2000 \
   --eval_every 500 \
   --eval_steps 50 \
   --log_every 10 \
