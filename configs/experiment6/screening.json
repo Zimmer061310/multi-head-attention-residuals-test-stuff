@@ -1,0 +1,95 @@
+{
+  "format_version": 1,
+  "name": "Experiment 6 coupled MHAR chunks to attention groups",
+  "seed": 42,
+  "screening_milestone": 2000,
+  "full_schedule_steps": 20000,
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp6-coupled-qkv-screen-seed42",
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691"
+  },
+  "runs": [
+    {
+      "id": "b",
+      "train": true,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "qkv_groups": null,
+      "purpose": "ordinary residual and dense-QKV baseline"
+    },
+    {
+      "id": "m4",
+      "train": false,
+      "mode": "full_mh",
+      "attnres_heads": 4,
+      "qkv_groups": null,
+      "purpose": "dense-QKV MHAR-4 reference",
+      "existing_result": "results/experiment2/stage-b-screening/step-2000/h4/result.json",
+      "checkpoint_sha256": "0b35bef6e99d2925ba3f4b2b48761b07a7fc4930d0dc5e90136c544c8a84136d"
+    },
+    {
+      "id": "c4",
+      "train": true,
+      "mode": "full_mh",
+      "attnres_heads": 4,
+      "qkv_groups": 4,
+      "purpose": "coupled MHAR-4"
+    },
+    {
+      "id": "g4",
+      "train": true,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "qkv_groups": 4,
+      "purpose": "four-group restricted-QKV baseline control"
+    },
+    {
+      "id": "m8",
+      "train": false,
+      "mode": "full_mh",
+      "attnres_heads": 8,
+      "qkv_groups": null,
+      "purpose": "dense-QKV MHAR-8 reference",
+      "existing_result": "results/experiment2/stage-b-screening/step-2000/h8/result.json",
+      "checkpoint_sha256": "903b7fdba36caab0eff95b4c7844e2f13488c3df03530b6bc1bf0ef2a99f51e1"
+    },
+    {
+      "id": "c8",
+      "train": true,
+      "mode": "full_mh",
+      "attnres_heads": 8,
+      "qkv_groups": 8,
+      "purpose": "coupled MHAR-8"
+    },
+    {
+      "id": "g8",
+      "train": true,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "qkv_groups": 8,
+      "purpose": "eight-group restricted-QKV baseline control"
+    }
+  ],
+  "primary_contrasts": [
+    {"id": "c4-minus-m4", "terms": {"c4": 1, "m4": -1}},
+    {"id": "c8-minus-m8", "terms": {"c8": 1, "m8": -1}},
+    {"id": "g4-minus-b", "terms": {"g4": 1, "b": -1}},
+    {"id": "g8-minus-b", "terms": {"g8": 1, "b": -1}},
+    {
+      "id": "h4-interaction",
+      "terms": {"c4": 1, "m4": -1, "g4": -1, "b": 1}
+    },
+    {
+      "id": "h8-interaction",
+      "terms": {"c8": 1, "m8": -1, "g8": -1, "b": 1}
+    }
+  ],
+  "screening_rule": "single seed; reject catastrophic designs only; do not declare a winner",
+  "catastrophic_rule": {
+    "maximum_delta_nll": 0.5,
+    "comparisons": ["c4-minus-m4", "c8-minus-m8", "g4-minus-b", "g8-minus-b"],
+    "also_catastrophic_if": "non-finite training loss, non-finite held-out NLL, or incomplete checkpoint"
+  }
+}

@@ -83,6 +83,7 @@ structural measurements—not measurements of human-interpretable semantic purit
 | **3 — Signal, time, and landscape** | Probe H16 seeds 42/43/44 at 1000/1500/2000/3000; separately move H8 boundaries locally. | Signal gate: 3/3 pass. Temporal gate: 0/3 pass. Gated actionability stage not run. |
 | **4 — Short-horizon training branches** | From seed 43 step 1500, train good/bad/unchanged branches to 2000; log training losses every 10 steps. | Small early A−B advantage; no clearly sustained full-horizon advantage or demonstrated benefit over unchanged. |
 | **5 — Fixed-validation washout** | Repeat the same interventions from step 1500; evaluate identical held-out examples after 0/1/2/5/10/20/50/100 updates. | A beats B through +20, loses at +50, wins again at +100. No sampled point has lower A NLL than unchanged C. |
+| **6 — Coupled MHAR chunks to attention groups** | Keep MHAR-4/8 coordinate chunks separate through grouped Q/K/V; compare against dense MHAR and restricted-attention controls. | Implemented and preregistered for a seed-42 step-2,000 screen; no GPU result yet. |
 
 ### Experiment 1 — all 105 pairings at fixed H4
 
@@ -297,6 +298,18 @@ intervals do not capture training-seed uncertainty.
 [Full-precision CSV](results/experiment5/analysis/fixed_eval_losses.csv) ·
 [W&B analysis](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/52j6bu4r)
 
+### Experiment 6 — coupled MHAR chunks to attention groups
+
+Experiment 6 keeps the 16-Q/8-KV, 80-dimensional-head attention layout fixed
+while replacing dense Q/K/V with four or eight block-restricted groups. It
+trains five new seed-42 models—B, C4, G4, C8, and G8—and reuses the accepted
+step-2,000 M4/M8 results. This is an early catastrophic-design screen, not a
+multi-seed architectural claim. No Experiment 6 GPU run has started.
+
+[Plan and frozen protocol](docs/plans/experiment-6.md) ·
+[Machine-readable run matrix](configs/experiment6/screening.json) ·
+[Grouped-QKV implementation](src/experiments/experiment6_coupled_qkv.py)
+
 ## Shared model and scientific controls
 
 The experiment family uses the 1B-class Qwen3-style MHAR setup below.
@@ -402,6 +415,7 @@ Useful entry points:
 | Exp 3 setup and gated stages | [Experiment 3 runbook](docs/runbooks/experiment-3.md) |
 | Exp 4 three branches | [launch_experiment4_3gpu.sh](scripts/train/launch_experiment4_3gpu.sh) |
 | Exp 5 fixed-validation sequence | [Experiment 5 runbook](docs/runbooks/experiment5-three-gpu.md) |
+| Exp 6 grouped-QKV screen | [Plan](docs/plans/experiment-6.md), [five-GPU launcher](scripts/train/launch_experiment6_5gpu.sh), [analysis](src/experiments/experiment6_screening.py) |
 
 Independent models/branches can run one per GPU; this is different from assigning
 several GPUs to one model. The recorded screen used independent jobs, including
