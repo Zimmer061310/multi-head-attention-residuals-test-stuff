@@ -52,6 +52,8 @@ class Experiment7ScreeningTest(unittest.TestCase):
             self.assertIn(value, run)
         self.assertIn("blq4;", launch); self.assertIn("blq8", launch)
         self.assertIn("MHAR_LQ_STAGGER_SECONDS", launch)
+        self.assertLess(launch.index("mhar-exp7-blq-queue"), launch.index('MHAR_LQ_STAGGER_SECONDS" -gt'))
+        self.assertIn('MHAR_HF_HOME="${MHAR_HF_HOME:-/root/hf-exp7}"', run)
 
 
 if __name__ == "__main__": unittest.main()
