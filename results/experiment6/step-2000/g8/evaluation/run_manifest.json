@@ -1,0 +1,56 @@
+{
+  "architecture": {
+    "experiment6_qkv_groups": 8,
+    "experiment6_variant": "g8",
+    "hidden_size": 1280,
+    "intermediate_size": 5120,
+    "num_attention_heads": 16,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8
+  },
+  "created_at": "2026-09-02T10:06:54.561504+00:00",
+  "parameters": {
+    "attention_output_macs_per_token": 58982400,
+    "attention_output_parameters": 58982400,
+    "qkv_groups": 8,
+    "qkv_macs_per_token": 14745600,
+    "qkv_parameters": 14745600,
+    "trainable_parameters": 976094080
+  },
+  "run_identity": {
+    "artifact": "/root/autodl-tmp/experiment2/stage-b-screening/fixed_eval.pt",
+    "artifact_sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "batch_size": 1,
+    "checkpoint": "/root/autodl-tmp/experiment6/screening/g8/step-2000",
+    "checkpoint_sha256": "2cea6440d1c899412d97edb64d07673242d994bb4be4d7bd603332cbec496b7c",
+    "dtype": "bf16",
+    "experiment": "6-coupled-qkv-screening",
+    "milestone": 2000,
+    "seed": 42,
+    "source_commit": "cc6332d2843529a32609e550b98aa451d143caec",
+    "training_recipe": {
+      "attnres_heads": 8,
+      "experiment6_qkv_groups": 8,
+      "experiment6_variant": "g8",
+      "global_batch_size": 32,
+      "global_step": 2000,
+      "hidden_size": 1280,
+      "intermediate_size": 5120,
+      "lr": 0.0005,
+      "lr_min": 5e-05,
+      "mode": "baseline",
+      "num_heads": 16,
+      "num_kv_heads": 8,
+      "num_layers": 36,
+      "seed": 42,
+      "seq_len": 1024,
+      "steps": 20000,
+      "warmup": 1000
+    },
+    "variant": "g8"
+  },
+  "wandb": {
+    "run_id": "gf4spq1m",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/gf4spq1m"
+  }
+}
