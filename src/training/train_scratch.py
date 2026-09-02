@@ -68,6 +68,15 @@ def parse_args():
         help="Frozen Experiment 6 architecture identity; omitted by all legacy runs",
     )
     p.add_argument(
+        "--local_q_groups", type=int, choices=[4, 8], default=None,
+        help="Experiment 7 only: make Q block diagonal while K/V remain dense",
+    )
+    p.add_argument(
+        "--experiment7_variant", choices=["lq4", "lq8", "blq4", "blq8"],
+        default=None,
+        help="Frozen Experiment 7 architecture identity; omitted by all legacy runs",
+    )
+    p.add_argument(
         "--mixed_partition", default=None,
         help="Experiment 2 ordered singleton/doubleton atom partition id; "
              "requires full_mh and uses attnres_heads as the atomic count",
@@ -264,6 +273,12 @@ def training_identity(args, world_size):
     experiment6_variant = getattr(args, "experiment6_variant", None)
     if experiment6_variant is not None:
         identity["experiment6_variant"] = experiment6_variant
+    local_q_groups = getattr(args, "local_q_groups", None)
+    if local_q_groups is not None:
+        identity["experiment7_local_q_groups"] = local_q_groups
+    experiment7_variant = getattr(args, "experiment7_variant", None)
+    if experiment7_variant is not None:
+        identity["experiment7_variant"] = experiment7_variant
     if args.branch_from:
         branch_manifest = json.loads(
             Path(args.branch_manifest).read_text(encoding="utf-8"))
@@ -278,7 +293,19 @@ def training_identity(args, world_size):
 
 
 def wandb_tags(args):
-    """Keep legacy run metadata unchanged and describe Experiment 6 accurately."""
+    """Keep legacy run metadata unchanged and describe opt-in experiments."""
+
+    experiment7_variant = getattr(args, "experiment7_variant", None)
+    if experiment7_variant is not None:
+        tags = [
+            "experiment-7", experiment7_variant, "local-q-global-kv", "1b", "fineweb-edu",
+            f"q-groups-{args.local_q_groups}",
+        ]
+        if args.mode == "full_mh":
+            tags.extend(["mhar", "full-mh", f"h{args.attnres_heads}"])
+        else:
+            tags.append("ordinary-residual")
+        return tags
 
     experiment6_variant = getattr(args, "experiment6_variant", None)
     if experiment6_variant is not None:
@@ -394,6 +421,12 @@ def validate_model_config(model, args):
     experiment6_variant = getattr(args, "experiment6_variant", None)
     if experiment6_variant is not None:
         expected["experiment6_variant"] = experiment6_variant
+    local_q_groups = getattr(args, "local_q_groups", None)
+    if local_q_groups is not None:
+        expected["experiment7_local_q_groups"] = local_q_groups
+    experiment7_variant = getattr(args, "experiment7_variant", None)
+    if experiment7_variant is not None:
+        expected["experiment7_variant"] = experiment7_variant
     observed = {key: getattr(model.config, key, None) for key in expected}
     mismatches = {
         key: {"expected": expected[key], "observed": observed[key]}
@@ -451,6 +484,38 @@ def build_model(args, device):
     """Build model from scratch based on mode."""
     qkv_groups = getattr(args, "qkv_groups", None)
     experiment6_variant = getattr(args, "experiment6_variant", None)
+    local_q_groups = getattr(args, "local_q_groups", None)
+    experiment7_variant = getattr(args, "experiment7_variant", None)
+    if qkv_groups is not None and local_q_groups is not None:
+        raise ValueError("Experiment 6 grouped QKV and Experiment 7 local Q are mutually exclusive")
+    if experiment6_variant is not None and experiment7_variant is not None:
+        raise ValueError("only one frozen experiment identity may be selected")
+    if experiment7_variant is not None:
+        frozen7 = {
+            "lq4": ("full_mh", 4, 4),
+            "lq8": ("full_mh", 8, 8),
+            "blq4": ("baseline", None, 4),
+            "blq8": ("baseline", None, 8),
+        }
+        expected_mode, expected_heads, expected_groups = frozen7[experiment7_variant]
+        observed_heads = args.attnres_heads if args.mode == "full_mh" else None
+        observed = (args.mode, observed_heads, local_q_groups)
+        expected = (expected_mode, expected_heads, expected_groups)
+        if observed != expected:
+            raise ValueError(
+                f"Experiment 7 variant {experiment7_variant} requires "
+                f"mode/heads/local_q_groups={expected}, got {observed}")
+    if local_q_groups is not None:
+        if args.mode not in ("baseline", "full_mh"):
+            raise ValueError("--local_q_groups is valid only with baseline or full_mh")
+        if args.mode == "full_mh" and args.attnres_heads != local_q_groups:
+            raise ValueError("local-Q MHAR requires attnres_heads == local_q_groups")
+        if args.hidden_size % local_q_groups or args.num_heads % local_q_groups:
+            raise ValueError("hidden and Q-head counts must divide local_q_groups")
+        from src.experiments.experiment7_local_q import (
+            Experiment7BaselineForCausalLM,
+            Experiment7MHARForCausalLM,
+        )
     if experiment6_variant is not None:
         frozen = {
             "b": ("baseline", None, None),
@@ -485,12 +550,14 @@ def build_model(args, device):
         if args.fsdp:
             raise NotImplementedError("checkpoint continuation is currently supported for DDP runs")
         if args.mode == "baseline":
-            model_class = Experiment6BaselineForCausalLM if qkv_groups else Qwen3ForCausalLM
+            model_class = (Experiment7BaselineForCausalLM if local_q_groups else
+                           Experiment6BaselineForCausalLM if qkv_groups else Qwen3ForCausalLM)
         elif args.mode == "moe":
             from transformers import Qwen3MoeForCausalLM
             model_class = Qwen3MoeForCausalLM
         else:
-            model_class = Experiment6MHARForCausalLM if qkv_groups else Qwen3AttnResForCausalLM
+            model_class = (Experiment7MHARForCausalLM if local_q_groups else
+                           Experiment6MHARForCausalLM if qkv_groups else Qwen3AttnResForCausalLM)
         model = model_class.from_pretrained(
             source_checkpoint, dtype=torch.bfloat16).to(device=device)
         validate_model_config(model, args)
@@ -517,7 +584,12 @@ def build_model(args, device):
         config = Qwen3Config(**common)
         if experiment6_variant:
             config.experiment6_variant = experiment6_variant
-        if qkv_groups:
+        if experiment7_variant:
+            config.experiment7_variant = experiment7_variant
+        if local_q_groups:
+            config.experiment7_local_q_groups = local_q_groups
+            model = Experiment7BaselineForCausalLM(config)
+        elif qkv_groups:
             config.experiment6_qkv_groups = qkv_groups
             model = Experiment6BaselineForCausalLM(config)
         else:
@@ -552,7 +624,12 @@ def build_model(args, device):
         )
         if experiment6_variant:
             config.experiment6_variant = experiment6_variant
-        if qkv_groups:
+        if experiment7_variant:
+            config.experiment7_variant = experiment7_variant
+        if local_q_groups:
+            config.experiment7_local_q_groups = local_q_groups
+            model = Experiment7MHARForCausalLM(config)
+        elif qkv_groups:
             config.experiment6_qkv_groups = qkv_groups
             model = Experiment6MHARForCausalLM(config)
         else:
@@ -898,6 +975,16 @@ def main():
             if use_wandb:
                 import wandb
                 wandb.config.update(experiment6_parameters, allow_val_change=False)
+        if args.experiment7_variant:
+            from src.experiments.experiment7_local_q import experiment7_parameter_report
+            experiment7_parameters = experiment7_parameter_report(model)
+            print("Experiment 7 parameter report: " + json.dumps(
+                experiment7_parameters, sort_keys=True))
+            manifest["experiment7_parameters"] = experiment7_parameters
+            atomic_write_json(run_manifest_path, manifest)
+            if use_wandb:
+                import wandb
+                wandb.config.update(experiment7_parameters, allow_val_change=False)
 
     # torch.compile the full model before DDP wrapping.
     # Gives ~2.5-2.9x throughput improvement for all modes.

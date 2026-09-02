@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "name": "Experiment 7 Local-Q / Global-KV",
+  "seed": 42,
+  "screening_milestone": 2000,
+  "full_schedule_steps": 20000,
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp7-local-q-global-kv-screen-seed42",
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691"
+  },
+  "runs": [
+    {"id": "b", "train": false, "mode": "baseline", "attnres_heads": null, "local_q_groups": null,
+     "existing_result": "results/experiment6/step-2000/b/evaluation/result.json"},
+    {"id": "m4", "train": false, "mode": "full_mh", "attnres_heads": 4, "local_q_groups": null,
+     "existing_result": "results/experiment2/stage-b-screening/step-2000/h4/result.json"},
+    {"id": "lq4", "train": true, "mode": "full_mh", "attnres_heads": 4, "local_q_groups": 4},
+    {"id": "blq4", "train": true, "mode": "baseline", "attnres_heads": null, "local_q_groups": 4},
+    {"id": "m8", "train": false, "mode": "full_mh", "attnres_heads": 8, "local_q_groups": null,
+     "existing_result": "results/experiment2/stage-b-screening/step-2000/h8/result.json"},
+    {"id": "lq8", "train": true, "mode": "full_mh", "attnres_heads": 8, "local_q_groups": 8},
+    {"id": "blq8", "train": true, "mode": "baseline", "attnres_heads": null, "local_q_groups": 8}
+  ],
+  "diagnostic_results": {
+    "c4": "results/experiment6/step-2000/c4/evaluation/result.json",
+    "c8": "results/experiment6/step-2000/c8/evaluation/result.json"
+  },
+  "contrasts": [
+    {"id": "lq4-minus-m4", "terms": {"lq4": 1, "m4": -1}},
+    {"id": "lq8-minus-m8", "terms": {"lq8": 1, "m8": -1}},
+    {"id": "blq4-minus-b", "terms": {"blq4": 1, "b": -1}},
+    {"id": "blq8-minus-b", "terms": {"blq8": 1, "b": -1}},
+    {"id": "h4-interaction", "terms": {"lq4": 1, "m4": -1, "blq4": -1, "b": 1}},
+    {"id": "h8-interaction", "terms": {"lq8": 1, "m8": -1, "blq8": -1, "b": 1}},
+    {"id": "lq4-minus-c4", "terms": {"lq4": 1, "c4": -1}, "diagnostic": true},
+    {"id": "lq8-minus-c8", "terms": {"lq8": 1, "c8": -1}, "diagnostic": true}
+  ],
+  "screening_rule": "single seed; reject catastrophic designs only; do not declare a winner",
+  "catastrophic_rule": {
+    "maximum_delta_nll": 0.5,
+    "comparisons": ["lq4-minus-m4", "lq8-minus-m8", "blq4-minus-b", "blq8-minus-b"]
+  }
+}
