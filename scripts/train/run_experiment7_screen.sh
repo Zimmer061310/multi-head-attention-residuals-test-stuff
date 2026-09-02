@@ -26,8 +26,9 @@ MHAR_OUTPUT_DIR="${MHAR_OUTPUT_DIR:-$MHAR_OUTPUT_ROOT/$MHAR_VARIANT}"
 MHAR_DATA_FILES="${MHAR_DATA_FILES:-/root/autodl-tmp/datasets/fineweb-edu-sample-10BT/train/*.parquet}"
 MHAR_WANDB_GROUP="${MHAR_WANDB_GROUP:-mhar-exp7-local-q-global-kv-screen-seed42}"
 MHAR_MASTER_PORT="${MHAR_MASTER_PORT:-29700}"
-mkdir -p "$MHAR_OUTPUT_DIR" /root/autodl-tmp/huggingface /root/autodl-tmp/wandb
-export HF_HOME=/root/autodl-tmp/huggingface HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+MHAR_HF_HOME="${MHAR_HF_HOME:-/root/hf-exp7}"
+mkdir -p "$MHAR_OUTPUT_DIR" "$MHAR_HF_HOME" /root/autodl-tmp/wandb
+export HF_HOME="$MHAR_HF_HOME" HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export WANDB_DIR=/root/autodl-tmp/wandb PYTHONUNBUFFERED=1 TOKENIZERS_PARALLELISM=false
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
@@ -47,6 +48,7 @@ exec "$MHAR_PYTHON_BIN" -m torch.distributed.run --nproc_per_node=1 \
   --data_files "$MHAR_DATA_FILES" --tokenizer Qwen/Qwen3-0.6B \
   --tokenizer_revision c1899de289a04d12100db370d81485cdf75e47ca \
   --grad_ckpt --save_every 100 --keep_last 1 --keep_steps 2000 \
+  --reuse_step_checkpoint_as_final \
   --eval_every 500 --eval_steps 50 --log_every 10 --out_dir "$MHAR_OUTPUT_DIR" \
   --wandb_project "MHAR Stuff" --wandb_group "$MHAR_WANDB_GROUP" --wandb_required \
   --run_name "mhar-exp7-$MHAR_VARIANT-seed42" "${EXTRA[@]}"

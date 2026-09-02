@@ -161,6 +161,11 @@ def parse_args():
     p.add_argument("--keep_last", type=int, default=2,
                    help="Number of resumable step checkpoints to retain")
     p.add_argument(
+        "--reuse_step_checkpoint_as_final", action="store_true",
+        help="Storage-only: use an existing terminal step-* checkpoint as final "
+             "instead of writing an identical second checkpoint",
+    )
+    p.add_argument(
         "--keep_steps",
         default="",
         help="Comma-separated step checkpoints to protect from rotation, e.g. "
@@ -1252,21 +1257,32 @@ def main():
                 wandb.log({"val/loss": val_loss, "val/ppl": val_ppl}, step=global_step)
 
     if is_main:
-        final_dir = save_training_checkpoint(
-            model=model,
-            tokenizer=tokenizer,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            global_step=global_step,
-            chunks_consumed=chunks_consumed,
-            run_identity=run_identity,
-            out_dir=out_dir,
-            keep_last=args.keep_last,
-            keep_steps=keep_steps,
-            wandb_run_id=wandb_run_id,
-            elapsed_training_seconds=time.time() - run_started,
-            final=True,
-        )
+        terminal_step_dir = out_dir / f"step-{global_step}"
+        if args.reuse_step_checkpoint_as_final:
+            required = (
+                terminal_step_dir / "training_manifest.json",
+                terminal_step_dir / "training_state.pt",
+            )
+            if not all(path.is_file() for path in required):
+                raise RuntimeError(
+                    "--reuse_step_checkpoint_as_final requires a complete terminal checkpoint")
+            final_dir = terminal_step_dir
+        else:
+            final_dir = save_training_checkpoint(
+                model=model,
+                tokenizer=tokenizer,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                global_step=global_step,
+                chunks_consumed=chunks_consumed,
+                run_identity=run_identity,
+                out_dir=out_dir,
+                keep_last=args.keep_last,
+                keep_steps=keep_steps,
+                wandb_run_id=wandb_run_id,
+                elapsed_training_seconds=time.time() - run_started,
+                final=True,
+            )
         print(f"Training done. Final model → {final_dir}")
         if use_wandb:
             import wandb
