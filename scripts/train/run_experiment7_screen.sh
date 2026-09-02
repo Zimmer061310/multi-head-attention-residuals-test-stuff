@@ -46,7 +46,7 @@ exec "$MHAR_PYTHON_BIN" -m torch.distributed.run --nproc_per_node=1 \
   --dataset_revision 87f09149ef4734204d70ed1d046ddc9ca3f2b8f9 \
   --data_files "$MHAR_DATA_FILES" --tokenizer Qwen/Qwen3-0.6B \
   --tokenizer_revision c1899de289a04d12100db370d81485cdf75e47ca \
-  --grad_ckpt --save_every 100 --keep_last 2 --keep_steps 500,1000,1500,2000 \
+  --grad_ckpt --save_every 100 --keep_last 1 --keep_steps 2000 \
   --eval_every 500 --eval_steps 50 --log_every 10 --out_dir "$MHAR_OUTPUT_DIR" \
   --wandb_project "MHAR Stuff" --wandb_group "$MHAR_WANDB_GROUP" --wandb_required \
   --run_name "mhar-exp7-$MHAR_VARIANT-seed42" "${EXTRA[@]}"

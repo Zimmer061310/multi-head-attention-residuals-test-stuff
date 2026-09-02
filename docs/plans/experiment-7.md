@@ -208,8 +208,10 @@ Experiment 6.
 ## Training and evaluation protocol
 
 Train every new model from scratch with matched seed, packed data order,
-optimizer, scheduler, and initialization procedure. Save rolling atomic
-checkpoints every 100 steps and protect steps 500, 1,000, 1,500, and 2,000.
+optimizer, scheduler, and initialization procedure. Save an atomic resumable
+checkpoint every 100 steps. On the 50 GB screening server, retain the latest
+checkpoint plus the final step-2,000 checkpoint; this preserves recovery from
+provider shutdown without accumulating roughly 100 GB of obsolete states.
 
 At step 2,000, pause and evaluate all new checkpoints on both fixed splits.
 Report:
