@@ -4,6 +4,9 @@ This run trains the four new seed-42 models only. Accepted B, M4, M8, C4 and
 C8 fixed-evaluation results are reused. It never continues beyond step 2000.
 Training writes an atomic resumable checkpoint every 100 steps and retains the
 latest state plus step 2000, which is the only evaluation milestone.
+The terminal step-2000 state is reused as the final checkpoint rather than
+writing a duplicate `final/` directory. LQ4 and LQ8 start ten minutes apart so
+their temporary atomic checkpoint writes do not overlap.
 
 ## GPU assignment
 

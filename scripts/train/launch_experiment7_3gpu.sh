@@ -6,6 +6,7 @@ MHAR_PYTHON_BIN="${MHAR_PYTHON_BIN:-python3}"
 MHAR_OUTPUT_ROOT="${MHAR_OUTPUT_ROOT:-/root/autodl-tmp/experiment7/screening}"
 MHAR_LOG_DIR="$MHAR_OUTPUT_ROOT/logs"
 MHAR_GPU_IDS="${MHAR_GPU_IDS:-0,1,2}"
+MHAR_LQ_STAGGER_SECONDS="${MHAR_LQ_STAGGER_SECONDS:-600}"
 IFS=',' read -r -a GPUS <<< "$MHAR_GPU_IDS"
 [[ "${#GPUS[@]}" -eq 3 ]] || { echo "MHAR_GPU_IDS must contain exactly three ids" >&2; exit 2; }
 mkdir -p "$MHAR_LOG_DIR"
@@ -22,6 +23,9 @@ for item in "lq4:${GPUS[0]}:29700" "lq8:${GPUS[1]}:29701"; do
     env CUDA_VISIBLE_DEVICES="$gpu" MHAR_REPO_DIR="$MHAR_REPO_DIR" \
       MHAR_PYTHON_BIN="$MHAR_PYTHON_BIN" MHAR_OUTPUT_ROOT="$MHAR_OUTPUT_ROOT" \
       MHAR_MASTER_PORT="$port" "$MHAR_REPO_DIR/scripts/train/run_experiment7_screen.sh" "$variant"
+  if [[ "$variant" == lq4 && "$MHAR_LQ_STAGGER_SECONDS" -gt 0 ]]; then
+    sleep "$MHAR_LQ_STAGGER_SECONDS"
+  fi
 done
 screen -L -Logfile "$MHAR_LOG_DIR/blq-queue.log" -dmS mhar-exp7-blq-queue \
   /bin/bash -lc "set -euo pipefail; export CUDA_VISIBLE_DEVICES='${GPUS[2]}' MHAR_REPO_DIR='$MHAR_REPO_DIR' MHAR_PYTHON_BIN='$MHAR_PYTHON_BIN' MHAR_OUTPUT_ROOT='$MHAR_OUTPUT_ROOT'; export MHAR_MASTER_PORT=29702; '$MHAR_REPO_DIR/scripts/train/run_experiment7_screen.sh' blq4; export MHAR_MASTER_PORT=29703; '$MHAR_REPO_DIR/scripts/train/run_experiment7_screen.sh' blq8"

@@ -47,9 +47,11 @@ class Experiment7ScreeningTest(unittest.TestCase):
         launch = (root / "scripts/train/launch_experiment7_3gpu.sh").read_text()
         for value in ("--steps 20000", "--stop_after_step 2000", "--save_every 100",
                       "--keep_last 1", "--keep_steps 2000",
+                      "--reuse_step_checkpoint_as_final",
                       '--experiment7_variant "$MHAR_VARIANT"'):
             self.assertIn(value, run)
         self.assertIn("blq4;", launch); self.assertIn("blq8", launch)
+        self.assertIn("MHAR_LQ_STAGGER_SECONDS", launch)
 
 
 if __name__ == "__main__": unittest.main()
