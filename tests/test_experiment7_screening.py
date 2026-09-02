@@ -46,7 +46,8 @@ class Experiment7ScreeningTest(unittest.TestCase):
         run = (root / "scripts/train/run_experiment7_screen.sh").read_text()
         launch = (root / "scripts/train/launch_experiment7_3gpu.sh").read_text()
         for value in ("--steps 20000", "--stop_after_step 2000", "--save_every 100",
-                      "--keep_steps 500,1000,1500,2000", '--experiment7_variant "$MHAR_VARIANT"'):
+                      "--keep_last 1", "--keep_steps 2000",
+                      '--experiment7_variant "$MHAR_VARIANT"'):
             self.assertIn(value, run)
         self.assertIn("blq4;", launch); self.assertIn("blq8", launch)
 
