@@ -2,9 +2,15 @@
 
 ## Status
 
-Description frozen for review. No implementation or GPU run has started.
+Implementation complete and locally verified. No GPU run has started.
 The first screen is single-seed step-2,000 screening only; it is not a
 multi-seed confirmation experiment.
+
+Implementation lives in `src/experiments/experiment7_local_q.py` and is
+activated only by the frozen Experiment 7 command-line identities. The legacy
+Qwen3/MHAR classes and Experiment 6 classes are unchanged. Training, fixed-set
+evaluation, paired analysis, three-GPU scheduling, result backup, and
+success-only shutdown are covered by the Experiment 7 scripts and runbook.
 
 ## Goal
 
