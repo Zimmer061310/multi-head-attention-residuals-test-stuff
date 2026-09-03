@@ -66,6 +66,8 @@ def wait_training(args, status):
 
 def launch_eval(args, variant):
     name = f"mhar-exp7-eval-{variant}"
+    result = args.output_root / "results" / variant / "result.json"
+    if result.is_file() and not alive(name): return
     if alive(name): return
     environment = os.environ.copy(); environment.update({
         "CUDA_VISIBLE_DEVICES": GPU[variant], "MHAR_REPO_DIR": str(args.repo),

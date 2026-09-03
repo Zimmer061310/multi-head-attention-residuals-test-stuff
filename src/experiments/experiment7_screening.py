@@ -209,7 +209,8 @@ def analyze_command(args):
                 run.log({f"{split}/{row['id']}/delta_nll": metrics["aggregate_delta_nll"],
                          f"{split}/{row['id']}/ci95_low": metrics["ci95_low"],
                          f"{split}/{row['id']}/ci95_high": metrics["ci95_high"]})
-        run.summary.update(decision=summary["decision"], catastrophic_designs=catastrophic)
+        run.summary.update({"decision": summary["decision"],
+                            "catastrophic_designs": catastrophic})
     output = Path(args.output_dir); output.mkdir(parents=True, exist_ok=True)
     atomic_write_json(output / "summary.json", summary)
     with (output / "contrasts.csv").open("w", newline="", encoding="utf-8") as handle:
