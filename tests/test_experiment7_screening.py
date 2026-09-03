@@ -55,5 +55,12 @@ class Experiment7ScreeningTest(unittest.TestCase):
         self.assertLess(launch.index("mhar-exp7-blq-queue"), launch.index('MHAR_LQ_STAGGER_SECONDS" -gt'))
         self.assertIn('MHAR_HF_HOME="${MHAR_HF_HOME:-/root/hf-exp7}"', run)
 
+    def test_wandb_summary_and_controller_resume_are_compatible(self):
+        root = Path(__file__).resolve().parents[1]
+        analysis = (root / "src/experiments/experiment7_screening.py").read_text()
+        controller = (root / "scripts/evaluate/run_experiment7_controller.py").read_text()
+        self.assertIn('run.summary.update({"decision": summary["decision"]', analysis)
+        self.assertIn('if result.is_file() and not alive(name): return', controller)
+
 
 if __name__ == "__main__": unittest.main()
