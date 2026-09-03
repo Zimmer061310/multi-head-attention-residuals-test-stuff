@@ -302,13 +302,28 @@ intervals do not capture training-seed uncertainty.
 
 Experiment 6 keeps the 16-Q/8-KV, 80-dimensional-head attention layout fixed
 while replacing dense Q/K/V with four or eight block-restricted groups. It
-trains five new seed-42 models—B, C4, G4, C8, and G8—and reuses the accepted
-step-2,000 M4/M8 results. This is an early catastrophic-design screen, not a
-multi-seed architectural claim. No Experiment 6 GPU run has started.
+trained five new seed-42 models—B, C4, G4, C8, and G8—and reused the accepted
+step-2,000 M4/M8 results. Hard coupling lost to dense MHAR: confirmation
+C4−M4 was +0.181916 NLL and C8−M8 was +0.286143, with both paired 95% CIs above
+zero. This is an early screen, not a multi-seed architectural claim.
 
 [Plan and frozen protocol](docs/plans/experiment-6.md) ·
 [Machine-readable run matrix](configs/experiment6/screening.json) ·
-[Grouped-QKV implementation](src/experiments/experiment6_coupled_qkv.py)
+[Grouped-QKV implementation](src/experiments/experiment6_coupled_qkv.py) ·
+[Final report](results/experiment6/FINAL_REPORT.md)
+
+### Experiment 7 — Local-Q / Global-KV coupling
+
+Experiment 7 retained local, chunk-restricted Q while restoring dense/global K
+and V. This recovered most of Experiment 6's loss, but still underperformed
+dense MHAR at step 2,000: confirmation LQ4−M4 was +0.048601 NLL and LQ8−M8
+was +0.054053, with both paired 95% CIs above zero. The result does not support
+advancing this exact hard local-Q design without a new rationale.
+
+[Plan and frozen protocol](docs/plans/experiment-7.md) ·
+[Machine-readable run matrix](configs/experiment7/screening.json) ·
+[Local-Q implementation](src/experiments/experiment7_local_q.py) ·
+[Final report](results/experiment7/FINAL_REPORT.md)
 
 ## Shared model and scientific controls
 
