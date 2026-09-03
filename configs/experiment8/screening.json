@@ -1,0 +1,124 @@
+{
+  "format_version": 1,
+  "name": "Experiment 8 Hybrid-Q8 / Global-KV",
+  "seed": 42,
+  "screening_milestone": 2000,
+  "full_schedule_steps": 20000,
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp8-hybrid-q8-global-kv-screen-seed42",
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691"
+  },
+  "head_assignment": {
+    "groups": 8,
+    "queries_per_kv_group": 2,
+    "local_query_head_position": "even",
+    "global_query_head_position": "odd",
+    "k_input": "global",
+    "v_input": "global",
+    "o_projection": "dense"
+  },
+  "runs": [
+    {
+      "id": "b",
+      "train": false,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "hybrid_q_groups": null,
+      "local_q_fraction": 0.0,
+      "existing_result": "results/experiment6/step-2000/b/evaluation/result.json"
+    },
+    {
+      "id": "bhq8",
+      "train": true,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "hybrid_q_groups": 8,
+      "local_q_fraction": 0.5
+    },
+    {
+      "id": "blq8",
+      "train": false,
+      "mode": "baseline",
+      "attnres_heads": null,
+      "hybrid_q_groups": null,
+      "local_q_fraction": 1.0,
+      "existing_result": "results/experiment7/step-2000/blq8/evaluation/result.json"
+    },
+    {
+      "id": "m8",
+      "train": false,
+      "mode": "full_mh",
+      "attnres_heads": 8,
+      "hybrid_q_groups": null,
+      "local_q_fraction": 0.0,
+      "existing_result": "results/experiment2/stage-b-screening/step-2000/h8/result.json"
+    },
+    {
+      "id": "hq8",
+      "train": true,
+      "mode": "full_mh",
+      "attnres_heads": 8,
+      "hybrid_q_groups": 8,
+      "local_q_fraction": 0.5
+    },
+    {
+      "id": "lq8",
+      "train": false,
+      "mode": "full_mh",
+      "attnres_heads": 8,
+      "hybrid_q_groups": null,
+      "local_q_fraction": 1.0,
+      "existing_result": "results/experiment7/step-2000/lq8/evaluation/result.json"
+    }
+  ],
+  "contrasts": [
+    {
+      "id": "hq8-minus-m8",
+      "terms": {"hq8": 1, "m8": -1},
+      "role": "primary"
+    },
+    {
+      "id": "bhq8-minus-b",
+      "terms": {"bhq8": 1, "b": -1},
+      "role": "control"
+    },
+    {
+      "id": "h8-interaction",
+      "terms": {"hq8": 1, "m8": -1, "bhq8": -1, "b": 1},
+      "role": "primary_interaction"
+    },
+    {
+      "id": "hq8-minus-lq8",
+      "terms": {"hq8": 1, "lq8": -1},
+      "role": "endpoint_diagnostic"
+    },
+    {
+      "id": "bhq8-minus-blq8",
+      "terms": {"bhq8": 1, "blq8": -1},
+      "role": "endpoint_control_diagnostic"
+    },
+    {
+      "id": "mhar-midpoint-curvature",
+      "terms": {"hq8": 2, "m8": -1, "lq8": -1},
+      "role": "shape_diagnostic"
+    },
+    {
+      "id": "baseline-midpoint-curvature",
+      "terms": {"bhq8": 2, "b": -1, "blq8": -1},
+      "role": "shape_control_diagnostic"
+    }
+  ],
+  "practical_equivalence": {
+    "contrast": "hq8-minus-m8",
+    "absolute_margin_nll": 0.005,
+    "rule": "the paired 95% confidence interval must lie wholly inside the margin; applies only to this within-seed screen"
+  },
+  "screening_rule": "single seed at step 2000; reject catastrophic designs and report within-seed evidence only; do not declare convergence or a multi-seed winner",
+  "catastrophic_rule": {
+    "maximum_delta_nll": 0.5,
+    "comparisons": ["hq8-minus-m8", "bhq8-minus-b"],
+    "also_catastrophic_if": "non-finite training loss, non-finite held-out NLL, or incomplete checkpoint"
+  }
+}

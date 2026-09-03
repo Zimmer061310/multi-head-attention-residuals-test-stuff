@@ -325,6 +325,28 @@ advancing this exact hard local-Q design without a new rationale.
 [Local-Q implementation](src/experiments/experiment7_local_q.py) ·
 [Final report](results/experiment7/FINAL_REPORT.md)
 
+### Experiment 8 — Hybrid-Q8 / Global-KV
+
+Experiment 8 tests the direct midpoint between dense M8 and fully local-query
+LQ8. Within every GQA group, the even Q head reads only its matching 160-D
+MHAR chunk while the odd Q head retains full 1,280-D residual access. Both
+heads share the ordinary global K/V head, and W_O remains dense. The required
+ordinary-residual BHQ8 control uses the same hybrid projection without MHAR.
+
+Only HQ8 and BHQ8 are new seed-42 runs. The compatible M8/LQ8 and B/BLQ8
+step-2,000 fixed-set results are reused. The primary comparisons are HQ8−M8
+and `(HQ8−M8)−(BHQ8−B)`, with paired per-sequence confidence intervals. This
+is a catastrophe/review screen only; it does not authorize continuation or
+multi-seed training.
+
+Status: implementation and fail-closed two-GPU workflow prepared; no GPU run
+has started.
+
+[Plan and frozen protocol](docs/plans/experiment-8.md) ·
+[Machine-readable run matrix](configs/experiment8/screening.json) ·
+[Hybrid-Q implementation](src/experiments/experiment8_hybrid_q.py) ·
+[Two-GPU runbook](docs/runbooks/experiment8-two-gpu.md)
+
 ## Shared model and scientific controls
 
 The experiment family uses the 1B-class Qwen3-style MHAR setup below.
