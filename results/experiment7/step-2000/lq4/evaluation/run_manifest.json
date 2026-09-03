@@ -1,0 +1,37 @@
+{
+  "created_at": "2026-09-03T05:05:36.165123+00:00",
+  "run_identity": {
+    "artifact_sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "batch_size": 1,
+    "checkpoint_sha256": "3312b1235533a1d4c0b69d0293d68da15cf730a1437d79949f3bba8bf3afcbd4",
+    "dtype": "bf16",
+    "experiment": "7-local-q-global-kv",
+    "milestone": 2000,
+    "seed": 42,
+    "source_commit": "6ab9254cb14c72cee57b255d7f71e81e00c938bc",
+    "training_recipe": {
+      "attnres_heads": 4,
+      "experiment7_local_q_groups": 4,
+      "experiment7_variant": "lq4",
+      "global_batch_size": 32,
+      "global_step": 2000,
+      "hidden_size": 1280,
+      "intermediate_size": 5120,
+      "lr": 0.0005,
+      "lr_min": 5e-05,
+      "mode": "full_mh",
+      "num_heads": 16,
+      "num_kv_heads": 8,
+      "num_layers": 36,
+      "seed": 42,
+      "seq_len": 1024,
+      "steps": 20000,
+      "warmup": 1000
+    },
+    "variant": "lq4"
+  },
+  "wandb": {
+    "run_id": "14pswxfp",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/14pswxfp"
+  }
+}
