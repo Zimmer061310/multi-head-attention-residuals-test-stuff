@@ -1,0 +1,63 @@
+{
+  "format_version": 1,
+  "name": "Experiment 9 HQ8 Local-vs-Global Head Contribution",
+  "seed": 42,
+  "milestone": 2000,
+  "training": false,
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp9-hq8-head-contribution-seed42-step2000",
+  "checkpoint": {
+    "source": "accepted Experiment 8 HQ8 step-2000 checkpoint",
+    "sha256": "74cff0ab19409dac9f6104e8986e4890c0837bc730d8ac233ae18011dbc58333"
+  },
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact reused by Experiment 8",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "splits": ["discovery", "confirmation"]
+  },
+  "head_order": {
+    "num_gqa_groups": 8,
+    "queries_per_group": 2,
+    "local_head_position": "even",
+    "global_head_position": "odd",
+    "head_dimension": 80,
+    "ablation_site": "attention output immediately before dense W_O"
+  },
+  "phase_9a": {
+    "structured_conditions": ["hq8-unchanged", "zero-local", "zero-global"],
+    "matched_random_family": {
+      "construction": "exhaust all C(8,4)=70 masks; remove the global head in four groups and the local head in the complementary four groups",
+      "count": 70,
+      "removed_heads": 8,
+      "removed_local_heads": 4,
+      "removed_global_heads": 4,
+      "removed_heads_per_group": 1
+    },
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260909,
+    "local_contribution_gate": {
+      "practical_margin_nll": 0.001,
+      "rule": "run 9B only if discovery delta-local is positive and confirmation delta-local is at least 0.001 with paired-bootstrap CI lower bound above zero"
+    }
+  },
+  "phase_9b": {
+    "conditional_on": "phase_9a.local_contribution_gate == pass",
+    "derangement_count": 32,
+    "derangement_seed": 20260910,
+    "same_permutation_all_layers": true,
+    "unchanged_components": ["global Q", "K", "V", "W_O", "weights", "MHAR routers"],
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260911,
+    "alignment_evidence_rule": {
+      "practical_margin_nll": 0.001,
+      "minimum_positive_fraction": 0.75,
+      "rule": "alignment evidence requires positive discovery mean, confirmation mean at least 0.001, hierarchical-bootstrap CI lower bound above zero, and at least 75% of derangements positive"
+    }
+  },
+  "interpretation_limits": [
+    "single trained seed and one checkpoint",
+    "paired sequence confidence intervals do not quantify training-seed uncertainty",
+    "head zeroing is an off-distribution intervention and does not equal retraining without those heads",
+    "the 32 derangements are a frozen diagnostic sample, not all 14833 derangements of eight chunks"
+  ]
+}

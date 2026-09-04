@@ -55,6 +55,10 @@ class HybridQueryLinear(nn.Module):
             if bias else None
         self.global_bias = nn.Parameter(torch.empty(groups, self.head_dim, **factory)) \
             if bias else None
+        # Runtime-only causal intervention used by Experiment 9. This is
+        # deliberately absent from the state dict, so the accepted Experiment
+        # 8 checkpoint and its default computation are unchanged.
+        self.local_group_permutation: tuple[int, ...] | None = None
 
     @classmethod
     def from_dense(cls, dense: nn.Linear, groups: int = HYBRID_Q_GROUPS):
@@ -91,6 +95,13 @@ class HybridQueryLinear(nn.Module):
                 f"expected input width {self.in_features}, got {inputs.shape[-1]}")
         grouped_inputs = inputs.reshape(
             *inputs.shape[:-1], self.groups, self.in_features_per_group)
+        if self.local_group_permutation is not None:
+            permutation = torch.as_tensor(
+                self.local_group_permutation,
+                device=grouped_inputs.device,
+                dtype=torch.long,
+            )
+            grouped_inputs = grouped_inputs.index_select(-2, permutation)
         local = torch.einsum("...gi,goi->...go", grouped_inputs, self.local_weight)
         global_ = torch.einsum("...i,goi->...go", inputs, self.global_weight)
         if self.local_bias is not None:
