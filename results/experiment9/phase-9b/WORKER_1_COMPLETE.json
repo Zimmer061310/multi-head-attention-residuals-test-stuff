@@ -1,0 +1,24 @@
+{
+  "completed_at": "2026-09-04T14:06:17.124210+00:00",
+  "condition_ids": [
+    "derangement-01",
+    "derangement-03",
+    "derangement-05",
+    "derangement-07",
+    "derangement-09",
+    "derangement-11",
+    "derangement-13",
+    "derangement-15",
+    "derangement-17",
+    "derangement-19",
+    "derangement-21",
+    "derangement-23",
+    "derangement-25",
+    "derangement-27",
+    "derangement-29",
+    "derangement-31"
+  ],
+  "manifest_sha256": "3b5a8d2807c9b2d9f29362eb6f36ca3185f06e09b0d955a3cad4923b9c9d2bf2",
+  "worker_count": 2,
+  "worker_index": 1
+}

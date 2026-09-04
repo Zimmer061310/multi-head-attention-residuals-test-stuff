@@ -1,0 +1,10 @@
+{
+  "alignment_evidence": true,
+  "created_at": "2026-09-04T14:07:19.394969+00:00",
+  "experiment": "9-hq8-head-contribution",
+  "format_version": 1,
+  "phase_9a_gate_passed": true,
+  "phase_9a_summary_sha256": "721d5abb91b8621194b38799aab10e94968d7e40dcdd423ade44e202dcb8ca5c",
+  "phase_9b_ran": true,
+  "phase_9b_summary_sha256": "73b126c9699ffc91cfb0f7118944f163be21c95100e6d9ad4d6a9817d733a782"
+}

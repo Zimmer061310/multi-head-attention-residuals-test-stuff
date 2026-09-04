@@ -1,0 +1,1210 @@
+{
+  "aggregate": {
+    "confirmation": {
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 20261912,
+      "bootstrap_unit": "derangements_and_paired_sequences",
+      "ci95_high": 0.0693800622379058,
+      "ci95_low": 0.06594512440169638,
+      "condition_median_delta_nll": 0.06773965223692358,
+      "condition_q25_delta_nll": 0.0665761143900454,
+      "condition_q75_delta_nll": 0.06865145289339125,
+      "maximum_condition_delta_nll": 0.07143170293420553,
+      "mean_delta_nll": 0.0676443693228066,
+      "minimum_condition_delta_nll": 0.063421621453017,
+      "positive_fraction": 1.0
+    },
+    "discovery": {
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 20261911,
+      "bootstrap_unit": "derangements_and_paired_sequences",
+      "ci95_high": 0.07262014624793664,
+      "ci95_low": 0.06852221425433527,
+      "condition_median_delta_nll": 0.07055396190844476,
+      "condition_q25_delta_nll": 0.06998470041435212,
+      "condition_q75_delta_nll": 0.07161377614829689,
+      "maximum_condition_delta_nll": 0.0731376651674509,
+      "mean_delta_nll": 0.07053723676654045,
+      "minimum_condition_delta_nll": 0.06626056740060449,
+      "positive_fraction": 1.0
+    }
+  },
+  "alignment_evidence": {
+    "checks": {
+      "confirmation_ci_lower_above_zero": true,
+      "confirmation_mean_at_least_margin": true,
+      "confirmation_positive_fraction_sufficient": true,
+      "discovery_mean_positive": true
+    },
+    "passed": true,
+    "rule": "alignment evidence requires positive discovery mean, confirmation mean at least 0.001, hierarchical-bootstrap CI lower bound above zero, and at least 75% of derangements positive"
+  },
+  "conditions": [
+    {
+      "condition": {
+        "id": "derangement-00",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          0,
+          6,
+          1,
+          2,
+          4,
+          7,
+          3
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06998947195759797,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260912,
+          "ci95_high": 0.07167603862471879,
+          "ci95_low": 0.06827876422321424,
+          "mean_delta_nll": 0.06998947355896235,
+          "nll": 4.206345175018758
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07210354231669402,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260911,
+          "ci95_high": 0.0740648178383708,
+          "ci95_low": 0.07017130760941655,
+          "mean_delta_nll": 0.07210354320704937,
+          "nll": 4.319806993415511
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-01",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          3,
+          0,
+          4,
+          5,
+          7,
+          1,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06640045803662975,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260914,
+          "ci95_high": 0.06815475506009534,
+          "ci95_low": 0.06467251884751021,
+          "mean_delta_nll": 0.06640045577660203,
+          "nll": 4.20275616109779
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07052587740349114,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260913,
+          "ci95_high": 0.07277244891738519,
+          "ci95_low": 0.06837687897495925,
+          "mean_delta_nll": 0.07052586879581213,
+          "nll": 4.318229328502309
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-02",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          7,
+          3,
+          0,
+          2,
+          1,
+          6,
+          4,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06388594141687065,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260916,
+          "ci95_high": 0.06559963912004604,
+          "ci95_low": 0.06218668125802651,
+          "mean_delta_nll": 0.06388594629243016,
+          "nll": 4.200241644478031
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0669110746560797,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260915,
+          "ci95_high": 0.06898658563150092,
+          "ci95_low": 0.06490427531534806,
+          "mean_delta_nll": 0.06691107014194131,
+          "nll": 4.314614525754897
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-03",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          3,
+          4,
+          0,
+          7,
+          6,
+          1,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06342161995224949,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260918,
+          "ci95_high": 0.06508387560024857,
+          "ci95_low": 0.06183792582014576,
+          "mean_delta_nll": 0.063421621453017,
+          "nll": 4.19977732301341
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0662605755489949,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260917,
+          "ci95_high": 0.06821957621723414,
+          "ci95_low": 0.06432535233907402,
+          "mean_delta_nll": 0.06626056740060449,
+          "nll": 4.313964026647812
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-04",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          4,
+          0,
+          7,
+          6,
+          5,
+          3,
+          1,
+          2
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06840507958524977,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260920,
+          "ci95_high": 0.07013761531561613,
+          "ci95_low": 0.06675910678459332,
+          "mean_delta_nll": 0.06840508570894599,
+          "nll": 4.20476078264641
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07159426951105452,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260919,
+          "ci95_high": 0.0737419871846214,
+          "ci95_low": 0.06949761775322258,
+          "mean_delta_nll": 0.0715942676179111,
+          "nll": 4.319297720609872
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-05",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          4,
+          0,
+          7,
+          1,
+          2,
+          3,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06905467908752971,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260922,
+          "ci95_high": 0.0708131883526221,
+          "ci95_low": 0.06731080258032307,
+          "mean_delta_nll": 0.06905468320474029,
+          "nll": 4.20541038214869
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07167230300306748,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260921,
+          "ci95_high": 0.07369164830306545,
+          "ci95_low": 0.06976508850930259,
+          "mean_delta_nll": 0.07167230173945427,
+          "nll": 4.319375754101885
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-06",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          0,
+          4,
+          2,
+          3,
+          6,
+          7,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06921655901016788,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260924,
+          "ci95_high": 0.07094167626928538,
+          "ci95_low": 0.06747343718307093,
+          "mean_delta_nll": 0.06921656243503094,
+          "nll": 4.205572262071328
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07179771630295573,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260923,
+          "ci95_high": 0.07392780951922759,
+          "ci95_low": 0.06974158105440438,
+          "mean_delta_nll": 0.07179771643131971,
+          "nll": 4.319501167401773
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-07",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          6,
+          7,
+          4,
+          5,
+          2,
+          3,
+          0,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.07143169693932894,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260926,
+          "ci95_high": 0.07314345862250775,
+          "ci95_low": 0.06975938425166532,
+          "mean_delta_nll": 0.07143170293420553,
+          "nll": 4.207787400000489
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07313766227789298,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260925,
+          "ci95_high": 0.07504573164042085,
+          "ci95_low": 0.07121946065453813,
+          "mean_delta_nll": 0.0731376651674509,
+          "nll": 4.32084111337671
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-08",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          4,
+          0,
+          3,
+          6,
+          1,
+          2,
+          7,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06626012015319471,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260928,
+          "ci95_high": 0.0679393014172092,
+          "ci95_low": 0.06460621382575482,
+          "mean_delta_nll": 0.06626012269407511,
+          "nll": 4.202615823214355
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0693755951561652,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260927,
+          "ci95_high": 0.0713043385068886,
+          "ci95_low": 0.06752593651181087,
+          "mean_delta_nll": 0.06937559507787228,
+          "nll": 4.317079046254983
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-09",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          7,
+          0,
+          4,
+          1,
+          6,
+          5,
+          2
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06787882102899179,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260930,
+          "ci95_high": 0.06960000513354317,
+          "ci95_low": 0.06614722495432943,
+          "mean_delta_nll": 0.06787883397191763,
+          "nll": 4.204234524090152
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07057018830046768,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260929,
+          "ci95_high": 0.0727252853801474,
+          "ci95_low": 0.06852449234575034,
+          "mean_delta_nll": 0.0705701787956059,
+          "nll": 4.318273639399285
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-10",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          5,
+          0,
+          4,
+          1,
+          7,
+          3,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06723540549404117,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260932,
+          "ci95_high": 0.06903624113183468,
+          "ci95_low": 0.06552893669577316,
+          "mean_delta_nll": 0.06723540788516402,
+          "nll": 4.203591108555202
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07053774100011889,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260931,
+          "ci95_high": 0.0726473791524768,
+          "ci95_low": 0.068504600727465,
+          "mean_delta_nll": 0.07053774502128363,
+          "nll": 4.318241192098936
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-11",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          4,
+          1,
+          7,
+          6,
+          2,
+          0,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06681527886339467,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260934,
+          "ci95_high": 0.0684935019351542,
+          "ci95_low": 0.0650873244390823,
+          "mean_delta_nll": 0.06681528594344854,
+          "nll": 4.203170981924555
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07019858299695425,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260933,
+          "ci95_high": 0.0721707372693345,
+          "ci95_low": 0.06828700489131734,
+          "mean_delta_nll": 0.07019857643172145,
+          "nll": 4.317902034095772
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-12",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          6,
+          7,
+          3,
+          1,
+          2,
+          0,
+          4,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06715406304114246,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260936,
+          "ci95_high": 0.06885999337537214,
+          "ci95_low": 0.06549183364259079,
+          "mean_delta_nll": 0.06715405965223908,
+          "nll": 4.203509766102303
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.06969818644742709,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260935,
+          "ci95_high": 0.07166259409859776,
+          "ci95_low": 0.06774555202573537,
+          "mean_delta_nll": 0.06969817634671926,
+          "nll": 4.3174016375462445
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-13",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          4,
+          5,
+          0,
+          7,
+          1,
+          2,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06708340164736448,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260938,
+          "ci95_high": 0.06880262289196253,
+          "ci95_low": 0.06534935856470839,
+          "mean_delta_nll": 0.06708339229226112,
+          "nll": 4.203439104708525
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0700591498456049,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260937,
+          "ci95_high": 0.07205920019187033,
+          "ci95_low": 0.06815016005421057,
+          "mean_delta_nll": 0.07005914766341448,
+          "nll": 4.317762600944422
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-14",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          7,
+          4,
+          3,
+          6,
+          0,
+          1,
+          5,
+          2
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06796525627054262,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260940,
+          "ci95_high": 0.06966350512811914,
+          "ci95_low": 0.06630510841496288,
+          "mean_delta_nll": 0.06796525279060006,
+          "nll": 4.204320959331703
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07024171228865672,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260939,
+          "ci95_high": 0.07222602459369228,
+          "ci95_low": 0.06826609099516645,
+          "mean_delta_nll": 0.07024170691147447,
+          "nll": 4.317945163387474
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-15",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          6,
+          0,
+          4,
+          1,
+          7,
+          2,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06486139549188241,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260942,
+          "ci95_high": 0.06660850520711392,
+          "ci95_low": 0.06314447737531736,
+          "mean_delta_nll": 0.06486139772459865,
+          "nll": 4.201217098553043
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.06804867993352026,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260941,
+          "ci95_high": 0.07006282438524067,
+          "ci95_low": 0.06607772284187377,
+          "mean_delta_nll": 0.06804867461323738,
+          "nll": 4.315752131032338
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-16",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          4,
+          0,
+          3,
+          6,
+          5,
+          1,
+          7,
+          2
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06937334707638687,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260944,
+          "ci95_high": 0.07114223123062402,
+          "ci95_low": 0.06770092130172997,
+          "mean_delta_nll": 0.06937335664406419,
+          "nll": 4.205729050137547
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0721853611406349,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260943,
+          "ci95_high": 0.07429925968172028,
+          "ci95_low": 0.07013503140769899,
+          "mean_delta_nll": 0.07218535710126162,
+          "nll": 4.319888812239452
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-17",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          7,
+          2,
+          6,
+          4,
+          5,
+          3,
+          0,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.07023667356951613,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260946,
+          "ci95_high": 0.07194901976035908,
+          "ci95_low": 0.06853159550810232,
+          "mean_delta_nll": 0.07023667823523283,
+          "nll": 4.2065923766306765
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07307277793175793,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260945,
+          "ci95_high": 0.0751398820313625,
+          "ci95_low": 0.07107064737938344,
+          "mean_delta_nll": 0.07307278597727418,
+          "nll": 4.320776229030575
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-18",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          7,
+          2,
+          6,
+          1,
+          5,
+          0,
+          4,
+          3
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06844749432038988,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260948,
+          "ci95_high": 0.07009305977262556,
+          "ci95_low": 0.06678948861081153,
+          "mean_delta_nll": 0.06844749627634883,
+          "nll": 4.20480319738155
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07176115226186308,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260947,
+          "ci95_high": 0.07389181506587192,
+          "ci95_low": 0.06968339278828353,
+          "mean_delta_nll": 0.07176115876063704,
+          "nll": 4.3194646033606805
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-19",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          6,
+          5,
+          0,
+          7,
+          3,
+          2,
+          1,
+          4
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06780914034428598,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260950,
+          "ci95_high": 0.06952363721793517,
+          "ci95_low": 0.0661180603899993,
+          "mean_delta_nll": 0.06780914170667529,
+          "nll": 4.204164843405446
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07116705418099212,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260949,
+          "ci95_high": 0.07336891011800617,
+          "ci95_low": 0.06905956667615101,
+          "mean_delta_nll": 0.07116704899817705,
+          "nll": 4.3188705052798095
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-20",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          4,
+          5,
+          2,
+          7,
+          0,
+          1,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06640765860400055,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260952,
+          "ci95_high": 0.06810940003488213,
+          "ci95_low": 0.06470632550772279,
+          "mean_delta_nll": 0.06640766886994243,
+          "nll": 4.202763361665161
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.06978198020688975,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260951,
+          "ci95_high": 0.07183637511916459,
+          "ci95_low": 0.06777673020260408,
+          "mean_delta_nll": 0.06978197954595089,
+          "nll": 4.317485431305707
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-21",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          1,
+          6,
+          7,
+          0,
+          5,
+          2,
+          3,
+          4
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06757166844775409,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260954,
+          "ci95_high": 0.06929406081326306,
+          "ci95_low": 0.06589819649234414,
+          "mean_delta_nll": 0.06757166609168053,
+          "nll": 4.2039273715089145
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07061373523253511,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260953,
+          "ci95_high": 0.07263737453613431,
+          "ci95_low": 0.06863281113328412,
+          "mean_delta_nll": 0.07061372883617878,
+          "nll": 4.3183171863313525
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-22",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          4,
+          3,
+          6,
+          2,
+          1,
+          0,
+          7,
+          5
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06633440187366624,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260956,
+          "ci95_high": 0.06802367869531736,
+          "ci95_low": 0.06469878308707848,
+          "mean_delta_nll": 0.0663344138301909,
+          "nll": 4.202690104934827
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.06956387917899942,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260955,
+          "ci95_high": 0.07157362853176892,
+          "ci95_low": 0.06760844129603356,
+          "mean_delta_nll": 0.06956388894468546,
+          "nll": 4.317267330277817
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-23",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          7,
+          0,
+          5,
+          3,
+          6,
+          4,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06754806430924809,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260958,
+          "ci95_high": 0.06928224533330649,
+          "ci95_low": 0.06583826674614102,
+          "mean_delta_nll": 0.06754805985838175,
+          "nll": 4.2039037673704085
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07064602265493214,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260957,
+          "ci95_high": 0.07280766825424508,
+          "ci95_low": 0.06849382282234728,
+          "mean_delta_nll": 0.0706460252404213,
+          "nll": 4.31834947375375
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-24",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          5,
+          0,
+          7,
+          1,
+          3,
+          4,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06767016212262078,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260960,
+          "ci95_high": 0.0694320949842222,
+          "ci95_low": 0.06593572159763425,
+          "mean_delta_nll": 0.06767016276717186,
+          "nll": 4.204025865183781
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.070205414400073,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260959,
+          "ci95_high": 0.07229294285643846,
+          "ci95_low": 0.0681103959097527,
+          "mean_delta_nll": 0.07020541140809655,
+          "nll": 4.31790886549889
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-25",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          2,
+          5,
+          6,
+          7,
+          3,
+          0,
+          4,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06843834305555418,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260962,
+          "ci95_high": 0.07013008538633585,
+          "ci95_low": 0.06676104533253238,
+          "mean_delta_nll": 0.06843833811581135,
+          "nll": 4.204794046116715
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07186496152905786,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260961,
+          "ci95_high": 0.07398959640413523,
+          "ci95_low": 0.06976868474157527,
+          "mean_delta_nll": 0.07186494581401348,
+          "nll": 4.319568412627875
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-26",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          3,
+          4,
+          6,
+          0,
+          2,
+          7,
+          1
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06863702986596998,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260964,
+          "ci95_high": 0.07027986530447379,
+          "ci95_low": 0.06699677767464891,
+          "mean_delta_nll": 0.06863703113049269,
+          "nll": 4.20499273292713
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07101115499889854,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260963,
+          "ci95_high": 0.07291027636965737,
+          "ci95_low": 0.0691807275172323,
+          "mean_delta_nll": 0.07101116050034761,
+          "nll": 4.318714606097716
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-27",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          4,
+          7,
+          1,
+          2,
+          6,
+          0,
+          3
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06797669663340766,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260966,
+          "ci95_high": 0.06966959126293659,
+          "ci95_low": 0.06629485683515668,
+          "mean_delta_nll": 0.06797669036313891,
+          "nll": 4.204332399694568
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07005227276307124,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260965,
+          "ci95_high": 0.07200230240123347,
+          "ci95_low": 0.06810590841341764,
+          "mean_delta_nll": 0.07005227403715253,
+          "nll": 4.317755723861889
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-28",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          3,
+          0,
+          5,
+          2,
+          1,
+          7,
+          4,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06663225543114493,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260968,
+          "ci95_high": 0.06837339812191204,
+          "ci95_low": 0.06489397543482482,
+          "mean_delta_nll": 0.0666322628967464,
+          "nll": 4.202987958492305
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.0701209405766674,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260967,
+          "ci95_high": 0.07220516408560798,
+          "ci95_low": 0.06808005229104311,
+          "mean_delta_nll": 0.07012094417586923,
+          "nll": 4.317824391675485
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-29",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          5,
+          2,
+          6,
+          1,
+          3,
+          7,
+          4,
+          0
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06620761446239687,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260970,
+          "ci95_high": 0.06786307243164628,
+          "ci95_low": 0.06455540813039988,
+          "mean_delta_nll": 0.06620761286467314,
+          "nll": 4.202563317523557
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.06947961324354335,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260969,
+          "ci95_high": 0.07160434266552329,
+          "ci95_low": 0.06743725205305964,
+          "mean_delta_nll": 0.06947960751131177,
+          "nll": 4.317183064342361
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-30",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          7,
+          4,
+          5,
+          0,
+          2,
+          3,
+          1,
+          6
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06869471923813197,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260972,
+          "ci95_high": 0.07047261593397706,
+          "ci95_low": 0.06695622353581712,
+          "mean_delta_nll": 0.06869471818208694,
+          "nll": 4.205050422299292
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07140874489777715,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260971,
+          "ci95_high": 0.0734634127584286,
+          "ci95_low": 0.0693935870542191,
+          "mean_delta_nll": 0.07140874536707997,
+          "nll": 4.319112195996595
+        }
+      }
+    },
+    {
+      "condition": {
+        "id": "derangement-31",
+        "kind": "local-chunk-derangement",
+        "local_chunk_permutation": [
+          6,
+          7,
+          1,
+          4,
+          0,
+          3,
+          5,
+          2
+        ]
+      },
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.06957523610701433,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260974,
+          "ci95_high": 0.07128303467761725,
+          "ci95_low": 0.06789846894098446,
+          "mean_delta_nll": 0.06957523617893457,
+          "nll": 4.205930939168175
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.07152371345960074,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260973,
+          "ci95_high": 0.07347799629205838,
+          "ci95_low": 0.06962804006179794,
+          "mean_delta_nll": 0.07152371294796467,
+          "nll": 4.319227164558418
+        }
+      }
+    }
+  ],
+  "created_at": "2026-09-04T14:06:59.270671+00:00",
+  "experiment": "9-hq8-head-contribution",
+  "format_version": 1,
+  "interpretation_limits": [
+    "single trained seed and one checkpoint",
+    "paired sequence confidence intervals do not quantify training-seed uncertainty",
+    "head zeroing is an off-distribution intervention and does not equal retraining without those heads",
+    "the 32 derangements are a frozen diagnostic sample, not all 14833 derangements of eight chunks"
+  ],
+  "phase": "9B-alignment",
+  "wandb": {
+    "run_id": "6pe9o9po",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/6pe9o9po"
+  }
+}
