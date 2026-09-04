@@ -4,8 +4,8 @@ Research code and experiment records studying **how the residual stream should
 be divided into routing groups in Multi-Head Attention Residuals (MHAR)**.
 
 This repository extends the MHAR reference implementation with frozen-partition
-tests, matched from-scratch training, boundary-signal diagnostics, and short
-continued-training interventions. **Our Experiments 1–5 are separate from the
+tests, matched from-scratch training, boundary-signal diagnostics, short
+continued-training interventions, and attention-coupling tests. **Our Experiments 1–9 are separate from the
 original paper's experiments.** They do not introduce a validated learnable-boundary
 architecture.
 
@@ -29,17 +29,22 @@ a training-time improvement.**
   but **did not establish an advantage over leaving native H16 unchanged**.
 - Fixed-validation Experiment 5 found an attenuated, **non-monotonic** A−B gap,
   not a clean permanent washout or a demonstrated adaptive-grouping benefit.
+- Hard chunk-restricted QKV and fully local-Q attention underperformed dense
+  MHAR, while the **Hybrid-Q8 midpoint matched M8 within this seed-42 screen**.
+- Frozen HQ8 ablations show that its local-Q heads contribute useful computation
+  and depend on their assigned MHAR chunks, although its global-Q heads remain
+  substantially more important.
 
 These are checkpoint- and protocol-specific findings, not universal semantic
 boundaries or proof that all adaptive routing methods will fail.
 
-**Status as of 2026-08-31:** Experiment 5 is complete; results are backed up and
-published. Its GPU workflow is closed and monitoring removed. No further
-architecture experiment has been launched. See the
-[shutdown record](results/experiment5/SHUTDOWN_STATUS.md) for the operational
-recovery and the distinction between SSH unreachability and provider billing.
+**Status as of 2026-09-04:** Experiments 1–9 are recorded through the single-seed
+Experiment 9 mechanistic screen. Experiment 9 results and figures are backed up;
+its GPU workflow is closed and monitoring removed. The result supports genuine
+local-head use and chunk alignment inside trained HQ8, but does not establish
+multi-seed robustness or authorize a new architecture by itself.
 
-[Latest full report](results/experiment5/FINAL_REPORT.md) ·
+[Latest full report](results/experiment9/FINAL_REPORT.md) ·
 [W&B project](https://wandb.ai/zimmer061310-ena/MHAR%20stuff) ·
 [Experiment plans](docs/plans/) · [Runbooks](docs/runbooks/)
 
@@ -83,7 +88,10 @@ structural measurements—not measurements of human-interpretable semantic purit
 | **3 — Signal, time, and landscape** | Probe H16 seeds 42/43/44 at 1000/1500/2000/3000; separately move H8 boundaries locally. | Signal gate: 3/3 pass. Temporal gate: 0/3 pass. Gated actionability stage not run. |
 | **4 — Short-horizon training branches** | From seed 43 step 1500, train good/bad/unchanged branches to 2000; log training losses every 10 steps. | Small early A−B advantage; no clearly sustained full-horizon advantage or demonstrated benefit over unchanged. |
 | **5 — Fixed-validation washout** | Repeat the same interventions from step 1500; evaluate identical held-out examples after 0/1/2/5/10/20/50/100 updates. | A beats B through +20, loses at +50, wins again at +100. No sampled point has lower A NLL than unchanged C. |
-| **6 — Coupled MHAR chunks to attention groups** | Keep MHAR-4/8 coordinate chunks separate through grouped Q/K/V; compare against dense MHAR and restricted-attention controls. | Implemented and preregistered for a seed-42 step-2,000 screen; no GPU result yet. |
+| **6 — Coupled MHAR chunks to attention groups** | Keep MHAR-4/8 coordinate chunks separate through grouped Q/K/V; compare against dense MHAR and restricted-attention controls. | Hard coupling loses: confirmation C4−M4 +0.181916 and C8−M8 +0.286143 NLL. |
+| **7 — Local-Q / Global-KV** | Restrict only Q to its MHAR chunk while restoring dense/global K and V. | Recovers most of Experiment 6's loss but remains worse: confirmation LQ4−M4 +0.048601 and LQ8−M8 +0.054053. |
+| **8 — Hybrid-Q8 / Global-KV** | Give each GQA group one local-Q and one global-Q head; compare with dense M8, fully local LQ8, and ordinary-residual controls. | HQ8 matches M8 within seed 42 at step 2000: confirmation HQ8−M8 −0.000671, CI [−0.002908,+0.001551]. |
+| **9 — HQ8 head contribution** | Freeze trained HQ8; zero local/global head populations, compare with 70 matched masks, then permute local chunk assignments. | Local heads matter (+0.165466 confirmation NLL when removed), global heads matter more (+1.494456), and all 32 chunk derangements hurt. |
 
 ### Experiment 1 — all 105 pairings at fixed H4
 
@@ -339,13 +347,50 @@ and `(HQ8−M8)−(BHQ8−B)`, with paired per-sequence confidence intervals. Th
 is a catastrophe/review screen only; it does not authorize continuation or
 multi-seed training.
 
-Status: implementation and fail-closed two-GPU workflow prepared; no GPU run
-has started.
+Frozen result: `eligible_for_review` and `within_seed_practical_match`. At step
+2,000, confirmation HQ8−M8 is −0.000671 NLL with paired 95% CI
+[−0.002908,+0.001551]. The matched ordinary-residual control BHQ8−B is
++0.021492 [+0.019057,+0.023976], giving an interaction of −0.022163
+[−0.025593,−0.018753]. This is still one seed and one early checkpoint.
+
+![Experiment 8: held-out NLL across global/local query mixtures](results/experiment8/step-2000/analysis/fig_hybrid_q_nll.png)
 
 [Plan and frozen protocol](docs/plans/experiment-8.md) ·
 [Machine-readable run matrix](configs/experiment8/screening.json) ·
 [Hybrid-Q implementation](src/experiments/experiment8_hybrid_q.py) ·
-[Two-GPU runbook](docs/runbooks/experiment8-two-gpu.md)
+[Final report](results/experiment8/FINAL_REPORT.md) ·
+[W&B analysis](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/8r9kzimc)
+
+### Experiment 9 — HQ8 local-vs-global head contribution
+
+Experiment 9 performs no training. It freezes the accepted HQ8 step-2,000
+checkpoint and zeros attention-head outputs immediately before dense W_O.
+Removing all eight local-Q heads raises confirmation NLL by +0.165466 with
+paired 95% CI [+0.161240,+0.169977]. Removing all eight global-Q heads raises it
+by +1.494456 [+1.472052,+1.516987]. Thus local heads are useful, but global heads
+carry much more of the model's attention computation.
+
+The matched control exhausts all 70 masks that remove four local and four global
+heads while removing exactly one head per GQA group. Its confirmation median is
++0.489875 NLL. Zero-local lies below every matched mask; zero-global lies above
+every matched mask.
+
+The preregistered contribution gate passed, authorizing the frozen alignment
+test. All 32 local-chunk derangements hurt: confirmation mean +0.067644 NLL,
+two-stage 95% CI [+0.065945,+0.069380], with 100% positive. This supports a
+specific learned MHAR-chunk/local-head relationship, subject to the limits of
+one seed, one checkpoint, and off-distribution head-zeroing interventions.
+
+![Experiment 9A: structured population ablations against 70 matched half-head masks](results/experiment9/fig_head_contribution.png)
+
+![Experiment 9B: NLL damage from 32 frozen local-chunk derangements](results/experiment9/fig_local_chunk_alignment.png)
+
+[Plan and frozen protocol](docs/plans/experiment-9.md) ·
+[Machine-readable protocol](configs/experiment9/protocol.json) ·
+[Intervention and analysis implementation](src/experiments/experiment9_head_contribution.py) ·
+[Final report](results/experiment9/FINAL_REPORT.md) ·
+[9A W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/7q07hopp) ·
+[9B W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/6pe9o9po)
 
 ## Shared model and scientific controls
 
@@ -453,6 +498,9 @@ Useful entry points:
 | Exp 4 three branches | [launch_experiment4_3gpu.sh](scripts/train/launch_experiment4_3gpu.sh) |
 | Exp 5 fixed-validation sequence | [Experiment 5 runbook](docs/runbooks/experiment5-three-gpu.md) |
 | Exp 6 grouped-QKV screen | [Plan](docs/plans/experiment-6.md), [five-GPU launcher](scripts/train/launch_experiment6_5gpu.sh), [analysis](src/experiments/experiment6_screening.py) |
+| Exp 7 Local-Q / Global-KV | [Plan](docs/plans/experiment-7.md), [implementation](src/experiments/experiment7_local_q.py), [analysis](src/experiments/experiment7_screening.py) |
+| Exp 8 Hybrid-Q8 | [Plan](docs/plans/experiment-8.md), [implementation](src/experiments/experiment8_hybrid_q.py), [analysis](src/experiments/experiment8_screening.py) |
+| Exp 9 HQ8 head contribution | [Plan](docs/plans/experiment-9.md), [interventions and analysis](src/experiments/experiment9_head_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment9_controller.py) |
 
 Independent models/branches can run one per GPU; this is different from assigning
 several GPUs to one model. The recorded screen used independent jobs, including
