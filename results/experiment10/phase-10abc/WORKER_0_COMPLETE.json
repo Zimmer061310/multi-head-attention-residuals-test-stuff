@@ -1,0 +1,21 @@
+{
+  "completed_at": "2026-09-04T17:05:14.668135+00:00",
+  "condition_ids": [
+    "hq8-unchanged",
+    "remove-global-g0",
+    "remove-local-g1",
+    "remove-group-g1",
+    "remove-global-g2",
+    "remove-local-g3",
+    "remove-group-g3",
+    "remove-global-g4",
+    "remove-local-g5",
+    "remove-group-g5",
+    "remove-global-g6",
+    "remove-local-g7",
+    "remove-group-g7"
+  ],
+  "manifest_sha256": "b37709bdded5108cc82b884e7fe7b33cd5eecfc849ef5b8f7ac5e13dd646fc98",
+  "worker_count": 2,
+  "worker_index": 0
+}

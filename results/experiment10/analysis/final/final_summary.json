@@ -1,0 +1,19 @@
+{
+  "classification": "distributed",
+  "created_at": "2026-09-04T18:15:25.956772+00:00",
+  "experiment": "10-per-group-query-contribution",
+  "format_version": 1,
+  "phase_10abc_summary_sha256": "5152b3ff8b76141dfac1f71608604a3ad654df69c570ff86ae3bc852a06624c0",
+  "phase_10d_ran": true,
+  "phase_10d_summary_sha256": "a54fbe814a3e6aa869b4b739024f9468f7ac429f1408497a2ab6154fa9a9cdcb",
+  "useful_local_groups": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}

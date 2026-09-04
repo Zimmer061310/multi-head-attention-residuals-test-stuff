@@ -1,0 +1,1113 @@
+{
+  "artifact_sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+  "checkpoint_sha256": "74cff0ab19409dac9f6104e8986e4890c0837bc730d8ac233ae18011dbc58333",
+  "content_sha256": "b37709bdded5108cc82b884e7fe7b33cd5eecfc849ef5b8f7ac5e13dd646fc98",
+  "created_from_commit": "51717c3a49a4b2f718ae374bedc17a0fcda4c42d",
+  "experiment": "10-per-group-query-contribution",
+  "format_version": 1,
+  "phase_10abc": [
+    {
+      "id": "hq8-unchanged",
+      "kind": "reference",
+      "removed_heads": []
+    },
+    {
+      "group": 0,
+      "id": "remove-local-g0",
+      "kind": "single-local",
+      "removed_heads": [
+        0
+      ]
+    },
+    {
+      "group": 0,
+      "id": "remove-global-g0",
+      "kind": "single-global",
+      "removed_heads": [
+        1
+      ]
+    },
+    {
+      "group": 0,
+      "id": "remove-group-g0",
+      "kind": "whole-group",
+      "removed_heads": [
+        0,
+        1
+      ]
+    },
+    {
+      "group": 1,
+      "id": "remove-local-g1",
+      "kind": "single-local",
+      "removed_heads": [
+        2
+      ]
+    },
+    {
+      "group": 1,
+      "id": "remove-global-g1",
+      "kind": "single-global",
+      "removed_heads": [
+        3
+      ]
+    },
+    {
+      "group": 1,
+      "id": "remove-group-g1",
+      "kind": "whole-group",
+      "removed_heads": [
+        2,
+        3
+      ]
+    },
+    {
+      "group": 2,
+      "id": "remove-local-g2",
+      "kind": "single-local",
+      "removed_heads": [
+        4
+      ]
+    },
+    {
+      "group": 2,
+      "id": "remove-global-g2",
+      "kind": "single-global",
+      "removed_heads": [
+        5
+      ]
+    },
+    {
+      "group": 2,
+      "id": "remove-group-g2",
+      "kind": "whole-group",
+      "removed_heads": [
+        4,
+        5
+      ]
+    },
+    {
+      "group": 3,
+      "id": "remove-local-g3",
+      "kind": "single-local",
+      "removed_heads": [
+        6
+      ]
+    },
+    {
+      "group": 3,
+      "id": "remove-global-g3",
+      "kind": "single-global",
+      "removed_heads": [
+        7
+      ]
+    },
+    {
+      "group": 3,
+      "id": "remove-group-g3",
+      "kind": "whole-group",
+      "removed_heads": [
+        6,
+        7
+      ]
+    },
+    {
+      "group": 4,
+      "id": "remove-local-g4",
+      "kind": "single-local",
+      "removed_heads": [
+        8
+      ]
+    },
+    {
+      "group": 4,
+      "id": "remove-global-g4",
+      "kind": "single-global",
+      "removed_heads": [
+        9
+      ]
+    },
+    {
+      "group": 4,
+      "id": "remove-group-g4",
+      "kind": "whole-group",
+      "removed_heads": [
+        8,
+        9
+      ]
+    },
+    {
+      "group": 5,
+      "id": "remove-local-g5",
+      "kind": "single-local",
+      "removed_heads": [
+        10
+      ]
+    },
+    {
+      "group": 5,
+      "id": "remove-global-g5",
+      "kind": "single-global",
+      "removed_heads": [
+        11
+      ]
+    },
+    {
+      "group": 5,
+      "id": "remove-group-g5",
+      "kind": "whole-group",
+      "removed_heads": [
+        10,
+        11
+      ]
+    },
+    {
+      "group": 6,
+      "id": "remove-local-g6",
+      "kind": "single-local",
+      "removed_heads": [
+        12
+      ]
+    },
+    {
+      "group": 6,
+      "id": "remove-global-g6",
+      "kind": "single-global",
+      "removed_heads": [
+        13
+      ]
+    },
+    {
+      "group": 6,
+      "id": "remove-group-g6",
+      "kind": "whole-group",
+      "removed_heads": [
+        12,
+        13
+      ]
+    },
+    {
+      "group": 7,
+      "id": "remove-local-g7",
+      "kind": "single-local",
+      "removed_heads": [
+        14
+      ]
+    },
+    {
+      "group": 7,
+      "id": "remove-global-g7",
+      "kind": "single-global",
+      "removed_heads": [
+        15
+      ]
+    },
+    {
+      "group": 7,
+      "id": "remove-group-g7",
+      "kind": "whole-group",
+      "removed_heads": [
+        14,
+        15
+      ]
+    }
+  ],
+  "phase_10d": [
+    {
+      "id": "misalign-g0-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        1,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        2,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        3,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        4,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        6,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g0-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        7,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 0
+    },
+    {
+      "id": "misalign-g1-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        2,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        3,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        4,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        5,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        6,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g1-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        7,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 1
+    },
+    {
+      "id": "misalign-g2-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        0,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        3,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        4,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        5,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        6,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g2-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        7,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 2
+    },
+    {
+      "id": "misalign-g3-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        0,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        1,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        4,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        5,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        6,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g3-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        7,
+        4,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 3
+    },
+    {
+      "id": "misalign-g4-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        0,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        1,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        3,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        6,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g4-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        7,
+        5,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 4
+    },
+    {
+      "id": "misalign-g5-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        0,
+        6,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        1,
+        6,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        2,
+        6,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        3,
+        6,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        4,
+        6,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        6,
+        7
+      ],
+      "source_chunk": 6,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g5-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        6,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 5
+    },
+    {
+      "id": "misalign-g6-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        0,
+        7
+      ],
+      "source_chunk": 0,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        1,
+        7
+      ],
+      "source_chunk": 1,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        2,
+        7
+      ],
+      "source_chunk": 2,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        3,
+        7
+      ],
+      "source_chunk": 3,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        4,
+        7
+      ],
+      "source_chunk": 4,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        5,
+        7
+      ],
+      "source_chunk": 5,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g6-from-c7",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        7
+      ],
+      "source_chunk": 7,
+      "target_group": 6
+    },
+    {
+      "id": "misalign-g7-from-c0",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ],
+      "source_chunk": 0,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c1",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        1
+      ],
+      "source_chunk": 1,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c2",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        2
+      ],
+      "source_chunk": 2,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c3",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        3
+      ],
+      "source_chunk": 3,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c4",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        4
+      ],
+      "source_chunk": 4,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c5",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        5
+      ],
+      "source_chunk": 5,
+      "target_group": 7
+    },
+    {
+      "id": "misalign-g7-from-c6",
+      "kind": "single-local-misalignment",
+      "local_chunk_sources": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        6
+      ],
+      "source_chunk": 6,
+      "target_group": 7
+    }
+  ]
+}
