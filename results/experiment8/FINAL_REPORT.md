@@ -7,6 +7,11 @@ Frozen decision: `eligible_for_review`. Within-seed assessment: `within_seed_pra
 This is a seed-42 step-2,000 screen, not a convergence or multi-seed claim.
 Negative delta NLL favors the first named model.
 
+## Figures
+
+- [Held-out NLL across 0%, 50%, and 100% local-query heads](step-2000/analysis/fig_hybrid_q_nll.pdf)
+- [Confirmation contrasts with paired 95% confidence intervals](step-2000/analysis/fig_hybrid_q_contrasts.pdf)
+
 ## Paired fixed-validation contrasts
 
 | Contrast | Role | Split | Delta NLL | 95% CI |
@@ -38,3 +43,5 @@ Negative delta NLL favors the first named model.
 - The paired intervals quantify held-out sequence sampling uncertainty, not training-seed uncertainty.
 - Parameter/MAC reports cover physical projection structure; they are not measured whole-model speedups.
 - No continuation or multi-seed experiment is authorized by this result.
+
+Figures are generated reproducibly by `figures/gen_fig_experiment8_hybrid_q.py` from the committed result files.
