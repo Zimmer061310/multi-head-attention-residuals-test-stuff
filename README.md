@@ -34,16 +34,20 @@ a training-time improvement.**
 - Frozen HQ8 ablations show that its local-Q heads contribute useful computation
   and depend on their assigned MHAR chunks, although its global-Q heads remain
   substantially more important.
+- The per-group follow-up finds useful local-Q contribution in all eight groups;
+  exact chunk alignment matters for every group, while local and global
+  importance rankings are nearly unrelated on confirmation.
 
 These are checkpoint- and protocol-specific findings, not universal semantic
 boundaries or proof that all adaptive routing methods will fail.
 
-**Status as of 2026-09-05:** Experiments 1–9 are recorded through the single-seed
-Experiment 9 mechanistic screen. Experiment 10 is preregistered and implemented
-as a no-training, frozen per-group ablation of the same accepted HQ8 checkpoint;
-it has no accepted numerical result yet.
+**Status as of 2026-09-05:** Experiments 1–10 are recorded through the
+single-seed Experiment 10 mechanistic screen. Experiment 10 classified local-Q
+contribution as distributed and found positive exact-chunk alignment damage in
+all eight groups. This remains a frozen checkpoint result, not a multi-seed or
+retraining claim.
 
-[Latest full report](results/experiment9/FINAL_REPORT.md) ·
+[Latest full report](results/experiment10/FINAL_REPORT.md) ·
 [W&B project](https://wandb.ai/zimmer061310-ena/MHAR%20stuff) ·
 [Experiment plans](docs/plans/) · [Runbooks](docs/runbooks/)
 
@@ -91,7 +95,7 @@ structural measurements—not measurements of human-interpretable semantic purit
 | **7 — Local-Q / Global-KV** | Restrict only Q to its MHAR chunk while restoring dense/global K and V. | Recovers most of Experiment 6's loss but remains worse: confirmation LQ4−M4 +0.048601 and LQ8−M8 +0.054053. |
 | **8 — Hybrid-Q8 / Global-KV** | Give each GQA group one local-Q and one global-Q head; compare with dense M8, fully local LQ8, and ordinary-residual controls. | HQ8 matches M8 within seed 42 at step 2000: confirmation HQ8−M8 −0.000671, CI [−0.002908,+0.001551]. |
 | **9 — HQ8 head contribution** | Freeze trained HQ8; zero local/global head populations, compare with 70 matched masks, then permute local chunk assignments. | Local heads matter (+0.165466 confirmation NLL when removed), global heads matter more (+1.494456), and all 32 chunk derangements hurt. |
-| **10 — Per-group query contribution** | Freeze trained HQ8; ablate each local head, global head, and whole GQA group, then conditionally exhaust one-group chunk substitutions. | Preregistered and implemented; frozen evaluation has not run yet. |
+| **10 — Per-group query contribution** | Freeze trained HQ8; ablate each local head, global head, and whole GQA group, then conditionally exhaust one-group chunk substitutions. | All 8 local groups pass; contribution is distributed. Every one-group wrong-chunk substitution hurts on confirmation. |
 
 ### Experiment 1 — all 105 pairings at fixed H4
 
@@ -401,19 +405,38 @@ matched single-global removals, and eight whole-group removals. All masks are
 applied to attention-head outputs immediately before dense W_O across every
 layer.
 
-The primary outputs are the eight-element local and global damage vectors,
-paired per-sequence confidence intervals, whole-group interaction terms, and a
-frozen distributed/concentrated descriptive classification. Experiment 10D is
-authorized only if at least one local group passes the preregistered usefulness
-rule; it then exhausts all 56 ways to give one target local head one incorrect
-source chunk while leaving the other seven groups aligned.
+All eight local heads passed the frozen usefulness rule, yielding the
+`distributed` classification. Confirmation single-local removal damage ranges
+from +0.002117 to +0.011945 NLL; the two largest local effects account for only
+40.2% of total positive damage. Global-head removals are larger for every group,
+from +0.021498 to +0.062250 NLL. Local/global group importance has almost no
+confirmation rank association (Spearman +0.024), supporting distinct roles
+rather than generally important group positions.
+
+The sum of confirmation single-local damages is +0.048829, far smaller than
+the +0.165466 all-local population damage. The +0.116638 collective gap has
+95% CI [+0.113928,+0.119382], showing strong nonlinear collective dependence.
+
+The frozen gate authorized all 56 one-group chunk substitutions. Every
+substitution hurt on confirmation. Mean alignment damage is positive for every
+target group, ranging from +0.002168 to +0.012006 NLL; group 4 is most dependent
+on exact chunk identity and group 6 is least under this intervention.
 
 This is a single-seed checkpoint intervention, not evidence that a retrained
 heterogeneous architecture would improve language modeling.
 
+![Experiment 10 per-group local/global/whole-group contribution](results/experiment10/fig_group_contribution.png)
+
+![Experiment 10 local contribution and interaction profiles](results/experiment10/fig_local_distribution.png)
+
+![Experiment 10 one-group wrong-chunk alignment map](results/experiment10/fig_group_alignment.png)
+
 [Plan and frozen protocol](docs/plans/experiment-10.md) ·
 [Machine-readable protocol](configs/experiment10/protocol.json) ·
 [Intervention and analysis implementation](src/experiments/experiment10_per_group_contribution.py) ·
+[Final report](results/experiment10/FINAL_REPORT.md) ·
+[10ABC W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/uyzpoa2t) ·
+[10D W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/aklimpg4) ·
 [Two-GPU runbook](docs/runbooks/experiment10-two-gpu.md)
 
 ## Shared model and scientific controls
