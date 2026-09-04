@@ -5,7 +5,7 @@ be divided into routing groups in Multi-Head Attention Residuals (MHAR)**.
 
 This repository extends the MHAR reference implementation with frozen-partition
 tests, matched from-scratch training, boundary-signal diagnostics, short
-continued-training interventions, and attention-coupling tests. **Our Experiments 1–9 are separate from the
+continued-training interventions, and attention-coupling tests. **Our Experiments 1–10 are separate from the
 original paper's experiments.** They do not introduce a validated learnable-boundary
 architecture.
 
@@ -38,11 +38,10 @@ a training-time improvement.**
 These are checkpoint- and protocol-specific findings, not universal semantic
 boundaries or proof that all adaptive routing methods will fail.
 
-**Status as of 2026-09-04:** Experiments 1–9 are recorded through the single-seed
-Experiment 9 mechanistic screen. Experiment 9 results and figures are backed up;
-its GPU workflow is closed and monitoring removed. The result supports genuine
-local-head use and chunk alignment inside trained HQ8, but does not establish
-multi-seed robustness or authorize a new architecture by itself.
+**Status as of 2026-09-05:** Experiments 1–9 are recorded through the single-seed
+Experiment 9 mechanistic screen. Experiment 10 is preregistered and implemented
+as a no-training, frozen per-group ablation of the same accepted HQ8 checkpoint;
+it has no accepted numerical result yet.
 
 [Latest full report](results/experiment9/FINAL_REPORT.md) ·
 [W&B project](https://wandb.ai/zimmer061310-ena/MHAR%20stuff) ·
@@ -92,6 +91,7 @@ structural measurements—not measurements of human-interpretable semantic purit
 | **7 — Local-Q / Global-KV** | Restrict only Q to its MHAR chunk while restoring dense/global K and V. | Recovers most of Experiment 6's loss but remains worse: confirmation LQ4−M4 +0.048601 and LQ8−M8 +0.054053. |
 | **8 — Hybrid-Q8 / Global-KV** | Give each GQA group one local-Q and one global-Q head; compare with dense M8, fully local LQ8, and ordinary-residual controls. | HQ8 matches M8 within seed 42 at step 2000: confirmation HQ8−M8 −0.000671, CI [−0.002908,+0.001551]. |
 | **9 — HQ8 head contribution** | Freeze trained HQ8; zero local/global head populations, compare with 70 matched masks, then permute local chunk assignments. | Local heads matter (+0.165466 confirmation NLL when removed), global heads matter more (+1.494456), and all 32 chunk derangements hurt. |
+| **10 — Per-group query contribution** | Freeze trained HQ8; ablate each local head, global head, and whole GQA group, then conditionally exhaust one-group chunk substitutions. | Preregistered and implemented; frozen evaluation has not run yet. |
 
 ### Experiment 1 — all 105 pairings at fixed H4
 
@@ -392,6 +392,30 @@ one seed, one checkpoint, and off-distribution head-zeroing interventions.
 [9A W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/7q07hopp) ·
 [9B W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/6pe9o9po)
 
+### Experiment 10 — per-group local/global query contribution
+
+Experiment 10 performs no training and reuses the accepted HQ8 step-2,000
+checkpoint and the same fixed discovery/confirmation artifact. Its primary
+25-condition stage contains unchanged HQ8, eight single-local removals, eight
+matched single-global removals, and eight whole-group removals. All masks are
+applied to attention-head outputs immediately before dense W_O across every
+layer.
+
+The primary outputs are the eight-element local and global damage vectors,
+paired per-sequence confidence intervals, whole-group interaction terms, and a
+frozen distributed/concentrated descriptive classification. Experiment 10D is
+authorized only if at least one local group passes the preregistered usefulness
+rule; it then exhausts all 56 ways to give one target local head one incorrect
+source chunk while leaving the other seven groups aligned.
+
+This is a single-seed checkpoint intervention, not evidence that a retrained
+heterogeneous architecture would improve language modeling.
+
+[Plan and frozen protocol](docs/plans/experiment-10.md) ·
+[Machine-readable protocol](configs/experiment10/protocol.json) ·
+[Intervention and analysis implementation](src/experiments/experiment10_per_group_contribution.py) ·
+[Two-GPU runbook](docs/runbooks/experiment10-two-gpu.md)
+
 ## Shared model and scientific controls
 
 The experiment family uses the 1B-class Qwen3-style MHAR setup below.
@@ -501,6 +525,7 @@ Useful entry points:
 | Exp 7 Local-Q / Global-KV | [Plan](docs/plans/experiment-7.md), [implementation](src/experiments/experiment7_local_q.py), [analysis](src/experiments/experiment7_screening.py) |
 | Exp 8 Hybrid-Q8 | [Plan](docs/plans/experiment-8.md), [implementation](src/experiments/experiment8_hybrid_q.py), [analysis](src/experiments/experiment8_screening.py) |
 | Exp 9 HQ8 head contribution | [Plan](docs/plans/experiment-9.md), [interventions and analysis](src/experiments/experiment9_head_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment9_controller.py) |
+| Exp 10 per-group contribution | [Plan](docs/plans/experiment-10.md), [interventions and analysis](src/experiments/experiment10_per_group_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment10_controller.py) |
 
 Independent models/branches can run one per GPU; this is different from assigning
 several GPUs to one model. The recorded screen used independent jobs, including

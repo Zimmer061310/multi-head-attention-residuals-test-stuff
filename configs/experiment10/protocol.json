@@ -1,0 +1,65 @@
+{
+  "format_version": 1,
+  "name": "Experiment 10 Per-Group Local/Global Query Contribution",
+  "seed": 42,
+  "milestone": 2000,
+  "training": false,
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp10-per-group-contribution-seed42-step2000",
+  "checkpoint": {
+    "source": "accepted Experiment 8 HQ8 step-2000 checkpoint",
+    "sha256": "74cff0ab19409dac9f6104e8986e4890c0837bc730d8ac233ae18011dbc58333"
+  },
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact reused by Experiments 8 and 9",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "splits": ["discovery", "confirmation"]
+  },
+  "head_order": {
+    "num_gqa_groups": 8,
+    "queries_per_group": 2,
+    "local_head_position": "even",
+    "global_head_position": "odd",
+    "head_dimension": 80,
+    "ablation_site": "attention output immediately before dense W_O"
+  },
+  "phase_10abc": {
+    "conditions": {
+      "reference": 1,
+      "single_local": 8,
+      "single_global": 8,
+      "whole_group": 8
+    },
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260912,
+    "useful_local_group_rule": {
+      "practical_margin_nll": 0.001,
+      "rule": "a local group is useful only if discovery delta is positive, confirmation delta is at least 0.001, and the confirmation paired-bootstrap CI lower bound is above zero"
+    },
+    "distribution_classification": {
+      "distributed_minimum_useful_groups": 6,
+      "distributed_maximum_top2_positive_share": 0.5,
+      "concentrated_maximum_useful_groups": 4,
+      "concentrated_minimum_top2_positive_share": 0.6,
+      "otherwise": "mixed_or_inconclusive"
+    },
+    "phase_10d_gate": {
+      "minimum_useful_local_groups": 1,
+      "rule": "run 10D only if at least one local group passes the frozen useful-local-group rule"
+    }
+  },
+  "phase_10d": {
+    "conditional_on": "phase_10abc.phase_10d_gate == pass",
+    "construction": "exhaust all 8 target local groups times 7 incorrect source chunks; change one local input assignment and leave the other seven aligned",
+    "condition_count": 56,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260913
+  },
+  "interpretation_limits": [
+    "single trained seed and one checkpoint",
+    "head zeroing and chunk substitution are off-distribution interventions and do not equal retraining",
+    "paired sequence confidence intervals do not quantify training-seed uncertainty",
+    "single-head damages need not add to the all-local population damage because the network is nonlinear",
+    "per-group labels refer to fixed HQ8 GQA positions and are not universal head coordinates"
+  ]
+}
