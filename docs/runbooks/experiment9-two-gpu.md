@@ -48,6 +48,9 @@ screen -L -Logfile /root/autodl-tmp/experiment9-controller.log \
   --result-branch codex/experiment-9-head-contribution
 ```
 
+The controller resolves the repository root from its own script path, so this
+direct-script command is independent of the shell's current directory.
+
 The controller first requires exact reproduction of Experiment 8 HQ8. It then
 analyzes 9A and conditionally runs 9B, uploads compact tables to W&B, copies all
 per-sequence results, publication figures, and manifests into
