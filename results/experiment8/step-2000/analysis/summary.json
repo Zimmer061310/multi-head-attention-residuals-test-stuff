@@ -1,0 +1,204 @@
+{
+  "catastrophic_designs": [],
+  "contrasts": [
+    {
+      "id": "hq8-minus-m8",
+      "role": "primary",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.0006710925992523542,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": 0.0015511246165260664,
+          "ci95_low": -0.002907986962236464,
+          "mean_delta_nll": -0.0006710975430905819
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.0002406447514067267,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": 0.00226490661734715,
+          "ci95_low": -0.0026904385653324426,
+          "mean_delta_nll": -0.00024064350873231888
+        }
+      },
+      "terms": {
+        "hq8": 1,
+        "m8": -1
+      }
+    },
+    {
+      "id": "bhq8-minus-b",
+      "role": "control",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": 0.021492051472296048,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": 0.023976295348256828,
+          "ci95_low": 0.019057278393302114,
+          "mean_delta_nll": 0.02149204909801483
+        },
+        "discovery": {
+          "aggregate_delta_nll": 0.02029628324834931,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": 0.02292514842702076,
+          "ci95_low": 0.017681773321237416,
+          "mean_delta_nll": 0.020296281669288874
+        }
+      },
+      "terms": {
+        "b": -1,
+        "bhq8": 1
+      }
+    },
+    {
+      "id": "h8-interaction",
+      "role": "primary_interaction",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.022163144071548402,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.018753334495704623,
+          "ci95_low": -0.02559320101281628,
+          "mean_delta_nll": -0.022163146641105413
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.02053692799975604,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.017187502374872567,
+          "ci95_low": -0.0238999325199984,
+          "mean_delta_nll": -0.020536925178021193
+        }
+      },
+      "terms": {
+        "b": 1,
+        "bhq8": -1,
+        "hq8": 1,
+        "m8": -1
+      }
+    },
+    {
+      "id": "hq8-minus-lq8",
+      "role": "endpoint_diagnostic",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.05472375733644963,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.05206934749148786,
+          "ci95_low": -0.05744236280443147,
+          "mean_delta_nll": -0.05472375499084592
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.058301692600940314,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.05531708840280771,
+          "ci95_low": -0.06144875600002706,
+          "mean_delta_nll": -0.058301696088165045
+        }
+      },
+      "terms": {
+        "hq8": 1,
+        "lq8": -1
+      }
+    },
+    {
+      "id": "bhq8-minus-blq8",
+      "role": "endpoint_control_diagnostic",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.03765724364846523,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.03474128798115998,
+          "ci95_low": -0.04087643043603748,
+          "mean_delta_nll": -0.037657242733985186
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.039474981854271896,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.03679223791696131,
+          "ci95_low": -0.04219565321691334,
+          "mean_delta_nll": -0.03947498695924878
+        }
+      },
+      "terms": {
+        "bhq8": 1,
+        "blq8": -1
+      }
+    },
+    {
+      "id": "mhar-midpoint-curvature",
+      "role": "shape_diagnostic",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.055394849935701984,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.051197542902082206,
+          "ci95_low": -0.05959766987944022,
+          "mean_delta_nll": -0.0553948525339365
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.05854233735234704,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.05424893379677087,
+          "ci95_low": -0.06294313137186691,
+          "mean_delta_nll": -0.058542339596897364
+        }
+      },
+      "terms": {
+        "hq8": 2,
+        "lq8": -1,
+        "m8": -1
+      }
+    },
+    {
+      "id": "baseline-midpoint-curvature",
+      "role": "shape_control_diagnostic",
+      "splits": {
+        "confirmation": {
+          "aggregate_delta_nll": -0.016165192176169185,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.011792334448546174,
+          "ci95_low": -0.020647016749717296,
+          "mean_delta_nll": -0.016165193635970354
+        },
+        "discovery": {
+          "aggregate_delta_nll": -0.019178698605922584,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 20260904,
+          "ci95_high": -0.014755403518211098,
+          "ci95_low": -0.023651402117684482,
+          "mean_delta_nll": -0.019178705289959908
+        }
+      },
+      "terms": {
+        "b": -1,
+        "bhq8": 2,
+        "blq8": -1
+      }
+    }
+  ],
+  "created_at": "2026-09-04T05:23:18.781339+00:00",
+  "decision": "eligible_for_review",
+  "experiment": "8-hybrid-q8-global-kv",
+  "format_version": 1,
+  "interpretation_limit": "single seed at step 2000; reject catastrophic designs and report within-seed evidence only; do not declare convergence or a multi-seed winner",
+  "milestone": 2000,
+  "seed": 42,
+  "single_seed_screen_only": true,
+  "wandb": {
+    "run_id": "8r9kzimc",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/8r9kzimc"
+  },
+  "within_seed_assessment": "within_seed_practical_match"
+}

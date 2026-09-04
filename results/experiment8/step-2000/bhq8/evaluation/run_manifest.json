@@ -1,0 +1,39 @@
+{
+  "created_at": "2026-09-04T05:21:05.966938+00:00",
+  "run_identity": {
+    "artifact_sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "batch_size": 1,
+    "checkpoint_sha256": "5db95e6b3dab711af8bc6bbe5cb6e87c9a458015b55e27f3d1ff0e37226d6468",
+    "dtype": "bf16",
+    "experiment": "8-hybrid-q8-global-kv",
+    "milestone": 2000,
+    "seed": 42,
+    "source_commit": "ad44da33799d60860ff3f54ad554871c992ba306",
+    "training_recipe": {
+      "attnres_heads": 8,
+      "experiment8_global_head_position": "odd",
+      "experiment8_hybrid_q_groups": 8,
+      "experiment8_local_head_position": "even",
+      "experiment8_variant": "bhq8",
+      "global_batch_size": 32,
+      "global_step": 2000,
+      "hidden_size": 1280,
+      "intermediate_size": 5120,
+      "lr": 0.0005,
+      "lr_min": 5e-05,
+      "mode": "baseline",
+      "num_heads": 16,
+      "num_kv_heads": 8,
+      "num_layers": 36,
+      "seed": 42,
+      "seq_len": 1024,
+      "steps": 20000,
+      "warmup": 1000
+    },
+    "variant": "bhq8"
+  },
+  "wandb": {
+    "run_id": "01qke5pe",
+    "run_url": "https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/01qke5pe"
+  }
+}
