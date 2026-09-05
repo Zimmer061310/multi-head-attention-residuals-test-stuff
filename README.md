@@ -440,7 +440,7 @@ heterogeneous architecture would improve language modeling.
 [10D W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/aklimpg4) ·
 [Two-GPU runbook](docs/runbooks/experiment10-two-gpu.md)
 
-### Experiment 11 — soft MHAR query specialization (planned)
+### Experiment 11 — soft MHAR query specialization (implemented, not run)
 
 Experiment 11 asks whether the useful local-query specialization found in
 Experiments 8–10 should remain hard or become a softer cross-chunk bias. It
@@ -454,10 +454,15 @@ activation-ratio, and post-Q-normalization query-angle measurements. Discovery
 selects one intermediate lambda per family and writes an immutable selection
 manifest before confirmation is opened. A positive result must beat both hard
 and global endpoints on confirmation and remain measurably less global than
-M8. This is a plan-only seed-42 step-2,000 screen; no code, GPU run, longer
-training, or multi-seed claim is authorized yet.
+M8. The opt-in architecture, fixed-data probes, frozen selection gate,
+analysis, figures, and fail-closed multi-GPU controller are implemented. No GPU
+run, longer training, or multi-seed claim is authorized yet.
 
-[Frozen plan](docs/plans/experiment-11.md)
+[Frozen plan](docs/plans/experiment-11.md) ·
+[Architecture](src/experiments/experiment11_soft_specialization.py) ·
+[Measurement and analysis](src/experiments/experiment11_workflow.py) ·
+[Controller](scripts/evaluate/run_experiment11_controller.py) ·
+[Runbook](docs/runbooks/experiment11-multigpu.md)
 
 ## Shared model and scientific controls
 
@@ -569,7 +574,7 @@ Useful entry points:
 | Exp 8 Hybrid-Q8 | [Plan](docs/plans/experiment-8.md), [implementation](src/experiments/experiment8_hybrid_q.py), [analysis](src/experiments/experiment8_screening.py) |
 | Exp 9 HQ8 head contribution | [Plan](docs/plans/experiment-9.md), [interventions and analysis](src/experiments/experiment9_head_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment9_controller.py) |
 | Exp 10 per-group contribution | [Plan](docs/plans/experiment-10.md), [interventions and analysis](src/experiments/experiment10_per_group_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment10_controller.py) |
-| Exp 11 soft query specialization | [Frozen plan](docs/plans/experiment-11.md); implementation intentionally absent |
+| Exp 11 soft query specialization | [Frozen plan](docs/plans/experiment-11.md), [implementation](src/experiments/experiment11_soft_specialization.py), [workflow](src/experiments/experiment11_workflow.py), [multi-GPU runbook](docs/runbooks/experiment11-multigpu.md) |
 | Reusable MHAR workflow | [Version-controlled skill](skills/mhar-research-workflow/SKILL.md), installed globally as `$mhar-research-workflow` |
 
 Independent models/branches can run one per GPU; this is different from assigning

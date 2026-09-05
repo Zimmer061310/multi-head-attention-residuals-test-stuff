@@ -1,0 +1,74 @@
+{
+  "format_version": 1,
+  "name": "Experiment 11 Soft MHAR Query Specialization",
+  "seed": 42,
+  "screening_milestone": 2000,
+  "full_schedule_steps": 20000,
+  "probe_milestones": [0, 500, 1000, 1500, 2000],
+  "wandb_project": "MHAR Stuff",
+  "wandb_group": "mhar-exp11-soft-query-specialization-seed42",
+  "run_matrix_sha256": "10f6d106d577b918f98c70fd0b3ff838ead9042c7c03978ce61f5ab96f7eb654",
+  "fixed_evaluation": {
+    "source": "Experiment 2 Stage B document-disjoint artifact",
+    "sha256": "29e545dd9399e9eaea6f5abf38f20ef76ba232466a01b6ddf13c3a6a287a3691",
+    "discovery_probe_sequences": 32,
+    "probe_selection": "first 32 discovery sequences in immutable artifact order",
+    "discovery_probe_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+  },
+  "backbone": {
+    "hidden_size": 1280,
+    "num_layers": 36,
+    "intermediate_size": 5120,
+    "num_attention_heads": 16,
+    "num_key_value_heads": 8,
+    "head_dim": 80,
+    "attnres_mode": "full_mh",
+    "attnres_heads": 8,
+    "sequence_length": 1024,
+    "global_batch_size": 32
+  },
+  "runs": [
+    {"id": "s2q8-l000", "family": "s2q8", "lambda": 0.0},
+    {"id": "s2q8-l010", "family": "s2q8", "lambda": 0.1},
+    {"id": "s2q8-l025", "family": "s2q8", "lambda": 0.25},
+    {"id": "s2q8-l050", "family": "s2q8", "lambda": 0.5},
+    {"id": "gslq8-l000", "family": "gslq8", "lambda": 0.0},
+    {"id": "gslq8-l010", "family": "gslq8", "lambda": 0.1},
+    {"id": "gslq8-l025", "family": "gslq8", "lambda": 0.25},
+    {"id": "gslq8-l050", "family": "gslq8", "lambda": 0.5},
+    {"id": "m8-l100", "family": "m8", "lambda": 1.0}
+  ],
+  "selection": {
+    "metric": "discovery token-weighted NLL",
+    "candidates": {
+      "s2q8": ["s2q8-l010", "s2q8-l025", "s2q8-l050"],
+      "gslq8": ["gslq8-l010", "gslq8-l025", "gslq8-l050"]
+    },
+    "tie_break": "smaller lambda",
+    "confirmation_requires_hashed_selection_manifest": true
+  },
+  "inference": {
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260905,
+    "negative_delta_favors_first": true
+  },
+  "classification": {
+    "supported": "selected intermediate beats its lambda-0 endpoint and shared M8 with both confirmation 95% CIs below zero, and R_act/theta are positive while both selected-minus-M8 intervals are below zero",
+    "gain_without_softness": "NLL requirements pass but effective-softness requirements fail",
+    "otherwise": "no_confirmed_soft_specialization_advantage"
+  },
+  "training": {
+    "dataset": "HuggingFaceFW/fineweb-edu",
+    "dataset_name": "sample-10BT",
+    "dataset_revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+    "tokenizer": "Qwen/Qwen3-0.6B",
+    "tokenizer_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "optimizer": "AdamW",
+    "learning_rate": 0.0005,
+    "minimum_learning_rate": 0.00005,
+    "warmup_steps": 1000,
+    "precision": "bf16",
+    "checkpoint_every": 100,
+    "no_silent_retry": true
+  }
+}

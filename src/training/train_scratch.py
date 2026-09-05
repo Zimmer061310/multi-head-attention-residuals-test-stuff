@@ -85,6 +85,26 @@ def parse_args():
         help="Frozen Experiment 8 architecture identity; omitted by all legacy runs",
     )
     p.add_argument(
+        "--experiment11_run",
+        choices=[
+            "s2q8-l000", "s2q8-l010", "s2q8-l025", "s2q8-l050",
+            "gslq8-l000", "gslq8-l010", "gslq8-l025", "gslq8-l050",
+            "m8-l100",
+        ],
+        default=None,
+        help="Frozen Experiment 11 dense-Q soft-specialization run identity",
+    )
+    p.add_argument(
+        "--experiment11_probe_artifact",
+        default=None,
+        help="Experiment 11 fixed artifact used for the exact pre-step-1 probe",
+    )
+    p.add_argument(
+        "--experiment11_probe_output",
+        default=None,
+        help="Write-once Experiment 11 step-0 probe result",
+    )
+    p.add_argument(
         "--mixed_partition", default=None,
         help="Experiment 2 ordered singleton/doubleton atom partition id; "
              "requires full_mh and uses attnres_heads as the atomic count",
@@ -300,6 +320,16 @@ def training_identity(args, world_size):
     experiment8_variant = getattr(args, "experiment8_variant", None)
     if experiment8_variant is not None:
         identity["experiment8_variant"] = experiment8_variant
+    experiment11_run = getattr(args, "experiment11_run", None)
+    if experiment11_run is not None:
+        from src.experiments.experiment11_soft_specialization import run_spec
+        row = run_spec(experiment11_run)
+        identity.update({
+            "experiment11_run_id": row.run_id,
+            "experiment11_family": row.family,
+            "experiment11_lambda": row.lambda_value,
+            "experiment11_soft_q_groups": 8,
+        })
     if args.branch_from:
         branch_manifest = json.loads(
             Path(args.branch_manifest).read_text(encoding="utf-8"))
@@ -315,6 +345,16 @@ def training_identity(args, world_size):
 
 def wandb_tags(args):
     """Keep legacy run metadata unchanged and describe opt-in experiments."""
+
+    experiment11_run = getattr(args, "experiment11_run", None)
+    if experiment11_run is not None:
+        from src.experiments.experiment11_soft_specialization import run_spec
+        row = run_spec(experiment11_run)
+        return [
+            "experiment-11", row.run_id, row.family, "soft-query-specialization",
+            f"lambda-{row.lambda_value:g}", "dense-q", "mhar", "full-mh", "h8",
+            "1b", "fineweb-edu", "single-seed-screen",
+        ]
 
     experiment8_variant = getattr(args, "experiment8_variant", None)
     if experiment8_variant is not None:
@@ -468,6 +508,16 @@ def validate_model_config(model, args):
     experiment8_variant = getattr(args, "experiment8_variant", None)
     if experiment8_variant is not None:
         expected["experiment8_variant"] = experiment8_variant
+    experiment11_run = getattr(args, "experiment11_run", None)
+    if experiment11_run is not None:
+        from src.experiments.experiment11_soft_specialization import run_spec
+        row = run_spec(experiment11_run)
+        expected.update({
+            "experiment11_run_id": row.run_id,
+            "experiment11_family": row.family,
+            "experiment11_lambda": row.lambda_value,
+            "experiment11_soft_q_groups": 8,
+        })
     observed = {key: getattr(model.config, key, None) for key in expected}
     mismatches = {
         key: {"expected": expected[key], "observed": observed[key]}
@@ -529,14 +579,26 @@ def build_model(args, device):
     experiment7_variant = getattr(args, "experiment7_variant", None)
     hybrid_q_groups = getattr(args, "hybrid_q_groups", None)
     experiment8_variant = getattr(args, "experiment8_variant", None)
+    experiment11_run = getattr(args, "experiment11_run", None)
     selected_projections = sum(value is not None for value in (
-        qkv_groups, local_q_groups, hybrid_q_groups))
+        qkv_groups, local_q_groups, hybrid_q_groups, experiment11_run))
     if selected_projections > 1:
-        raise ValueError("Experiment 6, 7, and 8 projection modes are mutually exclusive")
+        raise ValueError(
+            "Experiment 6, 7, 8, and 11 projection modes are mutually exclusive")
     selected_identities = sum(value is not None for value in (
-        experiment6_variant, experiment7_variant, experiment8_variant))
+        experiment6_variant, experiment7_variant, experiment8_variant,
+        experiment11_run))
     if selected_identities > 1:
         raise ValueError("only one frozen experiment identity may be selected")
+    if experiment11_run is not None:
+        if args.mode != "full_mh" or args.attnres_heads != 8:
+            raise ValueError("Experiment 11 requires mode=full_mh and attnres_heads=8")
+        if (args.hidden_size % 8 or args.num_kv_heads != 8 or
+                args.num_heads != 16):
+            raise ValueError("Experiment 11 requires H8 chunks, 8 KV heads, and 16 Q heads")
+        from src.experiments.experiment11_soft_specialization import (
+            Experiment11MHARForCausalLM,
+        )
     if experiment8_variant is not None:
         frozen8 = {
             "hq8": ("full_mh", 8, 8),
@@ -630,7 +692,8 @@ def build_model(args, device):
             from transformers import Qwen3MoeForCausalLM
             model_class = Qwen3MoeForCausalLM
         else:
-            model_class = (Experiment8MHARForCausalLM if hybrid_q_groups else
+            model_class = (Experiment11MHARForCausalLM if experiment11_run else
+                           Experiment8MHARForCausalLM if hybrid_q_groups else
                            Experiment7MHARForCausalLM if local_q_groups else
                            Experiment6MHARForCausalLM if qkv_groups else Qwen3AttnResForCausalLM)
         model = model_class.from_pretrained(
@@ -710,7 +773,16 @@ def build_model(args, device):
             config.experiment7_variant = experiment7_variant
         if experiment8_variant:
             config.experiment8_variant = experiment8_variant
-        if hybrid_q_groups:
+        if experiment11_run:
+            from src.experiments.experiment11_soft_specialization import run_spec
+            row = run_spec(experiment11_run)
+            config.experiment11_run_id = row.run_id
+            config.experiment11_family = row.family
+            config.experiment11_lambda = row.lambda_value
+            config.experiment11_soft_q_groups = 8
+        if experiment11_run:
+            model = Experiment11MHARForCausalLM(config)
+        elif hybrid_q_groups:
             config.experiment8_hybrid_q_groups = hybrid_q_groups
             config.experiment8_local_head_position = "even"
             config.experiment8_global_head_position = "odd"
@@ -886,6 +958,14 @@ def save_training_checkpoint(
 def main():
     args = parse_args()
 
+    probe_flags = (
+        args.experiment11_probe_artifact is not None,
+        args.experiment11_probe_output is not None,
+    )
+    if probe_flags[0] != probe_flags[1]:
+        raise ValueError("Experiment 11 step-0 probe artifact/output must be provided together")
+    if any(probe_flags) and (args.experiment11_run is None or args.resume_from or args.branch_from):
+        raise ValueError("Experiment 11 step-0 probe is valid only for a fresh Experiment 11 run")
     if args.keep_last < 1:
         raise ValueError("--keep_last must be at least 1")
     validate_branch_invocation(args)
@@ -983,6 +1063,9 @@ def main():
             atomic_write_json(run_manifest_path, manifest)
     if is_main and resume_state is not None:
         truncate_metrics_after_step(out_dir / "training_metrics.jsonl", start_step)
+        if args.experiment11_run:
+            truncate_metrics_after_step(
+                out_dir / "experiment11_weight_metrics.jsonl", start_step)
     dist.barrier()
 
     # ── W&B ──
@@ -1019,6 +1102,9 @@ def main():
             "run_id": wandb_run_id,
             "required": args.wandb_required,
         }
+        if args.experiment11_run and use_wandb:
+            import wandb
+            manifest["wandb"]["run_url"] = wandb.run.url
         atomic_write_json(run_manifest_path, manifest)
 
     # ── model ──
@@ -1084,6 +1170,40 @@ def main():
             if use_wandb:
                 import wandb
                 wandb.config.update(experiment8_parameters, allow_val_change=False)
+        if args.experiment11_run:
+            from src.experiments.experiment11_soft_specialization import (
+                experiment11_parameter_report,
+            )
+            experiment11_parameters = experiment11_parameter_report(model)
+            print("Experiment 11 parameter report: " + json.dumps(
+                experiment11_parameters, sort_keys=True))
+            manifest["experiment11_parameters"] = experiment11_parameters
+            atomic_write_json(run_manifest_path, manifest)
+            if use_wandb:
+                import wandb
+                wandb.config.update(experiment11_parameters, allow_val_change=False)
+
+    if args.experiment11_probe_artifact:
+        if world_size != 1:
+            raise ValueError("Experiment 11 step-0 probe requires one process per run")
+        if is_main:
+            from src.experiments.experiment11_workflow import write_step0_probe
+            step0 = write_step0_probe(
+                model,
+                run_id=args.experiment11_run,
+                artifact=Path(args.experiment11_probe_artifact),
+                output=Path(args.experiment11_probe_output),
+                training_identity=run_identity,
+                device=device,
+            )
+            print(f"Experiment 11 step-0 probe: {args.experiment11_probe_output}")
+            if use_wandb:
+                import wandb
+                wandb.log({
+                    "experiment11/r_act": step0["activation_metrics"]["metrics"]["r_act"]["mean"],
+                    "experiment11/theta_radians": step0["activation_metrics"]["metrics"]["theta_radians"]["mean"],
+                }, step=0)
+        dist.barrier()
 
     # torch.compile the full model before DDP wrapping.
     # Gives ~2.5-2.9x throughput improvement for all modes.
@@ -1307,6 +1427,26 @@ def main():
                 tokens_seen = 0
                 t0 = time.time()
         accum_loss = 0.0
+
+        if is_main and args.experiment11_run and global_step % 100 == 0:
+            from src.experiments.experiment11_soft_specialization import (
+                weight_specialization_metrics,
+            )
+            weight_metrics = weight_specialization_metrics(unwrap_model(model))
+            weight_row = {
+                "created_at": utc_now(),
+                "step": global_step,
+                "run_id": args.experiment11_run,
+                **weight_metrics,
+            }
+            append_jsonl(out_dir / "experiment11_weight_metrics.jsonl", weight_row)
+            if use_wandb:
+                import wandb
+                wandb.log({
+                    "experiment11/r_weight": sum(
+                        row["r_weight"] for row in weight_metrics["rows"]
+                    ) / len(weight_metrics["rows"]),
+                }, step=global_step)
 
         if not args.fsdp and is_main and checkpoint_due(global_step, args.save_every, save_steps):
             ckpt_dir = save_training_checkpoint(

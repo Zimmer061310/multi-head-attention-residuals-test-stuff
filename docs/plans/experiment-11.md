@@ -2,9 +2,10 @@
 
 ## Status and authorization
 
-This document freezes the scientific plan before implementation. It does not
-authorize architecture implementation, GPU rental, training, continuation
-beyond step 2,000, or multi-seed work. Those stages require separate explicit
+This document froze the scientific plan before implementation. Architecture
+and workflow implementation were subsequently authorized and are now present
+as opt-in Experiment 11 code. GPU rental, training, continuation beyond step
+2,000, and multi-seed work remain unauthorized and require separate explicit
 authorization.
 
 The first stage is a seed-42, step-2,000 screening experiment. Its purpose is
