@@ -96,6 +96,7 @@ structural measurements—not measurements of human-interpretable semantic purit
 | **8 — Hybrid-Q8 / Global-KV** | Give each GQA group one local-Q and one global-Q head; compare with dense M8, fully local LQ8, and ordinary-residual controls. | HQ8 matches M8 within seed 42 at step 2000: confirmation HQ8−M8 −0.000671, CI [−0.002908,+0.001551]. |
 | **9 — HQ8 head contribution** | Freeze trained HQ8; zero local/global head populations, compare with 70 matched masks, then permute local chunk assignments. | Local heads matter (+0.165466 confirmation NLL when removed), global heads matter more (+1.494456), and all 32 chunk derangements hurt. |
 | **10 — Per-group query contribution** | Freeze trained HQ8; ablate each local head, global head, and whole GQA group, then conditionally exhaust one-group chunk substitutions. | All 8 local groups pass; contribution is distributed. Every one-group wrong-chunk substitution hurts on confirmation. |
+| **11 — Soft query specialization** | Train matched dense-Q MHAR-8 models across a frozen cross-chunk input-bias sweep for soft-local+soft-local and global+soft-local query families. | Plan frozen. Nine-run seed-42 step-2,000 screen; implementation and GPU execution are not yet authorized. |
 
 ### Experiment 1 — all 105 pairings at fixed H4
 
@@ -439,6 +440,25 @@ heterogeneous architecture would improve language modeling.
 [10D W&B](https://wandb.ai/zimmer061310-ena/MHAR%20stuff/runs/aklimpg4) ·
 [Two-GPU runbook](docs/runbooks/experiment10-two-gpu.md)
 
+### Experiment 11 — soft MHAR query specialization (planned)
+
+Experiment 11 asks whether the useful local-query specialization found in
+Experiments 8–10 should remain hard or become a softer cross-chunk bias. It
+freezes two dense-Q families: two soft-local heads per GQA group and one global
+plus one soft-local head. Each family uses lambda values 0, 0.1, 0.25, and 0.5,
+with one shared dense M8 endpoint at lambda 1, for nine unique matched runs.
+
+Lambda is treated as an optimization bias rather than a guaranteed final
+information fraction. The plan therefore requires per-head weight-RMS,
+activation-ratio, and post-Q-normalization query-angle measurements. Discovery
+selects one intermediate lambda per family and writes an immutable selection
+manifest before confirmation is opened. A positive result must beat both hard
+and global endpoints on confirmation and remain measurably less global than
+M8. This is a plan-only seed-42 step-2,000 screen; no code, GPU run, longer
+training, or multi-seed claim is authorized yet.
+
+[Frozen plan](docs/plans/experiment-11.md)
+
 ## Shared model and scientific controls
 
 The experiment family uses the 1B-class Qwen3-style MHAR setup below.
@@ -549,6 +569,8 @@ Useful entry points:
 | Exp 8 Hybrid-Q8 | [Plan](docs/plans/experiment-8.md), [implementation](src/experiments/experiment8_hybrid_q.py), [analysis](src/experiments/experiment8_screening.py) |
 | Exp 9 HQ8 head contribution | [Plan](docs/plans/experiment-9.md), [interventions and analysis](src/experiments/experiment9_head_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment9_controller.py) |
 | Exp 10 per-group contribution | [Plan](docs/plans/experiment-10.md), [interventions and analysis](src/experiments/experiment10_per_group_contribution.py), [two-GPU controller](scripts/evaluate/run_experiment10_controller.py) |
+| Exp 11 soft query specialization | [Frozen plan](docs/plans/experiment-11.md); implementation intentionally absent |
+| Reusable MHAR workflow | [Version-controlled skill](skills/mhar-research-workflow/SKILL.md), installed globally as `$mhar-research-workflow` |
 
 Independent models/branches can run one per GPU; this is different from assigning
 several GPUs to one model. The recorded screen used independent jobs, including

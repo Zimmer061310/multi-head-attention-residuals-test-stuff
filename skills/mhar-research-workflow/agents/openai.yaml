@@ -1,0 +1,4 @@
+interface:
+  display_name: "MHAR Research Workflow"
+  short_description: "Plan and run rigorous MHAR experiments"
+  default_prompt: "Use $mhar-research-workflow to plan, implement, run, analyze, and close this MHAR experiment safely."
