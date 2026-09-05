@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import contextlib
 import glob
 import hashlib
 import json
@@ -40,6 +41,30 @@ from src.attention_residuals.modeling_qwen3_attnres import (
 from transformers import AutoTokenizer
 from transformers.models.qwen3.configuration_qwen3 import Qwen3Config
 from transformers.models.qwen3.modeling_qwen3 import Qwen3ForCausalLM
+
+
+@contextlib.contextmanager
+def optional_checkpoint_lock():
+    """Serialize large atomic saves when an experiment shares a filesystem.
+
+    This is an operational safeguard only. It is opt-in through an environment
+    variable so legacy training behavior and scientific identities are unchanged.
+    """
+
+    path = os.environ.get("MHAR_CHECKPOINT_LOCK")
+    if not path:
+        yield
+        return
+    import fcntl
+
+    lock_path = Path(path).resolve()
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def parse_args():
@@ -909,6 +934,24 @@ def save_training_checkpoint(
     keep_steps=(), final=False,
 ):
     """Atomically save weights plus optimizer/scheduler/RNG state."""
+
+    with optional_checkpoint_lock():
+        return _save_training_checkpoint_unlocked(
+            model=model, tokenizer=tokenizer, optimizer=optimizer,
+            scheduler=scheduler, global_step=global_step,
+            chunks_consumed=chunks_consumed, run_identity=run_identity,
+            out_dir=out_dir, keep_last=keep_last, wandb_run_id=wandb_run_id,
+            elapsed_training_seconds=elapsed_training_seconds,
+            keep_steps=keep_steps, final=final,
+        )
+
+
+def _save_training_checkpoint_unlocked(
+    *, model, tokenizer, optimizer, scheduler, global_step, chunks_consumed,
+    run_identity, out_dir, keep_last, wandb_run_id, elapsed_training_seconds,
+    keep_steps=(), final=False,
+):
+    """Checkpoint implementation called while the optional save lock is held."""
 
     out_dir = Path(out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -13,10 +13,11 @@ case "$MHAR_RUN_ID" in
   s2q8-l000|s2q8-l010|s2q8-l025|s2q8-l050|gslq8-l000|gslq8-l010|gslq8-l025|gslq8-l050|m8-l100) ;;
   *) echo "unknown Experiment 11 run ID: $MHAR_RUN_ID" >&2; exit 2 ;;
 esac
-case "$MHAR_TARGET_STEP" in
-  500|1000|1500|2000) ;;
-  *) echo "target must be a frozen milestone: 500, 1000, 1500, or 2000" >&2; exit 2 ;;
-esac
+if ! [[ "$MHAR_TARGET_STEP" =~ ^[0-9]+$ ]] || \
+   (( MHAR_TARGET_STEP < 100 || MHAR_TARGET_STEP > 2000 || MHAR_TARGET_STEP % 100 != 0 )); then
+  echo "target must be a 100-step atomic boundary from 100 through 2000" >&2
+  exit 2
+fi
 
 MHAR_PYTHON_BIN="${MHAR_PYTHON_BIN:-python3}"
 MHAR_REPO_DIR="${MHAR_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
@@ -30,6 +31,7 @@ mkdir -p "$MHAR_OUTPUT_DIR" "$MHAR_OUTPUT_ROOT/probes/$MHAR_RUN_ID" "$MHAR_HF_HO
 export HF_HOME="$MHAR_HF_HOME" HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export WANDB_DIR=/root/autodl-tmp/wandb PYTHONUNBUFFERED=1 TOKENIZERS_PARALLELISM=false
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export MHAR_CHECKPOINT_LOCK="${MHAR_CHECKPOINT_LOCK:-/tmp/mhar-exp11-checkpoint.lock}"
 
 EXTRA=()
 if [[ -n "$MHAR_RESUME_FROM" ]]; then
@@ -56,7 +58,8 @@ exec "$MHAR_PYTHON_BIN" -m torch.distributed.run --nproc_per_node=1 \
   --tokenizer_revision c1899de289a04d12100db370d81485cdf75e47ca \
   --grad_ckpt --save_every 100 --keep_last 1 --keep_steps "$MHAR_TARGET_STEP" \
   --reuse_step_checkpoint_as_final \
-  --eval_every 500 --eval_steps 50 --log_every 10 --out_dir "$MHAR_OUTPUT_DIR" \
+  --eval_every "${MHAR_EXP11_TRAIN_EVAL_EVERY:-500}" --eval_steps 50 \
+  --log_every 10 --out_dir "$MHAR_OUTPUT_DIR" \
   --wandb_project "MHAR Stuff" \
   --wandb_group "mhar-exp11-soft-query-specialization-seed42" --wandb_required \
   --run_name "mhar-exp11-$MHAR_RUN_ID-seed42" "${EXTRA[@]}"

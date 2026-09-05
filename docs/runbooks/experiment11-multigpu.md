@@ -19,6 +19,16 @@ fills them. Nine GPUs minimize training wall time; five GPUs require two waves;
 three GPUs require three waves. The model recipe and global batch remain the
 same at every GPU count.
 
+For the authorized six-plus-two GPU deployment, use
+`scripts/evaluate/run_experiment11_split_worker.py` on each host. Assign seven
+runs to the six-GPU host and two runs to the two-GPU host. The six-GPU worker
+rotates its seventh run at atomic boundaries, stops at every frozen probe
+milestone, and serializes large checkpoint writes through
+`MHAR_CHECKPOINT_LOCK`. This changes scheduling only: optimizer, scheduler,
+RNG, data position, W&B identity, and final step remain exact across resumes.
+Each worker refuses dirty source, identity-mismatched checkpoints, missing
+probe outputs, duplicate run IDs, active GPUs, or a changed artifact hash.
+
 The controller pauses every model at steps 500, 1,000, 1,500, and 2,000. It
 measures the fixed 32-sequence discovery probe at step 0 and each pause. The
 step-0 probe runs inside the exact initialized training process before the
